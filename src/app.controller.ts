@@ -35,7 +35,7 @@ export class AppController {
     }[];
 
     return {
-      message: `[${new Date().toISOString()}] - [${process.env.INSTANCE_ID}] - O servidor está em execução`,
+      message: `[${new Date().toISOString()}] - [${process.env.INSTANCE_ID}] - O servidor está em execução - Homologação!`,
       signatures: countSignatures,
       database_info: {
         active: +countActive.toString(),

@@ -23,7 +23,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle(title)
-    .setDescription('Bem-vindo à API do Territory Manager de Homologação! ')
+    .setDescription('Bem-vindo à API do Territory Manager!')
     .setDescription(description)
     .setVersion(version)
     .addBearerAuth()
