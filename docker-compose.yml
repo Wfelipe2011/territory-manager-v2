@@ -2,10 +2,8 @@ version: '3.5'
 
 services:
   app-prod:
+    image: wfelipe2011/territorio-digital-prod:master
     restart: unless-stopped
-    build:
-      context: .
-      dockerfile: Dockerfile.production
     deploy:
       replicas: 1
       resources:
