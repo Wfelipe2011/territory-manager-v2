@@ -36,7 +36,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
 
   SwaggerModule.setup('api', app, document);
-
+  const env = fs.readFileSync('./stack.env', 'utf8');
+  console.log(env);
   console.log(process.env);
 
   await app.listen(3000);
