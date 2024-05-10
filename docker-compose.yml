@@ -11,6 +11,7 @@ services:
           cpus: '0.5'
           memory: 2G
     environment:
+      - PORT=$PORT
       - DATABASE_URL=$DATABASE_URL
       - JWT_SECRET=$JWT_SECRET
       - TZ=$TZ
