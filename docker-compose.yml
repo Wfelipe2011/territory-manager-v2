@@ -2,13 +2,23 @@ version: '3.5'
 
 services:
   app-prod:
-    cpus: '0.5'
-    mem_limit: 2g
-    restart: always
+    restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile.production
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 2G
+    networks:
+      - npm_public
     ports:
       - '3000:3000'
     volumes:
       - ./public:/app/public
+
+networks:
+  npm_public:
+    external: true
