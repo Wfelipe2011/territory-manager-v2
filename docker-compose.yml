@@ -10,6 +10,8 @@ services:
         limits:
           cpus: '0.5'
           memory: 2G
+    env_file:
+      - stack.env
     networks:
       - npm_public
     ports:
