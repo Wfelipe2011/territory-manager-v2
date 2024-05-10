@@ -14,8 +14,6 @@ services:
       - npm_public
     ports:
       - '3000:3000'
-    volumes:
-      - ./public:/app/public
 
 networks:
   npm_public:
