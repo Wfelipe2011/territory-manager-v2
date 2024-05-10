@@ -1,0 +1,14 @@
+version: '3.5'
+
+services:
+  app-prod:
+    cpus: '0.5'
+    mem_limit: 2g
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./public:/app/public

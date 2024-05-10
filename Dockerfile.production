@@ -1,0 +1,34 @@
+# Use a imagem Node.js leve e otimizada para produção
+FROM node:18 as builder
+
+WORKDIR /app
+
+# Copie apenas os arquivos necessários para instalar as dependências
+COPY package*.json ./
+
+# Instale as dependências de desenvolvimento
+RUN npm ci --quiet
+
+# Copie o código fonte para a imagem
+COPY . .
+
+RUN npx prisma generate
+# Execute o comando de build
+RUN npm run build
+
+# Use uma imagem base mais leve para executar o aplicativo
+FROM node:18-alpine
+WORKDIR /app
+
+# Copy only necessary files from the builder stage
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+COPY package*.json ./
+
+# Install production dependencies (excluding devDependencies)
+RUN npm ci --only=prod --quiet
+
+RUN npx prisma generate
+
+# Defina o comando de inicialização para o aplicativo em produção
+CMD [ "npm", "run", "start:prod" ]

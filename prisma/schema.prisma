@@ -1,0 +1,186 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model address {
+  id   Int    @id @unique @default(autoincrement())
+  name String
+
+  // Relacionamentos
+  houses       house[]
+  multitenancy multitenancy @relation(fields: [tenantId], references: [id])
+  tenantId     Int          @map("tenant_id")
+}
+
+model type {
+  id           Int          @id @unique @default(autoincrement())
+  name         String
+  multitenancy multitenancy @relation(fields: [tenantId], references: [id])
+  tenantId     Int          @map("tenant_id")
+
+  // Relacionamentos
+  territory territory[]
+}
+
+model block {
+  id           Int          @id @unique @default(autoincrement())
+  name         String
+  multitenancy multitenancy @relation(fields: [tenantId], references: [id])
+  tenantId     Int          @map("tenant_id")
+
+  // Relacionamentos
+  houses          house[]
+  territory_block territory_block[]
+  round           round[]
+}
+
+model house {
+  id           Int       @id @unique @default(autoincrement())
+  number       String
+  complement   String?
+  legend       String?
+  order        Int?
+  dontVisit    Boolean   @default(false) @map("dont_visit")
+  observations String?
+  block        block     @relation(fields: [blockId], references: [id])
+  blockId      Int       @map("block_id")
+  address      address   @relation(fields: [addressId], references: [id])
+  addressId    Int       @map("address_id")
+  phone        String?
+  territory    territory @relation(fields: [territoryId], references: [id])
+  territoryId  Int       @map("territory_id")
+
+  // Relacionamentos
+  rounds       round[]
+  multitenancy multitenancy @relation(fields: [tenantId], references: [id])
+  tenantId     Int          @map("tenant_id")
+}
+
+model multitenancy {
+  id    Int     @id @unique @default(autoincrement())
+  name  String
+  phone String?
+
+  // Relacionamentos
+  users              user[]
+  territories        territory[]
+  addresses          address[]
+  blocks             block[]
+  houses             house[]
+  round              round[]
+  type               type[]
+  territory_block    territory_block[]
+  territory_overseer territory_overseer[]
+  signature          signature[]
+
+  @@map("multi_tenancy")
+}
+
+model territory {
+  id           Int          @id @unique @default(autoincrement())
+  name         String
+  multitenancy multitenancy @relation(fields: [tenantId], references: [id])
+  tenantId     Int          @map("tenant_id")
+  type         type         @relation(fields: [typeId], references: [id])
+  typeId       Int          @map("type_id")
+  imageUrl     String?      @map("image_url")
+
+  // Relacionamentos
+  house              house[]
+  round              round[]
+  territory_block    territory_block[]
+  territory_overseer territory_overseer[]
+}
+
+model territory_block {
+  id           Int          @id @unique @default(autoincrement())
+  block        block        @relation(fields: [blockId], references: [id])
+  blockId      Int          @map("block_id")
+  territory    territory    @relation(fields: [territoryId], references: [id])
+  territoryId  Int          @map("territory_id")
+  signature    signature?   @relation(fields: [signatureId], references: [id])
+  signatureId  Int?         @map("signature_id")
+  multitenancy multitenancy @relation(fields: [tenantId], references: [id])
+  tenantId     Int          @map("tenant_id")
+
+  @@unique([territoryId, blockId]) // Adicionando a anotação para criar a chave composta
+}
+
+model territory_overseer {
+  id             Int          @id @unique @default(autoincrement())
+  territory      territory    @relation(fields: [territoryId], references: [id])
+  territoryId    Int          @map("territory_id")
+  overseer       String
+  initialDate    DateTime     @default(now()) @map("initial_date")
+  expirationDate DateTime?    @map("expiration_date")
+  finished       Boolean      @default(false)
+  signature      signature?   @relation(fields: [signatureId], references: [id])
+  signatureId    Int?         @map("signature_id")
+  multitenancy   multitenancy @relation(fields: [tenantId], references: [id])
+  tenantId       Int          @map("tenant_id")
+  roundNumber    Int          @map("round_number")
+
+  @@index([territoryId, roundNumber])
+}
+
+// index unico: houseId, territoryId, blockId, tenantId, roundNumber
+model round {
+  id          Int @id @unique @default(autoincrement())
+  roundNumber Int @map("round_number")
+
+  // Relacionamentos
+  house       house     @relation(fields: [houseId], references: [id])
+  houseId     Int       @map("house_id")
+  territory   territory @relation(fields: [territoryId], references: [id])
+  territoryId Int       @map("territory_id")
+  block       block     @relation(fields: [blockId], references: [id])
+  blockId     Int       @map("block_id")
+
+  completed  Boolean
+  startDate  DateTime  @default(now()) @map("start_date")
+  updateDate DateTime? @map("update_date")
+  endDate    DateTime? @map("end_date")
+
+  multitenancy multitenancy @relation(fields: [tenantId], references: [id])
+  tenantId     Int          @map("tenant_id")
+
+  @@unique([houseId, territoryId, blockId, tenantId, roundNumber]) // Adicionando a anotação para criar a chave composta
+}
+
+model user {
+  id           Int          @id @unique @default(autoincrement())
+  name         String
+  email        String       @unique
+  password     String
+  multitenancy multitenancy @relation(fields: [tenantId], references: [id])
+  tenantId     Int          @map("tenant_id")
+}
+
+model signature {
+  id             Int          @id @unique @default(autoincrement())
+  key            String       @unique
+  expirationDate DateTime?    @map("expiration_date")
+  token          String
+  multitenancy   multitenancy @relation(fields: [tenantId], references: [id])
+  tenantId       Int          @map("tenant_id")
+
+  // Relacionamentos
+  territory_block    territory_block[]
+  territory_overseer territory_overseer[]
+  socket             socket[]
+}
+
+model socket {
+  id           Int        @id @unique @default(autoincrement())
+  socketId     String     @unique
+  room         String
+  createdAt    DateTime   @default(now()) @map("created_at")
+  signatureKey String?    @map("signature_key")
+  signature    signature? @relation(fields: [signatureKey], references: [key])
+}

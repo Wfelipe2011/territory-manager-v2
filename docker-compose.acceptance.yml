@@ -1,0 +1,23 @@
+version: '3.5'
+
+services:
+  app:
+    cpus: '0.5'
+    mem_limit: 1024m
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: app_territory_manager_acceptance
+    ports:
+      - '3000:4000'
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+    depends_on:
+      - db
+    networks:
+      - acp_network
+
+networks:
+  acp_network: # Defina o nome da sua rede personalizada
