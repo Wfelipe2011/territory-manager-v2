@@ -20,8 +20,6 @@ services:
       - NODEMAILER_APP_PASS=$NODEMAILER_APP_PASS
     networks:
       - npm_public
-    ports:
-      - '3000:3000'
 
 volumes:
   app-prod:
