@@ -10,8 +10,14 @@ services:
         limits:
           cpus: '0.5'
           memory: 2G
-    env_file:
-      - stack.env
+    environment:
+      - DATABASE_URL=$DATABASE_URL
+      - JWT_SECRET=$JWT_SECRET
+      - TZ=$TZ
+      - LOGTAIL_API_KEY=$LOGTAIL_API_KEY
+      - POSTGRES_DB=$POSTGRES_DB
+      - NODEMAILER_USER=$NODEMAILER_USER
+      - NODEMAILER_APP_PASS=$NODEMAILER_APP_PASS
     networks:
       - npm_public
     ports:

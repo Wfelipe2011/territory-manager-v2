@@ -21,11 +21,6 @@ async function bootstrap() {
     type: VersioningType.URI,
   });
 
-  await prisma.socket
-    .deleteMany({})
-    .then(() => console.log('Sockets deletados'))
-    .catch(() => console.log('Erro ao deletar sockets'));
-
   const config = new DocumentBuilder()
     .setTitle(title)
     .setDescription('Bem-vindo à API do Territory Manager!')
@@ -36,8 +31,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
 
   SwaggerModule.setup('api', app, document);
-  const env = fs.readFileSync('stack.env', 'utf8');
-  console.log(env);
   console.log(process.env);
 
   await app.listen(3000);
