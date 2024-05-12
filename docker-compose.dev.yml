@@ -1,37 +1,30 @@
 version: '3.5'
 
 services:
-  db:
-    cpus: '0.3'
-    mem_limit: 512m
-    container_name: db_territory_manager_development
-    image: postgres:13.2-alpine
-    ports:
-      - '5432:5432'
+  app-dev:
+    image: wfelipe2011/territorio-digital-acceptance:dev
+    restart: unless-stopped
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 2G
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=territory_manager_production
-    volumes:
-      - './.postgres:/var/lib/postgresql/data'
+      - PORT=$PORT
+      - DATABASE_URL=$DATABASE_URL
+      - JWT_SECRET=$JWT_SECRET
+      - TZ=$TZ
+      - LOGTAIL_API_KEY=$LOGTAIL_API_KEY
+      - POSTGRES_DB=$POSTGRES_DB
+      - NODEMAILER_USER=$NODEMAILER_USER
+      - NODEMAILER_APP_PASS=$NODEMAILER_APP_PASS
+    networks:
+      - npm_public
 
-  # app:
-  #   cpus: '0.3'
-  #   mem_limit: 512m
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.development
-  #   container_name: app_territory_manager_development
-  #   environment:
-  #     - PORT=${PORT}
-  #     - DATABASE_URL=postgresql://postgres:postgres@db:5432/territory_manager_development
-  #     - JWT_SECRET=${JWT_SECRET}
-  #     - INSTANCE_ID
-  #     - TZ=America/Sao_Paulo
-  #   ports:
-  #     - '3000:3000'
-  #   volumes:
-  #     - ./src:/app/src
-  #     - ./public:/app/public
-  #   depends_on:
-  #     - db
+volumes:
+  app-dev:
+
+networks:
+  npm_public:
+    external: true

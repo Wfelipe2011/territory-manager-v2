@@ -23,7 +23,7 @@ services:
       - npm_public
 
 volumes:
-  app-prod:
+  app-hmg:
 
 networks:
   npm_public:
