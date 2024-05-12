@@ -1,23 +1,30 @@
 version: '3.5'
 
 services:
-  app:
-    cpus: '0.5'
-    mem_limit: 1024m
-    restart: always
-    build:
-      context: .
-      dockerfile: Dockerfile.production
-    container_name: app_territory_manager_acceptance
-    ports:
-      - '3000:4000'
-    volumes:
-      - ./src:/app/src
-      - ./public:/app/public
-    depends_on:
-      - db
+  app-hmg:
+    image: wfelipe2011/territorio-digital-acceptance:acp
+    restart: unless-stopped
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 2G
+    environment:
+      - PORT=$PORT
+      - DATABASE_URL=$DATABASE_URL
+      - JWT_SECRET=$JWT_SECRET
+      - TZ=$TZ
+      - LOGTAIL_API_KEY=$LOGTAIL_API_KEY
+      - POSTGRES_DB=$POSTGRES_DB
+      - NODEMAILER_USER=$NODEMAILER_USER
+      - NODEMAILER_APP_PASS=$NODEMAILER_APP_PASS
     networks:
-      - acp_network
+      - npm_public
+
+volumes:
+  app-prod:
 
 networks:
-  acp_network: # Defina o nome da sua rede personalizada
+  npm_public:
+    external: true
