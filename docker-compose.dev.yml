@@ -2,7 +2,7 @@ version: '3.5'
 
 services:
   app-dev:
-    image: wfelipe2011/territorio-digital-acceptance:dev
+    image: wfelipe2011/territorio-digital-development:dev
     restart: unless-stopped
     deploy:
       replicas: 1
