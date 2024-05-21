@@ -10,6 +10,8 @@ services:
         limits:
           cpus: '0.2'
           memory: 512M
+    ports:
+      - '5000:5000'
     environment:
       - PORT=$PORT
       - DATABASE_URL=$DATABASE_URL
