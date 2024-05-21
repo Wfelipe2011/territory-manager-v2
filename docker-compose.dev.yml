@@ -29,4 +29,3 @@ volumes:
 
 networks:
   territory-manager-dev-net:
-    external: true
