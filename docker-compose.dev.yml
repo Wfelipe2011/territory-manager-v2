@@ -22,11 +22,11 @@ services:
       - NODEMAILER_USER=$NODEMAILER_USER
       - NODEMAILER_APP_PASS=$NODEMAILER_APP_PASS
     networks:
-      - td-net
+      - territory-manager-dev-net
 
 volumes:
   app-dev:
 
 networks:
-  td-net:
-    driver: bridge
+  territory-manager-dev-net:
+    external: true
