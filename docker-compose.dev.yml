@@ -19,12 +19,6 @@ services:
       - POSTGRES_DB=$POSTGRES_DB
       - NODEMAILER_USER=$NODEMAILER_USER
       - NODEMAILER_APP_PASS=$NODEMAILER_APP_PASS
-    networks:
-      - npm_public
 
 volumes:
   app-dev:
-
-networks:
-  npm_public:
-    external: true
