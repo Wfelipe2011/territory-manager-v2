@@ -149,8 +149,16 @@ model round {
 
   multitenancy multitenancy @relation(fields: [tenantId], references: [id])
   tenantId     Int          @map("tenant_id")
+  // type ThemeMode = 'default' | 'campaign' | 'letters';
+  mode         ThemeMode    @default(default)
 
   @@unique([houseId, territoryId, blockId, tenantId, roundNumber]) // Adicionando a anotação para criar a chave composta
+}
+
+enum ThemeMode {
+  default
+  campaign
+  letters
 }
 
 model user {

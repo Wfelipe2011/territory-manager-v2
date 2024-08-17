@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/infra/prisma.service';
 import { SignatureService } from '../signature/signature.service';
+import { ThemeMode } from '@prisma/client';
 
 interface Round {
   id: number;
@@ -47,6 +48,21 @@ export class RoundService {
       await this.finish(tenantId);
       await this.createRound(tenantId, rounds);
     }
+  }
+
+  async getThemeRound(tenantId: number, roundNumber: number): Promise<ThemeMode> {
+    const round = await this.prisma.round.findFirst({
+      where: {
+        tenantId,
+        roundNumber,
+      },
+    });
+
+    if (!round) {
+      return ThemeMode.default;
+    }
+
+    return round.mode;
   }
 
   private async finish(tenantId: number): Promise<void> {
