@@ -28,4 +28,12 @@ export class RoundController {
     console.log(req.user);
     return await this.roundService.getAll(req.user.tenantId);
   }
+
+  @Roles(Role.ADMIN)
+  @Get('/theme/:number')
+  async getThemeRound(@Request() req: RequestUser) {
+    const tenantId = req.user.tenantId;
+    const roundNumber = req.params.number;
+    return await this.roundService.getThemeRound(tenantId, +roundNumber);
+  }
 }
