@@ -22,6 +22,16 @@ type GenerateBlockParams = {
   tenantId: number;
 };
 
+type TokenData = {
+  id: string;
+  overseer: string;
+  territoryId: number;
+  blockId: number;
+  roles: Role[];
+  round: string;
+  tenantId: number;
+};
+
 @Injectable()
 export class SignatureService {
   private logger = new Logger(SignatureService.name);
@@ -102,9 +112,18 @@ export class SignatureService {
       where: { key: signatureId },
     });
     if (!signature) throw new NotFoundException('Assinatura não encontrada');
+    const tokenDecode = jwt.decode(signature.token) as TokenData;
+    const data = await this.prisma.round.findFirst({
+      where: {
+        territoryId: tokenDecode.territoryId,
+        roundNumber: +tokenDecode.round,
+        tenantId: tokenDecode.tenantId,
+      },
+    });
+    if (!data) throw new NotFoundException('Round não encontrado');
     return {
       token: signature.token,
-      mode: 'normal',
+      mode: data.mode,
     };
   }
 
