@@ -94,7 +94,6 @@ export class RoundService {
         roundNumber: rounds.length,
       },
       data: {
-        updateDate: new Date(),
         endDate: new Date(),
       },
     });
