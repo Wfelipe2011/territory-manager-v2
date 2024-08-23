@@ -6,7 +6,7 @@ import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enum/role.enum';
 import { VERSION } from 'src/enum/version.enum';
 import { logger } from 'src/infra/logger';
-import { RequestUser } from 'src/interfaces/RequestUser';
+import { RequestSignature, RequestUser } from 'src/interfaces/RequestUser';
 
 class InputSignature {
   @ApiProperty({ description: 'Data de expiração', example: '2021-01-01T00:00:00.000Z', required: true })
@@ -76,9 +76,10 @@ export class SignatureController {
   async createSignatureTerritoryBlock(
     @Param('territoryId') territoryIdSerialize: string,
     @Param('blockId') blockIdSerialize: string,
-    @Request() req: RequestUser
+    @Request() req: RequestSignature
   ) {
     try {
+      const { round } = req.user;
       if (!territoryIdSerialize) throw new BadRequestException('Território são obrigatório');
       const territoryId = Number(territoryIdSerialize);
       if (isNaN(territoryId)) throw new BadRequestException('Território inválido');
@@ -87,10 +88,15 @@ export class SignatureController {
       const blockId = Number(blockIdSerialize);
       if (isNaN(blockId)) throw new BadRequestException('Bloco inválido');
 
+      if (!round) throw new BadRequestException('Número da rodada são obrigatório');
+      if (isNaN(Number(round))) throw new BadRequestException('Número da rodada inválida');
+      if (Number(round) < 1) throw new BadRequestException('Número da rodada inválida');
+
       const result = await this.signatureService.generateTerritoryBlock({
         territoryId,
         blockId,
         tenantId: req.user.tenantId,
+        round: +round,
       });
 
       return result;
