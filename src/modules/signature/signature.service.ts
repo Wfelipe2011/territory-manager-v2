@@ -20,6 +20,7 @@ type GenerateBlockParams = {
   territoryId: number;
   blockId: number;
   tenantId: number;
+  round: number;
 };
 
 type TokenData = {
@@ -70,7 +71,7 @@ export class SignatureService {
     return { signature: uniqueId };
   }
 
-  async generateTerritoryBlock({ territoryId, blockId, tenantId }: GenerateBlockParams) {
+  async generateTerritoryBlock({ territoryId, blockId, tenantId, round }: GenerateBlockParams) {
     const territoryBlock = await this.prisma.territory_block.findUnique({
       where: {
         territoryId_blockId: {
@@ -86,7 +87,7 @@ export class SignatureService {
 
     const uniqueId = uuid();
     const expirationTime = new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(); // 5 horas
-    const token = this.createJWT({ id: uniqueId, territoryId, blockId, roles: [Role.PUBLICADOR], tenantId }, expirationTime);
+    const token = this.createJWT({ id: uniqueId, territoryId, blockId, roles: [Role.PUBLICADOR], tenantId, round }, expirationTime);
     const signature = await this.createSignature(uniqueId, new Date(expirationTime), token, tenantId);
 
     await this.prisma.territory_block.update({
@@ -113,6 +114,7 @@ export class SignatureService {
     });
     if (!signature) throw new NotFoundException('Assinatura não encontrada');
     const tokenDecode = jwt.decode(signature.token) as TokenData;
+    console.log({ tokenDecode });
     const data = await this.prisma.round.findFirst({
       where: {
         territoryId: tokenDecode.territoryId,

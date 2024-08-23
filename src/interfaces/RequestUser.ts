@@ -7,5 +7,5 @@ export interface RequestUser extends Request {
 }
 
 export interface RequestSignature extends Request {
-  user: { id: string; territoryId: number; blockId: number; roles: Role[] };
+  user: { id: string; territoryId: number; blockId: number; roles: Role[]; round: string; tenantId: number };
 }
