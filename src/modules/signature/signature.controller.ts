@@ -71,15 +71,15 @@ export class SignatureController {
   }
 
   @ApiBearerAuth()
-  @Post('territories/:territoryId/blocks/:blockId/signature')
+  @Post('territories/:territoryId/blocks/:blockId/signature/:round')
   @Roles(Role.ADMIN, Role.DIRIGENTE)
   async createSignatureTerritoryBlock(
     @Param('territoryId') territoryIdSerialize: string,
     @Param('blockId') blockIdSerialize: string,
+    @Param('round') round: string,
     @Request() req: RequestSignature
   ) {
     try {
-      const { round } = req.user;
       if (!territoryIdSerialize) throw new BadRequestException('Território são obrigatório');
       const territoryId = Number(territoryIdSerialize);
       if (isNaN(territoryId)) throw new BadRequestException('Território inválido');
