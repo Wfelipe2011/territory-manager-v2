@@ -76,12 +76,10 @@ export class AuthService {
     return { message: 'Email enviado' };
   }
 
-  async resetPassword(token: string, password: string) {
-    const payload = jwt.verify(token, envs.JWT_SECRET) as { id: number };
-    if (!payload) throw new UnauthorizedException('Token inválido');
+  async resetPassword(email: string, password: string) {
     const user = await this.prisma.user.findUnique({
       where: {
-        id: payload.id,
+        email,
       },
     });
     if (!user) throw new BadRequestException('Usuário não encontrado');
@@ -94,7 +92,21 @@ export class AuthService {
         password: newPassword,
       },
     });
-    return { message: 'Senha alterada' };
+
+    this.logger.log(`Gerando token ${user?.email}`);
+    const token = jwt.sign(
+      {
+        id: uuid(),
+        userId: user.id,
+        roles: ['admin'],
+        tenantId: user.tenantId,
+      },
+      envs.JWT_SECRET,
+      {
+        expiresIn: '1d',
+      }
+    );
+    return { token };
   }
 
   private createTransporter() {
