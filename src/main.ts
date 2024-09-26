@@ -2,20 +2,15 @@ import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { prisma } from './infra/prisma';
 import { VersioningType } from '@nestjs/common';
 import fs from 'fs';
 import { uuid } from './shared';
-import { WinstonModule } from 'nest-winston';
-import { logger } from './infra/logger';
 process.env.INSTANCE_ID = `pod-${uuid()}`;
 process.env.TZ = 'America/Sao_Paulo';
 
 async function bootstrap() {
   const { version, description, title } = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
-  const app = await NestFactory.create(AppModule, {
-    logger: WinstonModule.createLogger(logger),
-  });
+  const app = await NestFactory.create(AppModule);
   app.enableCors();
   app.enableVersioning({
     type: VersioningType.URI,

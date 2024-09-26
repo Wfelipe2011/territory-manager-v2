@@ -29,6 +29,7 @@ export class AuthService {
       {
         id: uuid(),
         userId: user.id,
+        userName: user.name,
         roles: ['admin'],
         tenantId: user.tenantId,
       },
@@ -98,6 +99,7 @@ export class AuthService {
       {
         id: uuid(),
         userId: user.id,
+        userName: user.name,
         roles: ['admin'],
         tenantId: user.tenantId,
       },
