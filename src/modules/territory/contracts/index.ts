@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { RawTerritoryAll, RawTerritoryOne } from '../interfaces';
 import dayjs from 'dayjs';
-import { logger } from 'src/infra/logger';
 
 export class RoundParams {
   @ApiProperty({ required: true, description: 'Qual a rodada do território', type: Number, example: 1 })
