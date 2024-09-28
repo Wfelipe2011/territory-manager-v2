@@ -1,4 +1,17 @@
-import { BadRequestException, Controller, ForbiddenException, Get, Param, Query, Request, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  ForbiddenException,
+  Get,
+  Logger,
+  Param,
+  Post,
+  Query,
+  Request,
+  Sse,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { TerritoryService } from './territory.service';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Role } from 'src/enum/role.enum';
@@ -8,6 +21,10 @@ import { VERSION } from 'src/enum/version.enum';
 import { SignatureIsValid } from '../signature/usecase/SignatureIsValid';
 import { logger } from 'src/infra/logger';
 import { RequestSignature, RequestUser } from 'src/interfaces/RequestUser';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { UploadTerritoryUseCase, Row } from './upload-territory.usecase';
+import { Loggable } from 'src/infra/loggable.decorate';
+import { Observable } from 'rxjs';
 
 @ApiTags('Territórios')
 @ApiBearerAuth()
@@ -17,7 +34,10 @@ import { RequestSignature, RequestUser } from 'src/interfaces/RequestUser';
 })
 export class TerritoryController {
   private signatureIsValid: SignatureIsValid;
-  constructor(readonly territoryService: TerritoryService) {
+  constructor(
+    readonly territoryService: TerritoryService,
+    readonly uploadTerritoryUseCase: UploadTerritoryUseCase
+  ) {
     this.signatureIsValid = new SignatureIsValid(territoryService.prisma);
   }
 
@@ -48,7 +68,6 @@ export class TerritoryController {
       throw error;
     }
   }
-  // findBlockByTerritoryId
 
   @ApiResponse({ status: 200, type: TerritoryTypesOutput, isArray: true })
   @ApiOperation({ summary: 'Busca todos os tipos de territórios' })
@@ -139,9 +158,27 @@ export class TerritoryController {
       throw error;
     }
   }
-}
 
-type TerritoryEditOutput = {
-  name: string;
-  houses: any;
-};
+  @ApiResponse({ status: 200 })
+  @ApiOperation({ summary: 'Upload de arquivo .xlsx' })
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  @Roles(Role.ADMIN)
+  async uploadFile(@UploadedFile() file: Express.Multer.File, @Request() req: RequestSignature, @Loggable() logger: Logger): Promise<Row[]> {
+    try {
+      logger.log(`Usuário está fazendo upload de um arquivo`);
+      if (!file) throw new BadRequestException('Arquivo é obrigatório');
+      return this.uploadTerritoryUseCase.execute(
+        {
+          tenantId: req.user.tenantId,
+          userId: req.user.userId,
+          file,
+        },
+        logger
+      );
+    } catch (error) {
+      logger.error(error);
+      throw error;
+    }
+  }
+}

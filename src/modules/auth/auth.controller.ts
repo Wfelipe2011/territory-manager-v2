@@ -27,10 +27,9 @@ export class AuthController {
     return this.authService.forgotPassword(body.email);
   }
 
-  @Public()
   @ApiOperation({ summary: 'Reset de senha' })
   @Post('reset-password')
-  async resetPassword(@Body() body: { token: string; password: string }) {
-    return this.authService.resetPassword(body.token, body.password);
+  async resetPassword(@Body() body: { email: string; password: string }) {
+    return this.authService.resetPassword(body.email, body.password);
   }
 }
