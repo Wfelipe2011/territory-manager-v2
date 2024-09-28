@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/infra/prisma.service';
 import xlsx from 'node-xlsx';
 import EventEmitter from 'events';
-import { UploadGateway } from '../gateway/upload.gateway';
+// import { UploadGateway } from '../gateway/upload.gateway';
 
 export interface Row {
   TipoTerritorio: string;
@@ -19,8 +19,7 @@ export interface Row {
 export class UploadTerritoryUseCase {
   private eventEmitter: EventEmitter;
   constructor(
-    readonly prisma: PrismaService,
-    readonly uploadGateway: UploadGateway
+    readonly prisma: PrismaService // readonly uploadGateway: UploadGateway
   ) {}
 
   onProgress(callback: (progress: number) => void) {
@@ -44,7 +43,7 @@ export class UploadTerritoryUseCase {
       const progress = Math.round(((i + 1) / totalRows) * 100);
       if (progress > porcentagem) {
         porcentagem = progress;
-        this.uploadGateway.sendProgress(body.userId, progress);
+        // this.uploadGateway.sendProgress(body.userId, progress);
       }
     }
 
