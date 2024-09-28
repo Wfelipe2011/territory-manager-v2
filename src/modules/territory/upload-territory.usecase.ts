@@ -47,7 +47,6 @@ export class UploadTerritoryUseCase {
         this.uploadGateway.sendProgress(body.userId, progress);
       }
     }
-    await this.deleteTenant(body.tenantId);
 
     return rows;
   }
