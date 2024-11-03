@@ -210,7 +210,7 @@ export class UploadTerritoryUseCase {
   async createTerritory(nameTerritory: string, type: { id: number; name: string; tenantId: number }, tenantId: number) {
     let territory = await this.prisma.territory.findFirst({
       where: {
-        name: nameTerritory,
+        name: String(nameTerritory),
         typeId: type.id,
         tenantId: tenantId,
       },
