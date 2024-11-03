@@ -218,7 +218,7 @@ export class UploadTerritoryUseCase {
     if (!territory) {
       territory = await this.prisma.territory.create({
         data: {
-          name: nameTerritory,
+          name: String(nameTerritory),
           multitenancy: {
             connect: {
               id: tenantId,
