@@ -19,11 +19,13 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { AddressModule } from './modules/address/address.module';
 import { TenancyModule } from './modules/tenancy/tenancy.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
     AuthModule,
     TerritoryModule,
+    DashboardModule,
     HouseModule,
     RoundModule,
     SignatureModule,
