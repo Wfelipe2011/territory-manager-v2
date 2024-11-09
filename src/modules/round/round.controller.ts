@@ -23,10 +23,10 @@ export class RoundController {
   }
 
   @Roles(Role.ADMIN)
-  @Get('/')
+  @Get('/info')
   async getAll(@Request() req: RequestUser): Promise<any> {
     console.log(req.user);
-    return await this.roundService.getAll(req.user.tenantId);
+    return await this.roundService.getRoundInfo(req.user.tenantId);
   }
 
   @Roles(Role.ADMIN)
@@ -35,5 +35,11 @@ export class RoundController {
     const tenantId = req.user.tenantId;
     const roundNumber = req.params.number;
     return await this.roundService.getThemeRound(tenantId, +roundNumber);
+  }
+
+  @Roles(Role.ADMIN)
+  @Get('/fix-round-info')
+  async fixRound(@Request() req: RequestUser): Promise<any> {
+    return await this.roundService.fixRoundInfo();
   }
 }

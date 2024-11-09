@@ -24,14 +24,69 @@ export class RoundService {
     private readonly signatureService: SignatureService
   ) {}
 
-  async getAll(tenantId: number): Promise<any> {
-    const rounds = await this.prisma.round.findMany({
-      where: {
-        tenantId,
-      },
-      distinct: ['roundNumber'],
-    });
+  async getRoundInfo(tenantId: number): Promise<any> {
+    const rounds = await this.prisma.$queryRaw`
+    SELECT 
+      ri.id,
+      ri.round_number,
+      ri.name,
+      ri.theme,
+      ri.tenant_id,
+      ri.color_primary,
+      ri.color_secondary,
+      MIN(r.start_date) AS start_date,
+      MAX(r.end_date) AS end_date,
+      CAST(SUM(CASE WHEN r.completed = TRUE THEN 1 ELSE 0 END) AS INT) AS completed,
+      CAST(SUM(CASE WHEN r.completed = FALSE THEN 1 ELSE 0 END) AS INT) AS not_completed
+    FROM 
+        round_info ri
+    INNER JOIN 
+        round r ON r.round_number = ri.round_number 
+                AND r.tenant_id = ri.tenant_id
+    WHERE 
+        r.tenant_id = ${tenantId}
+    GROUP BY 
+        ri.id, ri.round_number, ri.name, ri.theme, ri.tenant_id, 
+        ri.color_primary, ri.color_secondary
+    ORDER BY 
+        ri.round_number;
+    `;
     return rounds;
+  }
+
+  async fixRoundInfo(): Promise<any> {
+    const rawRounds = (await this.prisma.$queryRaw`
+      SELECT r.round_number, r.tenant_id, r."mode"
+      FROM round r
+      GROUP BY r.round_number, r.tenant_id, r."mode"
+      ORDER BY r.tenant_id ASC, r.round_number ASC
+    `) as any[];
+    for (const round of rawRounds) {
+      let name = 'Residencial';
+      let colorPrimary = '#7AAD58';
+      let colorSecondary = '#CBE6BA';
+      if (round.mode === 'letters') {
+        name = 'Cartas';
+        colorPrimary = '#E29D4F';
+        colorSecondary = '#FDD09FB2';
+      }
+      if (round.mode === 'campaign') {
+        name = 'Campanha';
+        colorPrimary = '#5B98AB';
+        colorSecondary = '#EAF2F4';
+      }
+      await this.prisma.round_info.create({
+        data: {
+          roundNumber: round.round_number,
+          tenantId: round.tenant_id,
+          theme: round.mode as any,
+          name,
+          colorPrimary,
+          colorSecondary,
+        },
+      });
+    }
+    return rawRounds;
   }
 
   async startRound(tenantId: number): Promise<void> {

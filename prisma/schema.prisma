@@ -129,6 +129,19 @@ model territory_overseer {
   @@index([territoryId, roundNumber])
 }
 
+model round_info {
+  id             Int       @id @unique @default(autoincrement())
+  roundNumber    Int       @map("round_number")
+  name           String
+  theme          ThemeMode
+  tenantId       Int       @map("tenant_id")
+  colorPrimary   String?   @map("color_primary")
+  colorSecondary String?   @map("color_secondary")
+
+  // index unico: tenantId, roundNumber
+  @@unique([tenantId, roundNumber]) // Adicionando a anotação para criar a chave composta
+}
+
 // index unico: houseId, territoryId, blockId, tenantId, roundNumber
 model round {
   id          Int @id @unique @default(autoincrement())
