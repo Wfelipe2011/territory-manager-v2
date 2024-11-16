@@ -25,8 +25,14 @@ export class RoundController {
   @Roles(Role.ADMIN)
   @Get('/info')
   async getAll(@Request() req: RequestUser): Promise<any> {
-    console.log(req.user);
     return await this.roundService.getRoundInfo(req.user.tenantId);
+  }
+
+  @Roles(Role.ADMIN)
+  @Get('/info/:roundNumber')
+  async getOneByRoundNumber(@Request() req: RequestUser): Promise<any> {
+    const roundNumber = req.params.roundNumber;
+    return await this.roundService.getRoundInfoByRoundNumber(req.user.tenantId, +roundNumber);
   }
 
   @Roles(Role.ADMIN)

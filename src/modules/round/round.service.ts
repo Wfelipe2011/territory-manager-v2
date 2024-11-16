@@ -54,6 +54,37 @@ export class RoundService {
     return rounds;
   }
 
+  async getRoundInfoByRoundNumber(tenantId: number, roundNumber: number): Promise<any> {
+    const [round] = await this.prisma.$queryRaw<any[]>`
+    SELECT 
+      ri.id,
+      ri.round_number,
+      ri.name,
+      ri.theme,
+      ri.tenant_id,
+      ri.color_primary,
+      ri.color_secondary,
+      MIN(r.start_date) AS start_date,
+      MAX(r.end_date) AS end_date,
+      CAST(SUM(CASE WHEN r.completed = TRUE THEN 1 ELSE 0 END) AS INT) AS completed,
+      CAST(SUM(CASE WHEN r.completed = FALSE THEN 1 ELSE 0 END) AS INT) AS not_completed
+    FROM 
+        round_info ri
+    INNER JOIN 
+        round r ON r.round_number = ri.round_number 
+                AND r.tenant_id = ri.tenant_id
+    WHERE 
+        r.tenant_id = ${tenantId}
+        AND r.round_number = ${roundNumber}
+    GROUP BY 
+        ri.id, ri.round_number, ri.name, ri.theme, ri.tenant_id, 
+        ri.color_primary, ri.color_secondary
+    ORDER BY 
+        ri.round_number;
+    `;
+    return round;
+  }
+
   async fixRoundInfo(): Promise<any> {
     const rawRounds = (await this.prisma.$queryRaw`
       SELECT r.round_number, r.tenant_id, r."mode"
