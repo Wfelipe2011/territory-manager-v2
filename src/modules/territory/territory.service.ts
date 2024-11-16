@@ -26,7 +26,8 @@ export class TerritoryService {
       INNER JOIN round r ON r.territory_id = t.id and r.round_number = ${+territoryDto.round}
       LEFT JOIN territory_overseer to2 ON to2.territory_id = t.id AND to2.signature_id IS NOT NULL AND to2.round_number = ${+territoryDto.round}
       LEFT JOIN signature s ON s.id = to2.signature_id
-      WHERE t.type_id = ${+type} AND t.tenant_id = ${+tenantId}
+      WHERE t.tenant_id = ${+tenantId}
+      ${type ? Prisma.sql`AND t.type_id = ${+type}` : Prisma.empty}
       ${filter ? Prisma.sql`AND LOWER(t.name) LIKE '%' || ${filter.toLowerCase()} || '%'` : Prisma.empty} 
       GROUP BY t.id, t.name, to2.overseer, s.key, s.expiration_date
       ORDER BY t.name ASC;
