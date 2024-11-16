@@ -15,6 +15,7 @@ export class TerritoryService {
     const territories = (await this.prisma.$queryRaw`
       SELECT 
           t.id as territory_id,
+          t.type_id,
           t.name,
           to2.overseer,
           s.key,

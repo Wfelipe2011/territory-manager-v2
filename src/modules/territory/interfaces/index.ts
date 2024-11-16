@@ -1,5 +1,6 @@
 export interface RawTerritoryAll {
   territory_id: number;
+  type_id: number;
   name: string;
   overseer: string;
   signature: number;

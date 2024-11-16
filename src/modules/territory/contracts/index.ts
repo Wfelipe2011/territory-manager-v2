@@ -73,6 +73,8 @@ class PositiveCompleted {
 export class TerritoryAllOutput {
   @ApiProperty({ required: false, description: 'Id do território', type: Number, example: 1 })
   territoryId: number;
+  @ApiProperty({ required: false, description: 'Id do tipo de território', type: Number, example: 1 })
+  typeId: number;
   @ApiProperty({ required: false, description: 'Nome do território', type: String, example: 'Vila Velha' })
   name: string;
   @ApiProperty({ required: false, description: 'Nome do dirigente', type: String, example: 'João' })
@@ -91,6 +93,7 @@ export class TerritoryAllOutput {
 
   constructor(territoryAll: RawTerritoryAll) {
     this.territoryId = territoryAll.territory_id;
+    this.typeId = territoryAll.type_id;
     this.name = territoryAll.name;
     this.overseer = territoryAll.overseer;
     this.signature = {
