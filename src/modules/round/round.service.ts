@@ -3,18 +3,20 @@ import { PrismaService } from 'src/infra/prisma.service';
 import { SignatureService } from '../signature/signature.service';
 import { ThemeMode } from '@prisma/client';
 
-interface Round {
-  id: number;
-  roundNumber: number;
-  houseId: number;
-  territoryId: number;
-  blockId: number;
-  completed: boolean;
-  startDate: Date;
-  updateDate: Date | null;
-  endDate: Date | null;
-  tenantId: number;
-}
+const themeColors = {
+  default: {
+    primary: '#7AAD58',
+    secondary: '#CBE6BA',
+  },
+  letters: {
+    primary: '#E29D4F',
+    secondary: '#FDD09FB2',
+  },
+  campaign: {
+    primary: '#5B98AB',
+    secondary: '#EAF2F4',
+  },
+};
 
 @Injectable()
 export class RoundService {
@@ -120,20 +122,19 @@ export class RoundService {
     return rawRounds;
   }
 
-  async startRound(tenantId: number): Promise<void> {
-    const rounds = await this.prisma.round.findMany({
+  async startRound(tenantId: number, body: { name: string; theme: string }): Promise<void> {
+    const rounds = await this.prisma.round_info.findMany({
       where: {
         tenantId,
       },
       distinct: ['roundNumber'],
     });
 
-    if (!rounds.length) {
-      await this.createRound(tenantId, rounds);
-    } else {
-      await this.finish(tenantId);
-      await this.createRound(tenantId, rounds);
-    }
+    await this.createRound(tenantId, rounds, body);
+  }
+
+  async finishRound(tenantId: number, roundNumber: number): Promise<void> {
+    await this.finish(tenantId, roundNumber);
   }
 
   async getThemeRound(tenantId: number, roundNumber: number): Promise<ThemeMode> {
@@ -151,18 +152,11 @@ export class RoundService {
     return round.mode;
   }
 
-  private async finish(tenantId: number): Promise<void> {
-    const rounds = await this.prisma.round.findMany({
-      where: {
-        tenantId,
-      },
-      distinct: ['roundNumber'],
-    });
-
+  public async finish(tenantId: number, roundNumber: number): Promise<void> {
     const territories = await this.prisma.round.findMany({
       where: {
         tenantId,
-        roundNumber: rounds.length,
+        roundNumber,
       },
       select: {
         territoryId: true,
@@ -171,47 +165,61 @@ export class RoundService {
       distinct: ['territoryId'],
     });
 
-    this.logger.log(`Finalizando rodada ${rounds.length} para congregação ${territories[0].multitenancy.name}`);
+    this.logger.log(`Finalizando rodada ${roundNumber} para congregação ${territories[0].multitenancy.name}`);
     await Promise.allSettled(territories.map(async territory => this.signatureService.deleteTerritorySignature(territory.territoryId)));
 
     await this.prisma.round.updateMany({
       where: {
         tenantId,
-        roundNumber: rounds.length,
+        roundNumber,
       },
       data: {
         endDate: new Date(),
       },
     });
 
-    this.logger.log(`Rodada ${rounds.length} para congregação ${territories[0].multitenancy.name} finalizada`);
+    this.logger.log(`Rodada ${roundNumber} para congregação ${territories[0].multitenancy.name} finalizada`);
   }
 
-  private async createRound(tenantId: number, rounds: Round[]) {
-    const houses = await this.prisma.house.findMany({
-      where: {
-        tenantId,
-      },
-      include: {
-        address: true,
-        block: true,
-        territory: true,
-        multitenancy: true,
-      },
-    });
+  private async createRound(tenantId: number, rounds: any[], body: { name: string; theme: string }) {
+    await this.prisma.$transaction(async txt => {
+      const houses = await txt.house.findMany({
+        where: {
+          tenantId,
+        },
+        include: {
+          address: true,
+          block: true,
+          territory: true,
+          multitenancy: true,
+        },
+      });
 
-    await this.prisma.round.createMany({
-      data: houses.map(house => {
-        return {
-          houseId: house.id,
-          blockId: house.blockId,
-          territoryId: house.territoryId,
-          tenantId: house.tenantId,
-          completed: false,
+      const roundInfo = await txt.round_info.create({
+        data: {
           roundNumber: rounds.length + 1,
-        };
-      }),
+          name: body.name,
+          theme: body.theme as ThemeMode,
+          colorPrimary: themeColors[body.theme as keyof typeof themeColors].primary,
+          colorSecondary: themeColors[body.theme as keyof typeof themeColors].secondary,
+          tenantId,
+        },
+      });
+
+      await txt.round.createMany({
+        data: houses.map(house => {
+          return {
+            houseId: house.id,
+            blockId: house.blockId,
+            territoryId: house.territoryId,
+            tenantId: house.tenantId,
+            completed: false,
+            roundNumber: roundInfo.roundNumber,
+            mode: roundInfo.theme,
+          };
+        }),
+      });
+      this.logger.log(`Rodada ${roundInfo.roundNumber} para congregação ${houses[0].multitenancy.name} iniciada`);
     });
-    this.logger.log(`Rodada ${rounds.length + 1} para congregação ${houses[0].multitenancy.name} iniciada`);
   }
 }

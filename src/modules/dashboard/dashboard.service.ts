@@ -38,7 +38,7 @@ export class DashboardService {
     SELECT
       CAST(SUM(CASE WHEN t.name = 'Residencial' THEN 1 ELSE 0 END) AS INT) AS residential,
       CAST(SUM(CASE WHEN t.name = 'Comercial' THEN 1 ELSE 0 END) AS INT) AS commercial,
-      CAST(SUM(CASE WHEN t.name = 'Predial' THEN 1 ELSE 0 END) AS INT) AS building,
+      CAST(SUM(CASE WHEN t.name IN ('Interfone', 'Predial-Interno', 'Predial-Externo') THEN 1 ELSE 0 END) AS INT) AS building,
       CAST(SUM(1) AS INT) AS total
     FROM
       territory tr

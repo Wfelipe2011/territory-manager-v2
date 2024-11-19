@@ -1,5 +1,5 @@
 import { RoundService } from './round.service';
-import { Controller, Get, Logger, Post, Request } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Post, Request } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enum/role.enum';
@@ -18,8 +18,18 @@ export class RoundController {
 
   @Roles(Role.ADMIN)
   @Post('/start')
-  async startAll(@Request() req: RequestUser): Promise<void> {
-    await this.roundService.startRound(req.user.tenantId);
+  async startAll(@Request() req: RequestUser, @Body() body: { name: string; theme: string }): Promise<void> {
+    await this.roundService.startRound(req.user.tenantId, body);
+  }
+
+  @Roles(Role.ADMIN)
+  @Post('/finish')
+  async finishAll(@Request() req: RequestUser, @Body() body: { roundNumber: number }): Promise<void> {
+    if (!body.roundNumber) {
+      this.logger.error('Round number is required');
+      throw new Error('Round number is required');
+    }
+    await this.roundService.finishRound(req.user.tenantId, +body.roundNumber);
   }
 
   @Roles(Role.ADMIN)
