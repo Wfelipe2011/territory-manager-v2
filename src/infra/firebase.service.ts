@@ -1,15 +1,15 @@
 import * as admin from 'firebase-admin';
 import { Injectable } from '@nestjs/common';
-import * as path from 'path';
+import { PrismaService } from './prisma.service';
 
 @Injectable()
 export class FirebaseService {
-  constructor() {
-    const serviceAccount = path.join(__dirname, '../../territorio-digital-firebase-adminsdk-yccxd-cb53a20e51.json');
-
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      storageBucket: 'territorio-digital.appspot.com',
+  constructor(prisma: PrismaService) {
+    prisma.firebase.findFirst().then(firebase => {
+      admin.initializeApp({
+        credential: admin.credential.cert(firebase?.config as any),
+        storageBucket: 'territorio-digital.appspot.com',
+      });
     });
   }
 
@@ -32,5 +32,25 @@ export class FirebaseService {
       });
       blobStream.end(file.buffer);
     });
+  }
+
+  async deleteFileByUrl(fileUrl: string): Promise<void> {
+    const bucket = admin.storage().bucket();
+
+    // Extrair o caminho do arquivo a partir da URL
+    const filePath = fileUrl.replace('https://storage.googleapis.com/territorio-digital.appspot.com/', '');
+
+    // Deletar o arquivo
+    const file = bucket.file(filePath);
+
+    return file
+      .delete()
+      .then(() => {
+        console.log(`Arquivo ${filePath} deletado com sucesso.`);
+      })
+      .catch(error => {
+        console.error(`Erro ao deletar o arquivo ${filePath}:`, error);
+        throw new Error('Erro ao deletar o arquivo');
+      });
   }
 }

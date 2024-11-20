@@ -71,6 +71,11 @@ model house {
   tenantId     Int          @map("tenant_id")
 }
 
+model firebase {
+  id     Int  @id @unique @default(autoincrement())
+  config Json
+}
+
 model multitenancy {
   id    Int     @id @unique @default(autoincrement())
   name  String
