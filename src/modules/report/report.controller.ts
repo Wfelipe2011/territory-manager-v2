@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Logger, Param, ParseIntPipe, Post, Request } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Param, ParseIntPipe, Post, UsePipes, ValidationPipe } from '@nestjs/common';
 import { VERSION } from 'src/enum/version.enum';
 import { PrismaService } from 'src/infra/prisma.service';
 import { Role } from 'src/enum/role.enum';
 import { Roles } from 'src/decorators/roles.decorator';
-import { Prisma, ReportType } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { RequestUser } from 'src/interfaces/RequestUser';
+import { CreateReportDto } from './contracts/CreateReport';
+import { CurrentUser } from 'src/decorators/current-user.decorator';
 
 @Controller({
   version: VERSION.V1,
@@ -50,7 +52,8 @@ export class ReportController {
 
   @Post()
   @Roles(Role.ADMIN, Role.DIRIGENTE, Role.PUBLICADOR)
-  async createReport(@Request() req: RequestUser, @Body() body: CreateReport) {
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async createReport(@CurrentUser() user: RequestUser['user'], @Body() body: CreateReportDto) {
     return this.prismaService.$transaction(async tsx => {
       let backupHouse = null;
       if (body?.id) {
@@ -65,7 +68,7 @@ export class ReportController {
         where: { id: body.id ?? 0 },
         create: {
           ...body,
-          tenantId: req.user.tenantId,
+          tenantId: user.tenantId,
         },
         update: {
           ...body,
@@ -79,7 +82,7 @@ export class ReportController {
             roundNumber: true,
           },
           where: {
-            tenantId: req.user.tenantId,
+            tenantId: user.tenantId,
             endDate: null,
           },
           distinct: ['roundNumber'],
@@ -181,9 +184,13 @@ export class ReportController {
       const backupData = house.backupData as Prisma.JsonObject;
       this.logger.debug(`Backup: ${JSON.stringify(backupData, null, 2)}`);
       this.logger.debug(`Report: ${JSON.stringify(house, null, 2)}`);
-      await tsx.house.delete({
-        where: {
-          id,
+      await tsx.house.update({
+        where: { id },
+        data: {
+          ...backupData,
+          backupData: Prisma.JsonNull,
+          reportType: null,
+          observations: null,
         },
       });
       this.logger.log(`Backup restaurado com sucesso`);
@@ -192,17 +199,3 @@ export class ReportController {
     });
   }
 }
-
-type CreateReport = {
-  id?: number;
-  territoryId: number;
-  blockId: number;
-  addressId: number;
-  observations: string;
-  legend: string;
-  number: string;
-  reportType: ReportType;
-  phone?: string;
-  order?: number;
-  complement?: string;
-};
