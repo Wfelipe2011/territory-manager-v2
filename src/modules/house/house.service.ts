@@ -52,6 +52,7 @@ export class HouseService {
           h.legend,
           h."order",
           h.dont_visit,
+          h.report_type,
           round.completed as status,
           a."name" as street_name,
           b."name" as block_name,
@@ -82,6 +83,7 @@ export class HouseService {
         order: house.order,
         status: house.status,
         dontVisit: house.dont_visit,
+        reportType: house.report_type,
       })),
     };
 

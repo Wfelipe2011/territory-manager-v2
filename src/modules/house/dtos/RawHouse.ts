@@ -9,4 +9,5 @@ export interface RawHouse {
   block_name: string;
   territory_name: string;
   dont_visit: boolean;
+  report_type: string;
 }

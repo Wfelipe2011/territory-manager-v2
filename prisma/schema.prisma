@@ -40,21 +40,30 @@ model block {
   round           round[]
 }
 
+enum ReportType {
+  add
+  remove
+  update
+}
+
 model house {
-  id           Int       @id @unique @default(autoincrement())
-  number       String
-  complement   String?
-  legend       String?
-  order        Int?
-  dontVisit    Boolean   @default(false) @map("dont_visit")
-  observations String?
-  block        block     @relation(fields: [blockId], references: [id])
-  blockId      Int       @map("block_id")
-  address      address   @relation(fields: [addressId], references: [id])
-  addressId    Int       @map("address_id")
+  id          Int       @id @unique @default(autoincrement())
+  number      String
+  dontVisit   Boolean   @default(false) @map("dont_visit")
+  block       block     @relation(fields: [blockId], references: [id])
+  blockId     Int       @map("block_id")
+  address     address   @relation(fields: [addressId], references: [id])
+  addressId   Int       @map("address_id")
+  territory   territory @relation(fields: [territoryId], references: [id])
+  territoryId Int       @map("territory_id")
+
   phone        String?
-  territory    territory @relation(fields: [territoryId], references: [id])
-  territoryId  Int       @map("territory_id")
+  legend       String?
+  complement   String?
+  order        Int?
+  observations String?
+  reportType   ReportType? @map("report_type")
+  backupData   Json?       @map("backup_data")
 
   // Relacionamentos
   rounds       round[]

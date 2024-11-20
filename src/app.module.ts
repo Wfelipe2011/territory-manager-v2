@@ -20,6 +20,7 @@ import { join } from 'path';
 import { AddressModule } from './modules/address/address.module';
 import { TenancyModule } from './modules/tenancy/tenancy.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { ReportModule } from './modules/report/report.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
       rootPath: join(__dirname, '..', 'public'), // Caminho para a pasta pública
     }),
     TenancyModule,
+    ReportModule,
   ],
   controllers: [AppController],
   providers: [
