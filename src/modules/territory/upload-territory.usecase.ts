@@ -20,7 +20,7 @@ export class UploadTerritoryUseCase {
   private eventEmitter: EventEmitter;
   constructor(
     readonly prisma: PrismaService // readonly uploadGateway: UploadGateway
-  ) {}
+  ) { }
 
   onProgress(callback: (progress: number) => void) {
     this.eventEmitter.on('progress', callback);
@@ -134,7 +134,7 @@ export class UploadTerritoryUseCase {
   ) {
     return await this.prisma.house.create({
       data: {
-        number: String(row.Numero) + '-' + row.Ordem,
+        number: String(row.Numero),
         territory: {
           connect: {
             id: territory.id,
