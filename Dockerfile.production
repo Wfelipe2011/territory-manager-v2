@@ -25,6 +25,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY package*.json ./
 
+RUN apk add --no-cache openssl1.1-compat libc6-compat
 # Install production dependencies (excluding devDependencies)
 RUN npm ci --only=prod --quiet
 
