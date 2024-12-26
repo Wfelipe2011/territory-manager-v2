@@ -17,7 +17,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # Use uma imagem base mais leve para executar o aplicativo
-FROM node:18-alpine
+FROM node:18-slim
 WORKDIR /app
 
 # Copy only necessary files from the builder stage
@@ -25,7 +25,6 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY package*.json ./
 
-RUN apk add --no-cache openssl1.1-compat libc6-compat
 # Install production dependencies (excluding devDependencies)
 RUN npm ci --only=prod --quiet
 
