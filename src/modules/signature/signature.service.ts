@@ -37,7 +37,7 @@ type TokenData = {
 export class SignatureService {
   private logger = new Logger(SignatureService.name);
   private signatureDate = new SignatureDate();
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async generateTerritory({ overseer, expirationTime, territoryId, tenantId, round }: GenerateTerritoryParams): Promise<{ signature: string }> {
     this.signatureDate.isValidDate(expirationTime);
@@ -202,7 +202,7 @@ export class SignatureService {
     });
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_1AM)
+  @Cron(CronExpression.EVERY_10_MINUTES)
   async deleteSignatureExpired() {
     this.logger.log('Deletando assinaturas expiradas');
     const { count } = await this.prisma.signature.deleteMany({
