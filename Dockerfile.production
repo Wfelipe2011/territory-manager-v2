@@ -27,7 +27,7 @@ COPY package*.json ./
 
 # Install production dependencies (excluding devDependencies)
 RUN npm ci --only=prod --quiet
-
+RUN apt-get update -y && apt-get install -y openssl
 RUN npx prisma generate
 
 # Defina o comando de inicialização para o aplicativo em produção
