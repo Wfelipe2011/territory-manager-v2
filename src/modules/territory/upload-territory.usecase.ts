@@ -20,7 +20,7 @@ export class UploadTerritoryUseCase {
   private eventEmitter: EventEmitter;
   constructor(
     readonly prisma: PrismaService // readonly uploadGateway: UploadGateway
-  ) {}
+  ) { }
 
   onProgress(callback: (progress: number) => void) {
     this.eventEmitter.on('progress', callback);
@@ -134,7 +134,7 @@ export class UploadTerritoryUseCase {
   ) {
     return await this.prisma.house.create({
       data: {
-        number: String(row.Numero) + '-' + row.Ordem,
+        number: String(row.Numero),
         territory: {
           connect: {
             id: territory.id,
@@ -210,7 +210,7 @@ export class UploadTerritoryUseCase {
   async createTerritory(nameTerritory: string, type: { id: number; name: string; tenantId: number }, tenantId: number) {
     let territory = await this.prisma.territory.findFirst({
       where: {
-        name: nameTerritory,
+        name: String(nameTerritory),
         typeId: type.id,
         tenantId: tenantId,
       },
@@ -218,7 +218,7 @@ export class UploadTerritoryUseCase {
     if (!territory) {
       territory = await this.prisma.territory.create({
         data: {
-          name: nameTerritory,
+          name: String(nameTerritory),
           multitenancy: {
             connect: {
               id: tenantId,
