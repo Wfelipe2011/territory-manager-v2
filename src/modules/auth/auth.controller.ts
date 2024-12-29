@@ -10,7 +10,7 @@ import { VERSION } from 'src/enum/version.enum';
   version: VERSION.V1,
 })
 export class AuthController {
-  constructor(readonly authService: AuthService) {}
+  constructor(readonly authService: AuthService) { }
 
   @Public()
   @ApiOperation({ summary: 'Autenticação de usuário' })
@@ -31,5 +31,11 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(@Body() body: { email: string; password: string }) {
     return this.authService.resetPassword(body.email, body.password);
+  }
+
+  @Public()
+  @Post('hash-password')
+  async hashPassword(@Body() body: { password: string }) {
+    return this.authService.hashPassword(body.password);
   }
 }
