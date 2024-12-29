@@ -145,8 +145,8 @@ export class UploadTerritoryUseCase {
             id: address.id,
           },
         },
-        legend: 'Residência',
-        observations: row['Legenda'],
+        legend: row['Legenda'] || 'Residência',
+        observations: '',
         block: {
           connect: {
             id: block.id,
