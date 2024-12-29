@@ -112,7 +112,9 @@ export class AuthService {
   }
 
   hashPassword(password: string) {
-    return bcrypt.hash(password, 10);
+    return {
+      password: bcrypt.hashSync(password, 10),
+    }
   }
 
   private createTransporter() {
