@@ -17,20 +17,20 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Usuário logado com sucesso', type: LoginOutput })
   @Post('login')
   async login(@Body() loginDto: LoginInput) {
-    return this.authService.login(loginDto.email, loginDto.password);
+    return this.authService.login(loginDto.email.toLocaleLowerCase(), loginDto.password);
   }
 
   @Public()
   @ApiOperation({ summary: 'Recuperação de senha' })
   @Post('forgot-password')
   async forgotPassword(@Body() body: { email: string }) {
-    return this.authService.forgotPassword(body.email);
+    return this.authService.forgotPassword(body.email.toLocaleLowerCase());
   }
 
   @ApiOperation({ summary: 'Reset de senha' })
   @Post('reset-password')
   async resetPassword(@Body() body: { email: string; password: string }) {
-    return this.authService.resetPassword(body.email, body.password);
+    return this.authService.resetPassword(body.email.toLocaleLowerCase(), body.password);
   }
 
   @Public()
