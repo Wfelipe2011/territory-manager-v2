@@ -15,8 +15,6 @@ import { HouseModule } from './modules/house/house.module';
 import { EventsModule } from './modules/gateway/event.module';
 import { PrismaService } from './infra/prisma.service';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
 import { AddressModule } from './modules/address/address.module';
 import { TenancyModule } from './modules/tenancy/tenancy.module';
 
@@ -39,9 +37,6 @@ import { TenancyModule } from './modules/tenancy/tenancy.module';
     ThrottlerModule.forRoot({
       ttl: 5, // seconds
       limit: 10000, //
-    }),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'), // Caminho para a pasta pública
     }),
     TenancyModule,
   ],
@@ -66,4 +61,4 @@ import { TenancyModule } from './modules/tenancy/tenancy.module';
     PrismaService,
   ],
 })
-export class AppModule {}
+export class AppModule { }
