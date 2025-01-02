@@ -1,5 +1,5 @@
-import { BadGatewayException, Logger, UseGuards } from '@nestjs/common';
-import { SubscribeMessage, MessageBody, WebSocketGateway, ConnectedSocket, WebSocketServer } from '@nestjs/websockets';
+import { Logger, UseGuards } from '@nestjs/common';
+import { SubscribeMessage, MessageBody, WebSocketGateway, ConnectedSocket, WebSocketServer, OnGatewayInit } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 import { PrismaService } from 'src/infra/prisma.service';
 import { AuthGuard } from '../auth/guard/auth.guard';
@@ -12,19 +12,28 @@ interface User {
 }
 
 @WebSocketGateway({ transports: ['websocket'] })
-export class EventsGateway {
+export class EventsGateway implements OnGatewayInit {
   @WebSocketServer() server: Server;
   private logger = new Logger(EventsGateway.name);
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
+
+  afterInit() {
+    this.logger.log('WebSocket Gateway initialized');
+  }
 
   @UseGuards(AuthGuard)
   @SubscribeMessage('join')
   async handleJoinEvent(@MessageBody() data: { roomName: string; username: string }, @ConnectedSocket() client: Socket & { user: User }) {
-    // if (!client.handshake.query.key) throw new Error('Chave de autenticação não informada');
     const { roomName, username } = data;
     try {
-      await this.prisma.socket.create({
-        data: {
+      await this.prisma.socket.upsert({
+        where: {
+          socketId: client.id,
+        },
+        update: {
+          room: roomName,
+        },
+        create: {
           room: roomName,
           socketId: client.id,
         },
@@ -103,10 +112,57 @@ export class EventsGateway {
     this.server.to(roomName).emit(`${roomName}`, data);
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_1AM)
-  async deleteSockets() {
-    this.logger.log('Deletando sockets expirados');
-    const { count } = await this.prisma.socket.deleteMany();
-    this.logger.log(`Sockets deletados: ${count}`);
+  @Cron(CronExpression.EVERY_30_SECONDS)
+  async handleCron() {
+    this.logger.log('Iniciando verificação de sockets');
+
+    this.logger.log('Buscando sockets no banco de dados');
+    const sockets = await this.prisma.socket.findMany();
+    const socketIds = sockets.map(socket => socket.socketId);
+    this.logger.log('Sockets encontrados:', socketIds);
+    const connectedSockets = Array.from(this.server.sockets.sockets.keys());
+    this.logger.log('Sockets conectados: ' + connectedSockets);
+
+    const disconnectedSockets = socketIds.filter(socketId => !connectedSockets.includes(socketId));
+    if (disconnectedSockets.length === 0) {
+      this.logger.log('Nenhum socket desconectado');
+      return;
+    }
+    this.logger.log('Sockets desconectados: ' + disconnectedSockets);
+
+    this.logger.log('Desconectando sockets do banco de dados');
+    await this.prisma.socket.deleteMany({
+      where: {
+        socketId: {
+          in: disconnectedSockets,
+        },
+      },
+    });
+
+    this.logger.log('Emitindo evento de saída para as salas');
+    const socketsConnected = await this.prisma.socket.findMany({
+      select: {
+        room: true,
+      },
+      distinct: ['room'],
+    });
+    await Promise.all(
+      socketsConnected.map(async skt => {
+        const roomCount = await this.prisma.socket.count({
+          where: {
+            room: skt.room,
+          },
+        });
+        this.logger.log(`Emitindo evento de saída para a sala ${skt.room} com ${roomCount} usuários`);
+        this.server.to(skt.room).emit(`${skt.room}`, {
+          type: 'user_left',
+          data: {
+            userCount: roomCount,
+          },
+        });
+      })
+    );
+
+    this.logger.log('Verificação de sockets finalizada');
   }
 }
