@@ -119,7 +119,7 @@ export class EventsGateway implements OnGatewayInit {
     this.logger.log('Buscando sockets no banco de dados');
     const sockets = await this.prisma.socket.findMany();
     const socketIds = sockets.map(socket => socket.socketId);
-    this.logger.log('Sockets encontrados:', socketIds);
+    this.logger.log('Sockets encontrados: ' + socketIds);
     const connectedSockets = Array.from(this.server.sockets.sockets.keys());
     this.logger.log('Sockets conectados: ' + connectedSockets);
 
