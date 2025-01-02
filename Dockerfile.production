@@ -9,10 +9,10 @@ COPY package*.json ./
 
 # Instale as dependências de desenvolvimento
 RUN npm ci --quiet
-RUN npx prisma generate
 
 # Copie o código fonte para a imagem
 COPY . .
+RUN npx prisma generate
 
 # Execute o comando de build
 RUN npm run build
@@ -28,11 +28,11 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY package*.json ./
 
-# Install production dependencies (excluding devDependencies)
-RUN npm ci --only=prod --quiet
-
 # Install openssl
 RUN apk add --no-cache openssl
+
+# Install production dependencies (excluding devDependencies)
+RUN npm ci --only=prod --quiet
 
 # Generate Prisma Client
 RUN npx prisma generate
