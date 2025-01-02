@@ -9,7 +9,7 @@ import nodemailer from 'nodemailer';
 @Injectable()
 export class AuthService {
   logger = new Logger(AuthService.name);
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async login(email: string, password: string) {
     this.logger.log(`login ${email}`);
@@ -109,6 +109,12 @@ export class AuthService {
       }
     );
     return { token };
+  }
+
+  hashPassword(password: string) {
+    return {
+      password: bcrypt.hashSync(password, 10),
+    }
   }
 
   private createTransporter() {
