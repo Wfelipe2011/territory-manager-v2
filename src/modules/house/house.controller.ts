@@ -1,5 +1,5 @@
 import { EventsGateway } from './../gateway/event.gateway';
-import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Put, Query, Request } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, Logger, Param, Patch, Post, Put, Query, Request } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enum/role.enum';
@@ -7,7 +7,6 @@ import { HouseService } from './house.service';
 import { AddressPerTerritoryAndBlockOutput } from './contracts/AddressPerTerritoryAndBlockOutput';
 import { VERSION } from 'src/enum/version.enum';
 import { SignatureIsValid } from '../signature/usecase/SignatureIsValid';
-import { logger } from 'src/infra/logger';
 import { RequestSignature, RequestUser } from 'src/interfaces/RequestUser';
 import { RoundParams } from '../territory/contracts';
 
@@ -17,6 +16,7 @@ import { RoundParams } from '../territory/contracts';
   version: VERSION.V1,
 })
 export class HouseController {
+  logger = new Logger(HouseController.name);
   private signatureIsValid: SignatureIsValid;
 
   constructor(
@@ -37,7 +37,7 @@ export class HouseController {
     @Request() req: RequestSignature
   ): Promise<AddressPerTerritoryAndBlockOutput> {
     try {
-      logger.info(`Usuário ${JSON.stringify(req.user, null, 2)} está buscando os endereços do território ${territoryId} e bloco ${blockId}`);
+      this.logger.log(`Usuário ${JSON.stringify(req.user, null, 2)} está buscando os endereços do território ${territoryId} e bloco ${blockId}`);
       if (!territoryId) throw new BadRequestException('Território são obrigatório');
       if (!blockId) throw new BadRequestException('Bloco são obrigatório');
       if (isNaN(+territoryId)) throw new BadRequestException('Território inválido');
@@ -52,7 +52,7 @@ export class HouseController {
       const result = await this.houseService.getAddressPerTerritoryByIdAndBlockById(+blockId, +territoryId);
       return result;
     } catch (error) {
-      logger.error(error);
+      this.logger.error(error);
       throw error;
     }
   }
@@ -67,7 +67,7 @@ export class HouseController {
     @Request() req: RequestSignature
   ) {
     try {
-      logger.info(
+      this.logger.log(
         `Usuário ${JSON.stringify(req.user, null, 2)} está buscando os endereços do território ${territoryId} e bloco ${blockId} e endereço ${addressId}`
       );
       if (!territoryId) throw new BadRequestException('Território são obrigatório');
@@ -83,7 +83,7 @@ export class HouseController {
       const result = await this.houseService.getHousesPerTerritoryByIdAndBlockByIdAndAddressById(+blockId, +territoryId, +addressId, +query.round);
       return result;
     } catch (error) {
-      logger.error(error);
+      this.logger.error(error);
       throw error;
     }
   }
@@ -99,7 +99,7 @@ export class HouseController {
     @Request() req: RequestSignature
   ) {
     try {
-      logger.info(
+      this.logger.log(
         `Usuário ${JSON.stringify(
           req.user,
           null,
@@ -126,7 +126,7 @@ export class HouseController {
       });
       return result;
     } catch (error) {
-      logger.error(error);
+      this.logger.error(error);
       throw error;
     }
   }
@@ -138,7 +138,7 @@ export class HouseController {
       const result = await this.houseService.findById(+id);
       return result;
     } catch (error) {
-      logger.error(error);
+      this.logger.error(error);
       throw error;
     }
   }
@@ -150,7 +150,7 @@ export class HouseController {
       const result = await this.houseService.update(+id, body);
       return result;
     } catch (error) {
-      logger.error(error);
+      this.logger.error(error);
       throw error;
     }
   }
@@ -168,7 +168,7 @@ export class HouseController {
       const result = await this.houseService.create(body);
       return result;
     } catch (error) {
-      logger.error(error);
+      this.logger.error(error);
       throw error;
     }
   }
@@ -180,7 +180,7 @@ export class HouseController {
       const result = await this.houseService.delete(+id);
       return result;
     } catch (error) {
-      logger.error(error);
+      this.logger.error(error);
       throw error;
     }
   }
