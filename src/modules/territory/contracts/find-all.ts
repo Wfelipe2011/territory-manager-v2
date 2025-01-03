@@ -1,15 +1,24 @@
-import { IsNumber, IsString } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class FindAllParams {
   @IsNumber()
-  @Transform(({ value }) => Number(value), { toClassOnly: true })
+  @Type(() => Number)
   page: number;
 
   @IsNumber()
-  @Transform(({ value }) => Number(value), { toClassOnly: true })
+  @Type(() => Number)
   limit: number;
 
   @IsString()
   sort: string;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  type?: number;
 }

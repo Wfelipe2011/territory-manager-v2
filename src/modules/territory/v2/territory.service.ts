@@ -20,14 +20,22 @@ export class TerritoryServiceV2 extends BaseService {
 
     const [data, total] = await Promise.all([
       this.prisma.territory.findMany({
-        where: { tenantId },
+        where: {
+          tenantId,
+          ...(params.search ? { name: { contains: params.search, mode: 'insensitive' } } : {}),
+          ...(params.type ? { typeId: params.type } : {}),
+        },
         include: { type: true },
         skip,
         take,
         orderBy,
       }),
       this.prisma.territory.count({
-        where: { tenantId },
+        where: {
+          tenantId,
+          ...(params.search ? { name: { contains: params.search, mode: 'insensitive' } } : {}),
+          ...(params.type ? { typeId: params.type } : {}),
+        },
       }),
     ]);
 

@@ -13,13 +13,13 @@ import { FirebaseService } from 'src/infra/firebase.service';
 })
 @UsePipes(
   new ValidationPipe({
-    transform: true,
-    whitelist: true,
+    transform: true, // Converte os parâmetros da requisição para os tipos especificados
+    whitelist: true, // Remove propriedades que não estão definidas no DTO
   })
 )
 export class TerritoryControllerV2 {
   logger = new Logger(TerritoryControllerV2.name);
-  constructor(readonly service: TerritoryServiceV2) {}
+  constructor(readonly service: TerritoryServiceV2) { }
 
   @Get()
   getTerritories(@CurrentUser() user: UserToken, @Query() query: FindAllParams) {
