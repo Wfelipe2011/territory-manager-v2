@@ -10,7 +10,7 @@ import { VERSION } from './enum/version.enum';
 })
 export class AppController {
   logger = new Logger(AppController.name);
-  constructor(private prismaService: PrismaService) {}
+  constructor(private prismaService: PrismaService) { }
 
   @Public()
   @ApiOperation({ summary: 'Verificação de saúde do servidor' })
@@ -27,16 +27,18 @@ export class AppController {
     const [{ max_connections }] = (await this.prismaService.$queryRaw`show max_connections`) as { max_connections: string }[];
     const [{ count: countActive }] = (await this.prismaService
       .$queryRaw`select count(1)  from pg_stat_activity where state = 'active' and datname = ${process.env.POSTGRES_DB}`) as {
-      count: BigInt;
-    }[];
+        count: BigInt;
+      }[];
     const [{ count: countIdle }] = (await this.prismaService
       .$queryRaw`select count(1)  from pg_stat_activity where state = 'idle' and datname = ${process.env.POSTGRES_DB}`) as {
-      count: BigInt;
-    }[];
+        count: BigInt;
+      }[];
+    const sockets = await this.prismaService.socket.count();
 
     return {
       message: `[${new Date().toISOString()}] - [${process.env.INSTANCE_ID}] - O servidor está em execução - Homologação!`,
       signatures: countSignatures,
+      sockets,
       database_info: {
         active: +countActive.toString(),
         idle: +countIdle.toString(),

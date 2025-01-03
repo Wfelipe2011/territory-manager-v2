@@ -1,6 +1,7 @@
 # Use a imagem Node.js leve e otimizada para produção
 FROM node:18 as builder
 
+# Defina o diretório de trabalho
 WORKDIR /app
 
 # Copie apenas os arquivos necessários para instalar as dependências
@@ -11,13 +12,15 @@ RUN npm ci --quiet
 
 # Copie o código fonte para a imagem
 COPY . .
-
 RUN npx prisma generate
+
 # Execute o comando de build
 RUN npm run build
 
 # Use uma imagem base mais leve para executar o aplicativo
-FROM node:18-slim
+FROM node:18-alpine
+
+# Defina o diretório de trabalho
 WORKDIR /app
 
 # Copy only necessary files from the builder stage
@@ -25,10 +28,17 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY package*.json ./
 
+# Install openssl
+RUN apk add --no-cache openssl
+
 # Install production dependencies (excluding devDependencies)
 RUN npm ci --only=prod --quiet
-RUN apt-get update -y && apt-get install -y openssl
+
+# Generate Prisma Client
 RUN npx prisma generate
+
+# Defina a variável de ambiente TZ para America/Sao_Paulo
+ENV TZ=America/Sao_Paulo
 
 # Defina o comando de inicialização para o aplicativo em produção
 CMD [ "npm", "run", "start:prod" ]
