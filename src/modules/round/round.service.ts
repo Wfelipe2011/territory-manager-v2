@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from 'src/infra/prisma.service';
+import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { SignatureService } from '../signature/signature.service';
 import { ThemeMode } from '@prisma/client';
 
@@ -24,7 +24,7 @@ export class RoundService {
   constructor(
     readonly prisma: PrismaService,
     private readonly signatureService: SignatureService
-  ) {}
+  ) { }
 
   async getRoundInfo(tenantId: number): Promise<any> {
     const rounds = await this.prisma.$queryRaw`

@@ -1,4 +1,4 @@
-import { PrismaService } from './infra/prisma.service';
+import { PrismaService } from './infra/prisma/prisma.service';
 import { Controller, Get, Logger } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from './decorators/public.decorator';

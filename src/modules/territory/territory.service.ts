@@ -1,5 +1,5 @@
 import { ConsoleLogger, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/infra/prisma.service';
+import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { TerritoryAllInput, TerritoryAllOutput, TerritoryOneOutput, TerritoryTypesOutput } from './contracts';
 import { RawTerritoryAll, RawTerritoryOne } from './interfaces';
 import { Prisma } from '@prisma/client';
@@ -7,7 +7,7 @@ import { Prisma } from '@prisma/client';
 @Injectable()
 export class TerritoryService {
   private readonly logger = new Logger(TerritoryService.name);
-  constructor(readonly prisma: PrismaService) {}
+  constructor(readonly prisma: PrismaService) { }
 
   async findAll(territoryDto: TerritoryAllInput, tenantId: number): Promise<TerritoryAllOutput[]> {
     const { filter = '', type } = territoryDto;

@@ -1,4 +1,4 @@
-import { PrismaService } from './../../infra/prisma.service';
+import { PrismaService } from '../../infra/prisma/prisma.service';
 import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { BlockSignatureDTO } from './dtos/BlockSignatureDTO';
 import { BlockSignature } from './dtos/BlockSignature';
@@ -19,7 +19,7 @@ export type CreateHouseInput = {
 @Injectable()
 export class HouseService {
   private logger = new Logger(HouseService.name);
-  constructor(readonly prisma: PrismaService) {}
+  constructor(readonly prisma: PrismaService) { }
 
   async getAddressPerTerritoryByIdAndBlockById(blockId: number, territoryId: number) {
     const territoryBlock = await this.prisma.territory_block.findUnique({
@@ -104,9 +104,8 @@ export class HouseService {
         throw new ForbiddenException(`Casa [${house?.territory.name}-${house?.block.name}-${house?.number}] não pode ser atualizada`);
     }
 
-    await this.prisma.$queryRaw`UPDATE round SET update_date = ${new Date()}, completed = ${
-      body.status
-    } WHERE house_id = ${houseId} AND round_number = ${roundNumber}`;
+    await this.prisma.$queryRaw`UPDATE round SET update_date = ${new Date()}, completed = ${body.status
+      } WHERE house_id = ${houseId} AND round_number = ${roundNumber}`;
 
     this.logger.log(`Casa [${house?.territory.name}-${house?.block.name}-${house?.number}] atualizada com sucesso`);
 

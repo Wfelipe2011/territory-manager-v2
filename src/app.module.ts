@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 
@@ -13,15 +13,17 @@ import { RoundModule } from './modules/round/round.module';
 import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 import { HouseModule } from './modules/house/house.module';
 import { EventsModule } from './modules/gateway/event.module';
-import { PrismaService } from './infra/prisma.service';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AddressModule } from './modules/address/address.module';
 import { TenancyModule } from './modules/tenancy/tenancy.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ReportModule } from './modules/report/report.module';
+import { PrismaModule } from './infra/prisma/prisma.module';
+import { PrismaConnectionMiddleware } from './infra/prisma/prisma-connection.middleware';
 
 @Module({
   imports: [
+    PrismaModule,
     AuthModule,
     TerritoryModule,
     DashboardModule,
@@ -62,7 +64,10 @@ import { ReportModule } from './modules/report/report.module';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
-    PrismaService,
   ],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(PrismaConnectionMiddleware).forRoutes('*');
+  }
+}

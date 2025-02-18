@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from 'src/infra/prisma.service';
+import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { BaseService } from 'src/shared/BaseService';
 import { FindAllParams } from '../contracts/find-all';
 import { FirebaseService } from 'src/infra/firebase.service';

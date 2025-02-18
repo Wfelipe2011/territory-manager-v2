@@ -1,7 +1,7 @@
 import { Logger, UseGuards } from '@nestjs/common';
 import { SubscribeMessage, MessageBody, WebSocketGateway, ConnectedSocket, WebSocketServer, OnGatewayInit } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
-import { PrismaService } from 'src/infra/prisma.service';
+import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { AuthGuard } from '../auth/guard/auth.guard';
 import { Cron, CronExpression } from '@nestjs/schedule';
 

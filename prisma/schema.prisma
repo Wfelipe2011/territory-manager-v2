@@ -13,9 +13,11 @@ model address {
   name String
 
   // Relacionamentos
-  houses       house[]
-  multitenancy multitenancy @relation(fields: [tenantId], references: [id])
-  tenantId     Int          @map("tenant_id")
+  houses                  house[]
+  multitenancy            multitenancy              @relation(fields: [tenantId], references: [id])
+  tenantId                Int                       @map("tenant_id")
+  // Relacionamentos
+  territory_block_address territory_block_address[]
 }
 
 model type {
@@ -47,15 +49,16 @@ enum ReportType {
 }
 
 model house {
-  id          Int       @id @unique @default(autoincrement())
-  number      String
-  dontVisit   Boolean   @default(false) @map("dont_visit")
-  block       block     @relation(fields: [blockId], references: [id])
-  blockId     Int       @map("block_id")
-  address     address   @relation(fields: [addressId], references: [id])
-  addressId   Int       @map("address_id")
-  territory   territory @relation(fields: [territoryId], references: [id])
-  territoryId Int       @map("territory_id")
+  id                      Int       @id @unique @default(autoincrement())
+  number                  String
+  dontVisit               Boolean   @default(false) @map("dont_visit")
+  block                   block     @relation(fields: [blockId], references: [id])
+  blockId                 Int       @map("block_id") /// @deprecated Use `territoryBlockAddressId` instead.
+  address                 address   @relation(fields: [addressId], references: [id])
+  addressId               Int       @map("address_id") /// @deprecated Use `territoryBlockAddressId` instead.
+  territory               territory @relation(fields: [territoryId], references: [id])
+  territoryId             Int       @map("territory_id") /// @deprecated Use `territoryBlockAddressId` instead.
+  territoryBlockAddressId Int?      @map("territory_block_address_id")
 
   phone        String?
   legend       String?
@@ -66,9 +69,10 @@ model house {
   backupData   Json?       @map("backup_data")
 
   // Relacionamentos
-  rounds       round[]
-  multitenancy multitenancy @relation(fields: [tenantId], references: [id])
-  tenantId     Int          @map("tenant_id")
+  rounds                round[]
+  multitenancy          multitenancy             @relation(fields: [tenantId], references: [id])
+  tenantId              Int                      @map("tenant_id")
+  territoryBlockAddress territory_block_address? @relation(fields: [territoryBlockAddressId], references: [id])
 }
 
 model firebase {
@@ -82,16 +86,17 @@ model multitenancy {
   phone String?
 
   // Relacionamentos
-  users              user[]
-  territories        territory[]
-  addresses          address[]
-  blocks             block[]
-  houses             house[]
-  round              round[]
-  type               type[]
-  territory_block    territory_block[]
-  territory_overseer territory_overseer[]
-  signature          signature[]
+  users                   user[]
+  territories             territory[]
+  addresses               address[]
+  blocks                  block[]
+  houses                  house[]
+  round                   round[]
+  type                    type[]
+  territory_block         territory_block[]
+  territory_overseer      territory_overseer[]
+  signature               signature[]
+  territory_block_address territory_block_address[]
 
   @@map("multi_tenancy")
 }
@@ -113,17 +118,31 @@ model territory {
 }
 
 model territory_block {
-  id           Int          @id @unique @default(autoincrement())
-  block        block        @relation(fields: [blockId], references: [id])
-  blockId      Int          @map("block_id")
-  territory    territory    @relation(fields: [territoryId], references: [id])
-  territoryId  Int          @map("territory_id")
-  signature    signature?   @relation(fields: [signatureId], references: [id])
-  signatureId  Int?         @map("signature_id")
-  multitenancy multitenancy @relation(fields: [tenantId], references: [id])
-  tenantId     Int          @map("tenant_id")
+  id                      Int                       @id @unique @default(autoincrement())
+  block                   block                     @relation(fields: [blockId], references: [id])
+  blockId                 Int                       @map("block_id")
+  territory               territory                 @relation(fields: [territoryId], references: [id])
+  territoryId             Int                       @map("territory_id")
+  signature               signature?                @relation(fields: [signatureId], references: [id])
+  signatureId             Int?                      @map("signature_id")
+  multitenancy            multitenancy              @relation(fields: [tenantId], references: [id])
+  tenantId                Int                       @map("tenant_id")
+  territory_block_address territory_block_address[]
 
   @@unique([territoryId, blockId]) // Adicionando a anotação para criar a chave composta
+}
+
+model territory_block_address {
+  id               Int             @id @unique @default(autoincrement())
+  territoryBlock   territory_block @relation(fields: [territoryBlockId], references: [id])
+  territoryBlockId Int             @map("territory_block_id")
+  address          address         @relation(fields: [addressId], references: [id])
+  addressId        Int             @map("address_id")
+  multitenancy     multitenancy    @relation(fields: [tenantId], references: [id])
+  tenantId         Int             @map("tenant_id")
+  house            house[]
+
+  @@unique([territoryBlockId, addressId]) // Adicionando a anotação para criar a chave composta
 }
 
 model territory_overseer {

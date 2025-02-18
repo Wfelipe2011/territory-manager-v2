@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Logger, Param, ParseIntPipe, Post, UsePipes, ValidationPipe } from '@nestjs/common';
 import { VERSION } from 'src/enum/version.enum';
-import { PrismaService } from 'src/infra/prisma.service';
+import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { Role } from 'src/enum/role.enum';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Prisma } from '@prisma/client';
@@ -14,7 +14,7 @@ import { CurrentUser } from 'src/decorators/current-user.decorator';
 })
 export class ReportController {
   logger = new Logger(ReportController.name);
-  constructor(private prismaService: PrismaService) {}
+  constructor(private prismaService: PrismaService) { }
 
   @Get()
   @Roles(Role.ADMIN)

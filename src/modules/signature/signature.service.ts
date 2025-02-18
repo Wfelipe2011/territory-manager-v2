@@ -1,6 +1,6 @@
 import { Signature } from './../territory/contracts/index';
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/infra/prisma.service';
+import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { calculateExpiresIn, uuid } from 'src/shared';
 import * as jwt from 'jsonwebtoken';
 import { envs } from 'src/infra/envs';
