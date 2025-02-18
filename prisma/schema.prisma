@@ -16,6 +16,7 @@ model address {
   houses                  house[]
   multitenancy            multitenancy              @relation(fields: [tenantId], references: [id])
   tenantId                Int                       @map("tenant_id")
+  zipCode                 String?                   @map("zip_code")
   // Relacionamentos
   territory_block_address territory_block_address[]
 }

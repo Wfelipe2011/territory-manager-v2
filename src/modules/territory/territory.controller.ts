@@ -7,6 +7,7 @@ import {
   Logger,
   Param,
   Post,
+  Put,
   Query,
   Request,
   UploadedFile,
@@ -26,7 +27,7 @@ import { RequestSignature, RequestUser } from 'src/interfaces/RequestUser';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadTerritoryUseCase, Row } from './upload-territory.usecase';
 import { Loggable } from 'src/infra/loggable.decorate';
-import { CreateTerritoryParams } from './contracts/CreateTerritoryParams';
+import { CreateTerritoryParams, UpdateTerritoryParams } from './contracts/UpsertTerritoryParams';
 
 @ApiTags('Territórios')
 @ApiBearerAuth()
@@ -70,6 +71,21 @@ export class TerritoryController {
   async createTerritory(@Request() req: RequestUser, @Body() body: CreateTerritoryParams) {
     logger.info(`Usuário ${JSON.stringify(req.user, null, 2)} está cadastrando um território`);
     return this.territoryService.create(body, req.user.tenantId)
+  }
+
+  @ApiResponse({ status: 200, type: TerritoryOneOutput })
+  @ApiOperation({ summary: 'Atualiza um território' })
+  @Put(':territoryId')
+  @Roles(Role.ADMIN)
+  @UsePipes(
+    new ValidationPipe({
+      transform: true, // Converte os parâmetros da requisição para os tipos especificados
+      whitelist: true, // Remove propriedades que não estão definidas no DTO
+    })
+  )
+  async updateTerritory(@Param('territoryId') territoryId: number, @Body() body: UpdateTerritoryParams) {
+    logger.info(`Usuário está atualizando o território ${territoryId}`);
+    return this.territoryService.update(territoryId, body)
   }
 
   @ApiResponse({ status: 200, type: TerritoryTypesOutput, isArray: true })

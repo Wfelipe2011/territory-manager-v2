@@ -3,7 +3,7 @@ import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { TerritoryAllInput, TerritoryAllOutput, TerritoryOneOutput, TerritoryTypesOutput } from './contracts';
 import { RawTerritoryAll, RawTerritoryOne } from './interfaces';
 import { Prisma } from '@prisma/client';
-import { CreateTerritoryParams } from './contracts/CreateTerritoryParams';
+import { CreateTerritoryParams } from './contracts/UpsertTerritoryParams';
 
 @Injectable()
 export class TerritoryService {
@@ -199,6 +199,18 @@ export class TerritoryService {
     return this.prisma.territory.create({
       data: {
         tenantId,
+        name: params.name,
+        typeId: params.typeId
+      }
+    })
+  }
+
+  async update(territoryId: number, params: CreateTerritoryParams) {
+    return this.prisma.territory.update({
+      where: {
+        id: territoryId
+      },
+      data: {
         name: params.name,
         typeId: params.typeId
       }

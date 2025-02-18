@@ -20,6 +20,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ReportModule } from './modules/report/report.module';
 import { PrismaModule } from './infra/prisma/prisma.module';
 import { PrismaConnectionMiddleware } from './infra/prisma/prisma-connection.middleware';
+import { BlockModule } from './modules/block/block.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { PrismaConnectionMiddleware } from './infra/prisma/prisma-connection.mid
     }),
     TenancyModule,
     ReportModule,
+    BlockModule
   ],
   controllers: [AppController],
   providers: [

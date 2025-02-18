@@ -11,3 +11,10 @@ export class CreateTerritoryParams {
   @Type(() => Number)
   typeId: number;
 }
+
+export class UpdateTerritoryParams extends CreateTerritoryParams {
+  @IsNotEmpty({ message: 'Território é obrigatório' })
+  @IsNumber({ allowNaN: false }, { message: 'Território deve ser um número' })
+  @Type(() => Number)
+  id: number;
+}

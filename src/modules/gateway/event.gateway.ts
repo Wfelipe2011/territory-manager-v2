@@ -112,10 +112,10 @@ export class EventsGateway implements OnGatewayInit {
     this.server.to(roomName).emit(`${roomName}`, data);
   }
 
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  // @Cron(CronExpression.EVERY_30_SECONDS)
   async handleCron() {
     this.logger.log('Iniciando verificação de sockets');
-
+    await this.prisma.connectToDatabase();
     this.logger.log('Buscando sockets no banco de dados');
     const sockets = await this.prisma.socket.findMany();
     const socketIds = sockets.map(socket => socket.socketId);
