@@ -2,21 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { SignatureService } from '../signature/signature.service';
 import { ThemeMode } from '@prisma/client';
-
-const themeColors = {
-  default: {
-    primary: '#7AAD58',
-    secondary: '#CBE6BA',
-  },
-  letters: {
-    primary: '#E29D4F',
-    secondary: '#FDD09FB2',
-  },
-  campaign: {
-    primary: '#5B98AB',
-    secondary: '#EAF2F4',
-  },
-};
+import { themeColors } from 'src/constants/themeColors';
 
 @Injectable()
 export class RoundService {
@@ -220,6 +206,6 @@ export class RoundService {
         }),
       });
       this.logger.log(`Rodada ${roundInfo.roundNumber} para congregação ${houses[0].multitenancy.name} iniciada`);
-    });
+    }, { timeout: 120_000 });
   }
 }
