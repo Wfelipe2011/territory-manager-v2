@@ -144,6 +144,29 @@ export class ReportController {
         },
       });
       this.logger.log(`Report ${id} aprovado com sucesso e backup removido`);
+      // buscar house ghost e remover
+      const houseGhost = await txt.house.findFirst({
+        where: {
+          number: 'ghost',
+          tenantId: house.tenantId,
+          territoryBlockAddressId: house.territoryBlockAddressId,
+        }
+      })
+
+      if (houseGhost) {
+        this.logger.log(`Removendo casa fantasma`);
+        await txt.round.deleteMany({
+          where: {
+            houseId: houseGhost.id,
+          },
+        });
+        await txt.house.delete({
+          where: {
+            id: houseGhost.id,
+          },
+        });
+        this.logger.log(`Casa fantasma removida com sucesso`);
+      }
       return { message: 'Alteração aprovada com sucesso' };
     });
   }

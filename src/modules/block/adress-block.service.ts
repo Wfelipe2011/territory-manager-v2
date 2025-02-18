@@ -150,7 +150,7 @@ export class AddressBlockService {
         this.logger.log(`Casa fantasma criada: ${JSON.stringify(house)}`);
 
         let rounds = await prisma.round.findMany({
-            where: { tenantId },
+            where: { tenantId, endDate: null, },
             select: { roundNumber: true },
             distinct: 'roundNumber'
         });
