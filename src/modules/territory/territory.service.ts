@@ -1,8 +1,9 @@
-import { ConsoleLogger, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { TerritoryAllInput, TerritoryAllOutput, TerritoryOneOutput, TerritoryTypesOutput } from './contracts';
 import { RawTerritoryAll, RawTerritoryOne } from './interfaces';
 import { Prisma } from '@prisma/client';
+import { CreateTerritoryParams } from './contracts/CreateTerritoryParams';
 
 @Injectable()
 export class TerritoryService {
@@ -192,6 +193,16 @@ export class TerritoryService {
         pageSize: pagination.pageSize,
       },
     };
+  }
+
+  async create(params: CreateTerritoryParams, tenantId: number) {
+    return this.prisma.territory.create({
+      data: {
+        tenantId,
+        name: params.name,
+        typeId: params.typeId
+      }
+    })
   }
 
   processStreetFilter(streetFilter?: string) {
