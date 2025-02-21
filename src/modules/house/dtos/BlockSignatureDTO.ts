@@ -22,6 +22,7 @@ export class BlockSignatureDTO {
         id: item.address_id,
         name: item.address_name,
         houses: result.reduce((acc, curr) => {
+          if (curr.house_number === "ghost") return acc
           if (curr.address_id === item.address_id) {
             acc.push(curr.house_number);
           }

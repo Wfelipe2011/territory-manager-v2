@@ -75,14 +75,26 @@ export class TerritoryService {
     if (territoryDto.history.filter(h => !h.finished).length === 0)
       throw new NotFoundException(`Território: ${territoryDto.territoryName} não tem histórico assinatura`);
     await Promise.all(
-      territoryDto.blocks.map(async block => {
-        const like = `%${territoryId}-${block.id}%`;
-        const [connections] = await this.prisma.$queryRaw<{ count: BigInt }[]>`
+      [
+        ...territoryDto.blocks.map(async block => {
+          const houseGhost = await this.prisma.house.count({
+            where: {
+              territoryId,
+              blockId: block.id,
+              number: 'ghost'
+            }
+          })
+          block.positiveCompleted -= houseGhost
+        }),
+        ...territoryDto.blocks.map(async block => {
+          const like = `%${territoryId}-${block.id}%`;
+          const [connections] = await this.prisma.$queryRaw<{ count: BigInt }[]>`
           select count(s.id)  from socket s 
           where s.room LIKE ${like};
         `;
-        block.connections = +connections.count.toString();
-      })
+          block.connections = +connections.count.toString();
+        })
+      ]
     );
 
     this.logger.log(`Território: ${territoryDto.territoryName}`);

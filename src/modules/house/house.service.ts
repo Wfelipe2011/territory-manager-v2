@@ -75,7 +75,7 @@ export class HouseService {
       territoryName: territory_name,
       blockName: block_name,
       streetName: street_name,
-      houses: houses.map(house => ({
+      houses: houses.filter(h => h.number !== "ghost").map(house => ({
         id: house.house_id,
         number: house.number,
         complement: house.complement,
@@ -128,7 +128,7 @@ export class HouseService {
       INNER JOIN address a ON a.id = h.address_id 
       INNER JOIN block b ON b.id = h.block_id
       LEFT JOIN territory_overseer to2 on to2.territory_id = t.id  and to2.finished = false 
-      WHERE h.territory_id = ${territoryId} AND h.block_id = ${blockId}
+      WHERE h.territory_id = ${territoryId} AND h.block_id = ${blockId} 
     `;
   }
 
