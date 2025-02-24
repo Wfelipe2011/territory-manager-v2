@@ -6,7 +6,10 @@ import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { UserToken } from '../auth/contracts';
 import { UpsertBlockDto } from './contracts/UpsertBlockDto';
 import { BlockService } from './block.service';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth()
+@ApiTags('Block')
 @Controller({ version: VERSION.V2, path: '' })
 export class BlockController {
   private readonly logger = new Logger(BlockController.name);
@@ -27,8 +30,9 @@ export class BlockController {
     return this.blockService.getTerritoryBlockDetails(blockId, territoryId, user.tenantId);
   }
 
-  @Post('territories/:territoryId/blocks')
   @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Cria ou atualiza um quadra' })
+  @Post('territories/:territoryId/blocks')
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async upsertBlock(@Param('territoryId', ParseIntPipe) territoryId: number, @Body() upsertBlockDto: UpsertBlockDto, @CurrentUser() user: UserToken) {
     this.logger.log('Iniciando upsertBlock');
