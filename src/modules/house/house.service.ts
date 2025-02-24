@@ -6,6 +6,7 @@ import { RawHouse } from './dtos/RawHouse';
 import { Output, Round } from './dtos/Houses';
 import { LegengDTO } from './dtos/Legend';
 import dayjs from 'dayjs';
+import { UpdateHouseOrder } from './contracts/UpdateHouseOrder';
 
 export type CreateHouseInput = {
   streetId: number;
@@ -268,5 +269,21 @@ export class HouseService {
     this.logger.log(`Rodadas deletadas com sucesso da casa ${id}`);
     await this.prisma.house.delete({ where: { id } });
     this.logger.log(`Casa ${id} deletada com sucesso`);
+  }
+
+  async updateOrder(inputs: UpdateHouseOrder): Promise<void> {
+    this.logger.log(`Atualizando ordem das casas`);
+    await this.prisma.$transaction(inputs.houses.map(house => {
+      this.logger.log(`Atualizando casa ${house.id} para a ordem ${house.order}`);
+      return this.prisma.house.update({
+        where: {
+          id: house.id,
+        },
+        data: {
+          order: house.order,
+        },
+      });
+    }));
+    this.logger.log(`Ordem das casas atualizada com sucesso`);
   }
 }

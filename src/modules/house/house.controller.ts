@@ -1,5 +1,5 @@
 import { EventsGateway } from './../gateway/event.gateway';
-import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, Logger, Param, Patch, Post, Put, Query, Request } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, Logger, Param, Patch, Post, Put, Query, Request, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enum/role.enum';
@@ -9,6 +9,7 @@ import { VERSION } from 'src/enum/version.enum';
 import { SignatureIsValid } from '../signature/usecase/SignatureIsValid';
 import { RequestSignature, RequestUser } from 'src/interfaces/RequestUser';
 import { RoundParams } from '../territory/contracts';
+import { UpdateHouseOrder } from './contracts/UpdateHouseOrder';
 
 @ApiBearerAuth()
 @ApiTags('House')
@@ -179,6 +180,20 @@ export class HouseController {
     try {
       const result = await this.houseService.delete(+id);
       return result;
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
+  }
+
+  @Roles(Role.ADMIN)
+  @Post('houses/order')
+  @ApiOperation({ summary: 'Atualiza a ordem das casas' })
+  @ApiResponse({ status: 200, description: 'Ordem atualizada com sucesso' })
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async updateOrder(@Body() body: UpdateHouseOrder): Promise<void> {
+    try {
+      return await this.houseService.updateOrder(body);
     } catch (error) {
       this.logger.error(error);
       throw error;
