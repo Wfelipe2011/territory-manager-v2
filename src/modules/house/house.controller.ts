@@ -10,6 +10,7 @@ import { SignatureIsValid } from '../signature/usecase/SignatureIsValid';
 import { RequestSignature, RequestUser } from 'src/interfaces/RequestUser';
 import { RoundParams } from '../territory/contracts';
 import { UpdateHouseOrder } from './contracts/UpdateHouseOrder';
+import { UpsertHouseInput } from './contracts/UpsertHouseInput';
 
 @ApiBearerAuth()
 @ApiTags('House')
@@ -146,10 +147,10 @@ export class HouseController {
 
   @Roles(Role.ADMIN)
   @Put('houses/:id')
-  async update(@Param('id') id: number, @Body() body: CreateHouseInput) {
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async update(@Param('id') id: number, @Body() body: UpsertHouseInput) {
     try {
-      const result = await this.houseService.update(+id, body);
-      return result;
+      return await this.houseService.update(+id, body);
     } catch (error) {
       this.logger.error(error);
       throw error;
@@ -158,16 +159,10 @@ export class HouseController {
 
   @Roles(Role.ADMIN)
   @Post('houses')
-  async create(@Body() body: CreateHouseInput) {
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async create(@Body() body: UpsertHouseInput) {
     try {
-      const { streetId, number, legend, dontVisit, territoryId, blockId } = body;
-      if (!streetId) throw new BadRequestException('Rua são obrigatório');
-      if (!number) throw new BadRequestException('Número são obrigatório');
-      if (!legend) throw new BadRequestException('Legenda são obrigatório');
-      if (!dontVisit === undefined) throw new BadRequestException('Não visitar são obrigatório');
-      if (!territoryId) throw new BadRequestException('Território são obrigatório');
-      const result = await this.houseService.create(body);
-      return result;
+      return this.houseService.create(body);
     } catch (error) {
       this.logger.error(error);
       throw error;
@@ -200,12 +195,3 @@ export class HouseController {
     }
   }
 }
-
-export type CreateHouseInput = {
-  streetId: number;
-  number: string;
-  legend: string;
-  dontVisit: boolean;
-  territoryId: number;
-  blockId: number;
-};
