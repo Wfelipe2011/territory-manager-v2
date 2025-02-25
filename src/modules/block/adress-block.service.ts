@@ -37,16 +37,7 @@ export class AddressBlockService {
         }
 
         // Upsert de endereços
-        const upsertedAddresses = await Promise.all(
-            addresses.map((address) =>
-                prisma.address.upsert({
-                    where: { id: address.id ?? 0 },
-                    update: { name: address.street, zipCode: address.zipCode, tenantId },
-                    create: { name: address.street, zipCode: address.zipCode, tenantId },
-                })
-            )
-        );
-        this.logger.log(`Endereços upserted: ${JSON.stringify(upsertedAddresses)}`);
+        const upsertedAddresses = await this.upsertAddress(addresses, tenantId, prisma);
 
         const addressIds = upsertedAddresses.map((a) => a.id);
 
@@ -102,6 +93,58 @@ export class AddressBlockService {
                 await this.createGhostHouse(addressId, territoryBlock, territoryBlockAddress.id, tenantId, prisma);
             }
         }
+    }
+
+    private async upsertAddress(addresses: AddressDto[], tenantId: number, prisma: PrismaTransaction) {
+        this.logger.log(`Iniciando upsert de endereços: ${JSON.stringify(addresses)}`);
+        const upsertedAddresses = await Promise.all(
+            addresses.map(async (address) => {
+                if (address.id) {
+                    this.logger.log(`Atualizando endereço com ID: ${address.id}`);
+                    // Se o ID já foi informado, apenas atualiza o endereço
+                    const updatedAddress = await prisma.address.update({
+                        where: { id: address.id },
+                        data: { name: address.street, zipCode: address.zipCode, tenantId },
+                    });
+                    this.logger.log(`Endereço atualizado: ${JSON.stringify(updatedAddress)}`);
+                    return updatedAddress;
+                }
+
+                this.logger.log(`Buscando endereço similar para: ${address.street}`);
+                // Se não houver ID, busca um endereço similar com mais de 80% de similaridade
+                const similarAddress = await prisma.$queryRaw<
+                    { id: number; name: string }[]
+                >`
+                    SELECT id, name
+                    FROM "address"
+                    WHERE similarity(name, ${address.street}) > 0.3
+                    ORDER BY similarity(name, ${address.street}) DESC
+                    LIMIT 1
+                `;
+                this.logger.debug(`Endereços similares encontrados: ${JSON.stringify(similarAddress)}`);
+                if (similarAddress.length > 0) {
+                    this.logger.debug(`Endereço similar encontrado: ${JSON.stringify(similarAddress[0])}`);
+                    // Atualiza o endereço encontrado com nome similar
+                    const updatedSimilarAddress = await prisma.address.update({
+                        where: { id: similarAddress[0].id },
+                        data: { name: address.street, zipCode: address.zipCode, tenantId },
+                    });
+                    this.logger.debug(`Endereço similar atualizado: ${JSON.stringify(updatedSimilarAddress)}`);
+                    return updatedSimilarAddress;
+                } else {
+                    this.logger.log(`Criando novo endereço para: ${address.street}`);
+                    // Cria um novo endereço
+                    const newAddress = await prisma.address.create({
+                        data: { name: address.street, zipCode: address.zipCode, tenantId },
+                    });
+                    this.logger.log(`Novo endereço criado: ${JSON.stringify(newAddress)}`);
+                    return newAddress;
+                }
+            })
+        );
+
+        this.logger.log(`Endereços processados: ${JSON.stringify(upsertedAddresses)}`);
+        return upsertedAddresses;
     }
 
     // Método para deletar casas e rounds associados
