@@ -22,4 +22,20 @@ export class AddressService {
     `;
     return addresses;
   }
+
+  async findAllAddresses(tenantId: number) {
+    return this.prisma.address.findMany({
+      select: {
+        id: true,
+        name: true,
+        zipCode: true,
+      },
+      where: {
+        tenantId,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+  }
 }
