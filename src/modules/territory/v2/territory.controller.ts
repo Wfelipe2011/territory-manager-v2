@@ -1,12 +1,18 @@
 import { Controller, Get, Logger, Param, ParseIntPipe, Post, Query, UploadedFile, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
 import { VERSION } from 'src/enum/version.enum';
-import { TerritoryServiceV2 } from './territory.service';
 import { UserToken } from 'src/modules/auth/contracts';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { FindAllParams } from '../contracts/find-all';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { FirebaseService } from 'src/infra/firebase.service';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/enum/role.enum';
+import { FindOneParams } from '../contracts/find-one';
+import { TerritoryEditOutput } from '../interfaces/TerritoryEditOutputV2';
+import { TerritoryServiceV2 } from './territory.service';
 
+@ApiBearerAuth()
+@ApiTags('Territórios V2')
 @Controller({
   version: VERSION.V2,
   path: 'territories',
@@ -41,5 +47,29 @@ export class TerritoryControllerV2 {
   )
   async uploadFile(@Param('id', ParseIntPipe) id: number, @UploadedFile() file: Express.Multer.File, @CurrentUser() user: UserToken) {
     return this.service.uploadFile(user.tenantId, id, file);
+  }
+
+  @ApiResponse({ status: 200, type: TerritoryEditOutput })
+  @ApiOperation({ summary: 'Busca um território para edição' })
+  @Get(':territoryId/edit')
+  @Roles(Role.ADMIN)
+  async getTerritoryEditById(
+    @Param('territoryId', ParseIntPipe) territorySerialize: number,
+    @Query()
+    query: FindOneParams,
+    @CurrentUser() user: UserToken
+  ): Promise<TerritoryEditOutput> {
+    try {
+      this.logger.log(`Usuário ${JSON.stringify(user, null, 2)} está buscando para edição o território ${territorySerialize}`);
+
+      return await this.service.findEditById(
+        user.tenantId,
+        territorySerialize,
+        query
+      );
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
   }
 }

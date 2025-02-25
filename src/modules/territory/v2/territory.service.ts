@@ -1,8 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { BaseService } from 'src/shared/BaseService';
 import { FindAllParams } from '../contracts/find-all';
 import { FirebaseService } from 'src/infra/firebase.service';
+import { FindOneParams } from '../contracts/find-one';
+import { TerritoryEditOutput } from '../interfaces/TerritoryEditOutputV2';
 
 @Injectable()
 export class TerritoryServiceV2 extends BaseService {
@@ -68,4 +70,43 @@ export class TerritoryServiceV2 extends BaseService {
       where: { id },
     });
   }
+
+  async findEditById(tenantId: number, territoryId: number, query: FindOneParams): Promise<TerritoryEditOutput> {
+    const result = await this.prisma.territory.findFirst({
+      where: { id: territoryId, tenantId },
+      include: {
+        territory_overseer: true,
+        house: {
+          where: {
+            ...query.blockId ? { blockId: query.blockId } : {},
+            number: { not: 'ghost' },
+          },
+          include: { address: true, block: true },
+        },
+        type: true,
+      },
+    });
+
+    if (!result) throw new NotFoundException('Territorio não encontrado');
+
+    return {
+      name: result.name,
+      typeName: result.type.name,
+      imageUrl: result.imageUrl,
+      totalHouse: result.house.length,
+      house: result.house.map(h => ({
+        id: h.id,
+        dontVisit: h.dontVisit,
+        legend: h.legend,
+        number: h.number,
+        street: h.address.name,
+        streetId: h.addressId,
+        observations: h.observations,
+        order: h.order,
+        blockName: h.block.name,
+        blockId: h.blockId,
+      })),
+    };
+  }
 }
+
