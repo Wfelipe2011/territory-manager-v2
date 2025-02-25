@@ -20,6 +20,10 @@ export class AddressBlockService {
         this.logger.log('Gerenciando endereços associados');
 
         const territoryBlock = await prisma.territory_block.findUnique({ where: { id: territoryBlockId } });
+        if (!territoryBlock) {
+            this.logger.error(`Bloco de território não encontrado com ID: ${territoryBlockId}`);
+            return;
+        }
         this.logger.log(`Territory Block encontrado: ${JSON.stringify(territoryBlock)}`);
 
         // Se não há endereços, remove tudo (endereços, casas e rounds)
@@ -178,14 +182,14 @@ export class AddressBlockService {
     }
 
     // Método para criar uma casa fantasma e seus rounds
-    private async createGhostHouse(addressId: number, territoryBlock: any, territoryBlockAddressId: number, tenantId: number, prisma: PrismaTransaction) {
+    async createGhostHouse(addressId: number, territoryBlock: { blockId: number; territoryId: number }, territoryBlockAddressId: number, tenantId: number, prisma: PrismaTransaction) {
         this.logger.log(`Criando casa fantasma para endereço com ID: ${addressId}`);
         const house = await prisma.house.create({
             data: {
                 addressId,
-                blockId: territoryBlock?.blockId!,
+                blockId: territoryBlock.blockId,
                 tenantId,
-                territoryId: territoryBlock?.territoryId!,
+                territoryId: territoryBlock.territoryId,
                 territoryBlockAddressId,
                 number: 'ghost',
             }
