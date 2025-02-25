@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Logger, Param, ParseIntPipe, Post, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Logger, Param, ParseIntPipe, Post, UsePipes, ValidationPipe } from '@nestjs/common';
 import { VERSION } from 'src/enum/version.enum';
 import { Role } from 'src/enum/role.enum';
 import { Roles } from 'src/decorators/roles.decorator';
@@ -28,6 +28,14 @@ export class BlockController {
   async getTerritoryBlockDetails(@Param('blockId', ParseIntPipe) blockId: number, @Param('territoryId', ParseIntPipe) territoryId: number, @CurrentUser() user: UserToken) {
     this.logger.log('Iniciando getTerritoryBlockDetails');
     return this.blockService.getTerritoryBlockDetails(blockId, territoryId, user.tenantId);
+  }
+
+  @Delete('territories/:territoryId/blocks/:blockId')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Deleta um quadra e suas dependências' })
+  async deleteBlock(@Param('blockId', ParseIntPipe) blockId: number, @Param('territoryId', ParseIntPipe) territoryId: number, @CurrentUser() user: UserToken) {
+    this.logger.log('Iniciando deleteBlock');
+    return this.blockService.deleteBlock(blockId, territoryId, user.tenantId);
   }
 
   @Roles(Role.ADMIN)

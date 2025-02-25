@@ -1,6 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
-import { UserToken } from '../auth/contracts';
 import { AddressBlockService } from './adress-block.service';
 import { UpsertBlockDto } from './contracts/UpsertBlockDto';
 import { TerritoryBlockService } from './territory-block.service';
@@ -79,5 +78,36 @@ export class BlockService {
                 zipCode: a.address.zipCode,
             })),
         }));
+    }
+
+    async deleteBlock(blockId: number, territoryId: number, tenantId: number) {
+        return this.prisma.$transaction(async (prisma) => {
+            this.logger.log('Iniciando deleteBlock');
+            const territoryBlock = await prisma.territory_block.findFirst({ where: { blockId, territoryId, tenantId }, include: { territory_block_address: true } });
+            if (!territoryBlock) {
+                this.logger.warn('Quadra não encontrada');
+                throw new NotFoundException('Quadra não encontrada');
+            }
+            this.logger.log(`Encontrado territoryBlock com ID: ${territoryBlock.id}`);
+
+            await prisma.round.deleteMany({
+                where: {
+                    house: {
+                        territoryBlockAddressId: { in: territoryBlock.territory_block_address.map((a) => a.id) },
+                        tenantId
+                    }
+                }
+            });
+            this.logger.log('Rounds deletados');
+
+            await prisma.house.deleteMany({ where: { territoryBlockAddressId: { in: territoryBlock.territory_block_address.map((a) => a.id) }, tenantId } });
+            this.logger.log('Houses deletadas');
+
+            await prisma.territory_block_address.deleteMany({ where: { territoryBlockId: territoryBlock.id, tenantId } });
+            this.logger.log('Territory block addresses deletadas');
+
+            await prisma.territory_block.delete({ where: { id: territoryBlock.id, tenantId } });
+            this.logger.log('Territory block deletado');
+        }, { timeout: 120_000 });
     }
 }
