@@ -3,6 +3,7 @@ import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { SignatureService } from '../signature/signature.service';
 import { ThemeMode } from '@prisma/client';
 import { themeColors } from 'src/constants/themeColors';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class RoundService {
@@ -169,6 +170,7 @@ export class RoundService {
 
   private async createRound(tenantId: number, rounds: any[], body: { name: string; theme: string }) {
     await this.prisma.$transaction(async txt => {
+      this.logger.log(`Iniciando criação da rodada para o inquilino ${tenantId}`);
       const houses = await txt.house.findMany({
         where: {
           tenantId,
@@ -178,8 +180,21 @@ export class RoundService {
           block: true,
           territory: true,
           multitenancy: true,
+          rounds: {
+            where: {
+              mode: ThemeMode.default,
+              startDate: {
+                gte: dayjs().subtract(1, 'year').toDate(),
+              },
+            },
+            select: {
+              completed: true,
+            }
+          }
         },
       });
+
+      this.logger.log(`Casas encontradas para o inquilino ${tenantId}: ${houses.length}`);
 
       const roundInfo = await txt.round_info.create({
         data: {
@@ -192,8 +207,11 @@ export class RoundService {
         },
       });
 
+      this.logger.log(`Informações da rodada criadas: ${JSON.stringify(roundInfo)}`);
+
       await txt.round.createMany({
         data: houses.map(house => {
+          const leaveLetter = house.rounds.every(r => !r.completed);
           return {
             houseId: house.id,
             blockId: house.blockId,
@@ -202,9 +220,11 @@ export class RoundService {
             completed: false,
             roundNumber: roundInfo.roundNumber,
             mode: roundInfo.theme,
+            leaveLetter
           };
         }),
       });
+
       this.logger.log(`Rodada ${roundInfo.roundNumber} para congregação ${houses[0].multitenancy.name} iniciada`);
     }, { timeout: 120_000 });
   }

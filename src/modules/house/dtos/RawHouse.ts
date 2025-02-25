@@ -2,6 +2,7 @@ export interface RawHouse {
   house_id: number;
   number: string;
   complement: string | null;
+  leave_letter: boolean;
   legend: string | null;
   order: number | null;
   status: boolean;

@@ -55,6 +55,7 @@ export class HouseService {
           h.dont_visit,
           h.report_type,
           round.completed as status,
+          round.leave_letter,
           a."name" as street_name,
           b."name" as block_name,
           t."name" as territory_name
@@ -80,6 +81,7 @@ export class HouseService {
         id: house.house_id,
         number: house.number,
         complement: house.complement,
+        leaveLetter: house.leave_letter,
         legend: LegengDTO.mapper(house?.legend),
         order: house.order,
         status: house.status,

@@ -6,6 +6,7 @@ export interface Output {
     id: number;
     number: string;
     complement: string | null;
+    leaveLetter: boolean;
     legend: string | null;
     order: number | null;
     status: boolean;
@@ -17,6 +18,7 @@ export interface Round {
   house_id: number;
   territory_id: number;
   completed: boolean;
+  leave_letter: boolean;
   start_date: Date;
   update_date: Date;
   end_date: null;
