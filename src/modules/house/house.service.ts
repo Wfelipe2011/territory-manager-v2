@@ -100,15 +100,19 @@ export class HouseService {
 
     this.logger.log(`Verificando se a casa [${house?.territory.name}-${house?.block.name}-${house?.number}] pode ser atualizada`);
 
-    if (!isAdmin && round.update_date && body.status === false) {
+    if (!isAdmin && round.completed_date && body.status === false) {
       const now = dayjs();
-      const updateDate = dayjs(round.update_date);
+      const updateDate = dayjs(round.completed_date);
       if (now.diff(updateDate, 'day') > 2)
         throw new ForbiddenException(`Casa [${house?.territory.name}-${house?.block.name}-${house?.number}] não pode ser atualizada`);
     }
 
-    await this.prisma.$queryRaw`UPDATE round SET update_date = ${new Date()}, completed = ${body.status
-      } WHERE house_id = ${houseId} AND round_number = ${roundNumber}`;
+    await this.prisma.$queryRaw`
+      UPDATE round SET 
+        update_date = ${new Date()}, 
+        completed = ${body.status}, 
+        completed_date = ${new Date()} 
+      WHERE house_id = ${houseId} AND round_number = ${roundNumber}`;
 
     this.logger.log(`Casa [${house?.territory.name}-${house?.block.name}-${house?.number}] atualizada com sucesso`);
 

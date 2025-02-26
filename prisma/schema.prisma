@@ -189,10 +189,11 @@ model round {
   block       block     @relation(fields: [blockId], references: [id])
   blockId     Int       @map("block_id")
 
-  completed  Boolean
-  startDate  DateTime  @default(now()) @map("start_date")
-  updateDate DateTime? @map("update_date")
-  endDate    DateTime? @map("end_date")
+  completed     Boolean
+  startDate     DateTime  @default(now()) @map("start_date")
+  updateDate    DateTime? @map("update_date")
+  completedDate DateTime? @map("completed_date")
+  endDate       DateTime? @map("end_date")
 
   multitenancy multitenancy @relation(fields: [tenantId], references: [id])
   tenantId     Int          @map("tenant_id")

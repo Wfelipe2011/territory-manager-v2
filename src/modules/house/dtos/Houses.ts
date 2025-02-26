@@ -21,6 +21,7 @@ export interface Round {
   leave_letter: boolean;
   start_date: Date;
   update_date: Date;
+  completed_date: Date;
   end_date: null;
   congregation_id: number;
 }

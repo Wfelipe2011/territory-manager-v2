@@ -10,7 +10,7 @@ export class DashboardService {
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
     const data = await this.prisma.$queryRaw<any>`
     SELECT
-        TO_CHAR(r.update_date, 'YYYY-MM-01') AS date,
+        TO_CHAR(r.completed_date, 'YYYY-MM-01') AS date,
         CAST(SUM(CASE WHEN t.name = 'Residencial' THEN 1 ELSE 0 END) AS INT) AS residential,
         CAST(SUM(CASE WHEN t.name = 'Comercial' THEN 1 ELSE 0 END) AS INT) AS commercial
     FROM
@@ -24,9 +24,9 @@ export class DashboardService {
     WHERE
         r.completed = TRUE
         AND r.tenant_id = ${tenantId}
-        AND r.update_date >= ${oneYearAgo}
+        AND r.completed_date >= ${oneYearAgo}
     GROUP BY
-        TO_CHAR(r.update_date, 'YYYY-MM-01')
+        TO_CHAR(r.completed_date, 'YYYY-MM-01')
     ORDER BY
         date;
     `;
