@@ -4,9 +4,9 @@ import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { Role } from 'src/enum/role.enum';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Prisma } from '@prisma/client';
-import { RequestUser } from 'src/interfaces/RequestUser';
 import { CreateReportDto } from './contracts/CreateReport';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
+import { UserToken } from '../auth/contracts';
 
 @Controller({
   version: VERSION.V1,
@@ -18,12 +18,13 @@ export class ReportController {
 
   @Get()
   @Roles(Role.ADMIN)
-  async getReports() {
+  async getReports(@CurrentUser() user: UserToken) {
     return this.prismaService.house.findMany({
       where: {
         reportType: {
           not: null,
         },
+        tenantId: user.tenantId,
       },
       include: {
         territory: {
@@ -53,7 +54,7 @@ export class ReportController {
   @Post()
   @Roles(Role.ADMIN, Role.DIRIGENTE, Role.PUBLICADOR)
   @UsePipes(new ValidationPipe({ transform: true }))
-  async createReport(@CurrentUser() user: RequestUser['user'], @Body() body: CreateReportDto) {
+  async createReport(@CurrentUser() user: UserToken, @Body() body: CreateReportDto) {
     return this.prismaService.$transaction(async tsx => {
       let backupHouse = null;
       if (body?.id) {
@@ -106,11 +107,11 @@ export class ReportController {
 
   @Post('approve/:id')
   @Roles(Role.ADMIN)
-  async approveReport(@Param('id', ParseIntPipe) id: number) {
+  async approveReport(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: UserToken) {
     this.logger.log(`Iniciando aprovação do report ${id}`);
     return this.prismaService.$transaction(async txt => {
       this.logger.log(`Buscando report ${id}`);
-      const house = await txt.house.findUnique({ where: { id } });
+      const house = await txt.house.findUnique({ where: { id, tenantId: user.tenantId } });
       if (!house) {
         this.logger.error(`Report ${id} não encontrado`);
         throw new Error('Registro não encontrado');
@@ -123,12 +124,14 @@ export class ReportController {
         await txt.round.deleteMany({
           where: {
             houseId: id,
+            tenantId: house.tenantId,
           },
         });
         this.logger.log(`Registros deletados com sucesso`);
         await txt.house.delete({
           where: {
             id,
+            tenantId: house.tenantId,
           },
         });
         this.logger.log(`Report ${id} aprovado com sucesso e registros deletados`);
@@ -136,7 +139,7 @@ export class ReportController {
       }
 
       await txt.house.update({
-        where: { id },
+        where: { id, tenantId: house.tenantId, },
         data: {
           reportType: null,
           backupData: Prisma.JsonNull,
@@ -173,11 +176,11 @@ export class ReportController {
 
   @Post('cancel/:id')
   @Roles(Role.ADMIN)
-  async cancelReport(@Param('id', ParseIntPipe) id: number) {
+  async cancelReport(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: UserToken) {
     return this.prismaService.$transaction(async tsx => {
       this.logger.log(`Iniciando cancelamento do report ${id}`);
       const house = await tsx.house.findUnique({
-        where: { id },
+        where: { id, tenantId: user.tenantId },
       });
       if (!house) {
         this.logger.error(`Report ${id} não encontrado`);
