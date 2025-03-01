@@ -12,8 +12,10 @@ import dayjs from 'dayjs';
 import { TransactionsService } from './transactions.service';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { PrismaService } from './infra/prisma/prisma.service';
+import { Public } from './decorators/public.decorator';
 
 dayjs.extend(customParseFormat);
+
 
 @Controller('transactions')
 export class TransactionsController {
@@ -69,6 +71,7 @@ export class TransactionsController {
         return this.transactionsService.saveTransactions(transactions);
     }
 
+    @Public()
     @Get('balance')
     async getBalance(
         @Query('startDate') startDate: string,
