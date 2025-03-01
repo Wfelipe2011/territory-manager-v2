@@ -32,6 +32,7 @@
   "dependencies": {
     "@logtail/node": "^0.4.12",
     "@logtail/winston": "^0.4.12",
+    "@nestjs/axios": "^4.0.0",
     "@nestjs/cache-manager": "^2.1.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.0.0",

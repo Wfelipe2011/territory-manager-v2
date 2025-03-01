@@ -22,9 +22,13 @@ import { PrismaModule } from './infra/prisma/prisma.module';
 import { PrismaConnectionMiddleware } from './infra/prisma/prisma-connection.middleware';
 import { BlockModule } from './modules/block/block.module';
 import { RecordsModule } from './modules/records/records.module';
+import { HttpModule } from '@nestjs/axios';
+import { TransactionsController } from './transactions.controller';
+import { TransactionsService } from './transactions.service';
 
 @Module({
   imports: [
+    HttpModule,
     PrismaModule,
     AuthModule,
     TerritoryModule,
@@ -50,7 +54,7 @@ import { RecordsModule } from './modules/records/records.module';
     BlockModule,
     RecordsModule
   ],
-  controllers: [AppController],
+  controllers: [AppController, TransactionsController],
   providers: [
     {
       provide: APP_GUARD,
@@ -68,6 +72,7 @@ import { RecordsModule } from './modules/records/records.module';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
+    TransactionsService
   ],
 })
 export class AppModule implements NestModule {

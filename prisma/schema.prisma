@@ -240,3 +240,28 @@ model socket {
   signatureKey String?    @map("signature_key")
   signature    signature? @relation(fields: [signatureKey], references: [key])
 }
+
+model paypal_transaction {
+  id                      Int      @id @unique @default(autoincrement())
+  transactionId           String   @unique // ID da transação do PayPal
+  date                    DateTime // Data da transação
+  time                    String // Horário da transação
+  timezone                String // Fuso horário
+  description             String? // Descrição da transação
+  currency                String // Moeda usada
+  grossAmount             Float // Valor bruto
+  feeAmount               Float // Tarifa
+  netAmount               Float // Valor líquido
+  balanceAfterTransaction Float? // Saldo após a transação
+  emailFrom               String? // Email do remetente
+  name                    String? // Nome do remetente
+  bankName                String? // Nome do banco
+  bankAccount             String? // Conta bancária
+  shippingAmount          Float? // Valor do frete
+  salesTax                Float? // Imposto sobre vendas
+  invoiceId               String? // ID da fatura
+  referenceTransactionId  String? // ID de referência da transação
+
+  createdAt DateTime @default(now()) // Data de criação do registro
+  updatedAt DateTime @updatedAt // Atualizado automaticamente
+}
