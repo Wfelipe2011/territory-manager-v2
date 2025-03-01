@@ -38,7 +38,10 @@ export class TransactionsController {
 
         const transactions = parsed.data
             .map((row: any) => {
-                const parsedDate = dayjs(row['Data'].trim(), 'DD/MM/YYYY', true);
+                // data vem DD/MM/YYYY vamos mudar para YYYY-MM-DD usando replace e regex
+                if (!row['Data']) return null; // Ignora transações sem data
+                row['Data'] = row['Data'].replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$3-$2-$1');
+                const parsedDate = dayjs(row['Data'].trim(), 'YYYY-MM-DD', true); // Valida a data
 
                 if (!parsedDate.isValid()) {
                     console.warn(`❌ Data inválida encontrada: ${row['Data']}`);
