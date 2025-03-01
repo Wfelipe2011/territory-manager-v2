@@ -182,7 +182,7 @@ export class TerritoryService {
       typeName: result.type.name,
       imageUrl: result.imageUrl,
       totalHouse: totalHousesByTerritory,
-      house: result.house.map(h => ({
+      house: result.house.filter(h => Boolean(h.number !== 'ghost')).map(h => ({
         id: h.id,
         dontVisit: h.dontVisit,
         legend: h.legend,

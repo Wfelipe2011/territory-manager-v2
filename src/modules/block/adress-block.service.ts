@@ -7,7 +7,7 @@ import { themeColors } from 'src/constants/themeColors';
 interface AddressDto {
     id?: number;
     street: string;
-    zipCode: string;
+    zipCode?: string;
 }
 
 @Injectable()
