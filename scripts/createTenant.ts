@@ -6,19 +6,19 @@ const prisma = new PrismaClient();
     await prisma.$connect()
 
     const tenant = {
-        name: "Teste Cadastro 1",
-        phone: "",
+        name: "Central Lorena",
+        phone: "12981829844",
     }
 
     const user = {
-        name: "Teste Cadastro 1",
-        email: uuid() + "@gmail.com",
+        name: "Central Lorena",
+        email: "joaowictor756@gmail.com",
         password: "$2b$10$wgySAFayJt4bIjhGCBVCxehxvW7Yk.TOxsZaEiBb9R8f5egKg73kq",
     }
 
     const types = [
         { name: 'Residencial' },
-        { name: 'Comercial' },
+        { name: 'Rural' },
     ]
 
     await prisma.multitenancy.create({

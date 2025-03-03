@@ -1,9 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { SignatureService } from '../signature/signature.service';
 import { ThemeMode } from '@prisma/client';
 import { themeColors } from 'src/constants/themeColors';
 import dayjs from 'dayjs';
+import { CreateRoundDto } from './contracts/CreateRoundDto';
 
 @Injectable()
 export class RoundService {
@@ -23,6 +24,7 @@ export class RoundService {
       ri.tenant_id,
       ri.color_primary,
       ri.color_secondary,
+      ri.type,
       MIN(r.start_date) AS start_date,
       MAX(r.end_date) AS end_date,
       CAST(SUM(CASE WHEN r.completed = TRUE THEN 1 ELSE 0 END) AS INT) AS completed,
@@ -36,7 +38,7 @@ export class RoundService {
         r.tenant_id = ${tenantId}
     GROUP BY 
         ri.id, ri.round_number, ri.name, ri.theme, ri.tenant_id, 
-        ri.color_primary, ri.color_secondary
+        ri.color_primary, ri.color_secondary, ri.type
     ORDER BY 
         ri.round_number;
     `;
@@ -53,6 +55,7 @@ export class RoundService {
       ri.tenant_id,
       ri.color_primary,
       ri.color_secondary,
+      ri.type,
       MIN(r.start_date) AS start_date,
       MAX(r.end_date) AS end_date,
       CAST(SUM(CASE WHEN r.completed = TRUE THEN 1 ELSE 0 END) AS INT) AS completed,
@@ -109,7 +112,7 @@ export class RoundService {
     return rawRounds;
   }
 
-  async startRound(tenantId: number, body: { name: string; theme: string }): Promise<void> {
+  async startRound(tenantId: number, body: CreateRoundDto): Promise<void> {
     const rounds = await this.prisma.round_info.findMany({
       where: {
         tenantId,
@@ -168,17 +171,24 @@ export class RoundService {
     this.logger.log(`Rodada ${roundNumber} para congregação ${territories[0].multitenancy.name} finalizada`);
   }
 
-  private async createRound(tenantId: number, rounds: any[], body: { name: string; theme: string }) {
+  private async createRound(tenantId: number, rounds: any[], body: CreateRoundDto) {
     await this.prisma.$transaction(async txt => {
       this.logger.log(`Iniciando criação da rodada para o inquilino ${tenantId}`);
       const houses = await txt.house.findMany({
         where: {
           tenantId,
+          territory: {
+            typeId: body.typeId
+          }
         },
         include: {
           address: true,
           block: true,
-          territory: true,
+          territory: {
+            include: {
+              type: true
+            }
+          },
           multitenancy: true,
           rounds: {
             where: {
@@ -193,16 +203,19 @@ export class RoundService {
           }
         },
       });
-
+      if (!houses.length) {
+        throw new NotFoundException("Nenhuma casa encontrada para a criação da rodada");
+      }
       this.logger.log(`Casas encontradas para o inquilino ${tenantId}: ${houses.length}`);
 
       const roundInfo = await txt.round_info.create({
         data: {
           roundNumber: rounds.length + 1,
           name: body.name,
-          theme: body.theme as ThemeMode,
-          colorPrimary: themeColors[body.theme as keyof typeof themeColors].primary,
-          colorSecondary: themeColors[body.theme as keyof typeof themeColors].secondary,
+          theme: body.theme,
+          colorPrimary: body.colorPrimary,
+          colorSecondary: body.colorSecondary,
+          type: houses[0].territory.type.name,
           tenantId,
         },
       });

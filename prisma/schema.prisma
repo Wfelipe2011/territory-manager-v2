@@ -171,6 +171,7 @@ model round_info {
   tenantId       Int       @map("tenant_id")
   colorPrimary   String?   @map("color_primary")
   colorSecondary String?   @map("color_secondary")
+  type           String    @default("Residencial")
 
   // index unico: tenantId, roundNumber
   @@unique([tenantId, roundNumber]) // Adicionando a anotação para criar a chave composta
