@@ -127,19 +127,15 @@ export class RoundService {
     await this.finish(tenantId, roundNumber);
   }
 
-  async getThemeRound(tenantId: number, roundNumber: number): Promise<ThemeMode> {
-    const round = await this.prisma.round.findFirst({
+  async getThemeRound(tenantId: number, roundNumber: number) {
+    const round = await this.prisma.round_info.findFirst({
       where: {
         tenantId,
         roundNumber,
       },
     });
 
-    if (!round) {
-      return ThemeMode.default;
-    }
-
-    return round.mode;
+    return round;
   }
 
   public async finish(tenantId: number, roundNumber: number): Promise<void> {
