@@ -23,7 +23,7 @@ export class AppController {
     const countSignatures = await this.prismaService.signature.count({
       where: {
         expirationDate: {
-          lte: new Date(),
+          gt: new Date(),
         },
       },
     });
