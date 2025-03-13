@@ -103,7 +103,7 @@ export class HouseService {
     if (!isAdmin && round.completed_date && body.status === false) {
       const now = dayjs();
       const updateDate = dayjs(round.completed_date);
-      if (now.diff(updateDate, 'day') > 2)
+      if (now.diff(updateDate, 'hours') > 5)
         throw new ForbiddenException(`Casa [${house?.territory.name}-${house?.block.name}-${house?.number}] não pode ser atualizada`);
     }
 

@@ -190,7 +190,7 @@ export class RoundService {
             where: {
               mode: ThemeMode.default,
               startDate: {
-                gte: dayjs().subtract(1, 'year').toDate(),
+                gte: getRoundStartDate(tenantId),
               },
             },
             select: {
@@ -220,7 +220,7 @@ export class RoundService {
 
       await txt.round.createMany({
         data: houses.map(house => {
-          const leaveLetter = house.rounds.every(r => !r.completed);
+          const leaveLetter = house.rounds.every(r => !r.completed) && body.theme === ThemeMode.default;
           return {
             houseId: house.id,
             blockId: house.blockId,
@@ -238,3 +238,11 @@ export class RoundService {
     }, { timeout: 120_000 });
   }
 }
+
+function getRoundStartDate(tenantId: number) {
+  if (tenantId === 2) return dayjs().subtract(1, 'year').toDate();
+  if (tenantId === 5) return dayjs().subtract(3, 'months').toDate();
+  if (tenantId === 9) return dayjs().subtract(3, 'months').toDate();
+  return dayjs().subtract(6, 'months').toDate();
+}
+

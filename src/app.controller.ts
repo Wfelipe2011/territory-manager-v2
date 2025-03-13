@@ -53,7 +53,7 @@ export class AppController {
     const cpuUsagePercent = currentLoad.currentLoad.toFixed(2); // Percentual de uso da CPU
 
     return {
-      message: `[${new Date().toISOString()}] - [${process.env.INSTANCE_ID}] - O servidor está em execução - Homologação!`,
+      message: `[${new Date().toISOString()}] - [${process.env.INSTANCE_ID}] - O servidor está em execução - Produção!`,
       signatures: countSignatures,
       sockets,
       database_info: {
