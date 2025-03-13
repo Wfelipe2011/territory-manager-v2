@@ -19,7 +19,6 @@ export class AppController {
   @ApiOkResponse({ description: 'Servidor está em execução', type: String })
   @Get('/health-check')
   async healthCheck() {
-    // Contagem de assinaturas expiradas
     const countSignatures = await this.prismaService.signature.count({
       where: {
         expirationDate: {
