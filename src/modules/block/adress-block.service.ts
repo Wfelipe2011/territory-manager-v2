@@ -121,7 +121,7 @@ export class AddressBlockService {
                 >`
                     SELECT id, name
                     FROM "address"
-                    WHERE similarity(name, ${address.street}) > 0.3
+                    WHERE similarity(name, ${address.street}) > 0.5
                     ORDER BY similarity(name, ${address.street}) DESC
                     LIMIT 1
                 `;
