@@ -7,6 +7,7 @@ import { Output, Round } from './dtos/Houses';
 import { LegengDTO } from './dtos/Legend';
 import dayjs from 'dayjs';
 import { UpdateHouseOrder } from './contracts/UpdateHouseOrder';
+import { getCustomHoursTenancy } from 'src/shared/getCustomHoursTenancy';
 
 export type CreateHouseInput = {
   streetId: number;
@@ -16,13 +17,6 @@ export type CreateHouseInput = {
   territoryId: number;
   blockId: number;
 };
-
-function getCustomHoursTenancy(tenantId?: number) {
-  if (tenantId === 6) {
-    return 24 * 7; // 7 dias
-  }
-  return 5; // 5 horas
-}
 
 @Injectable()
 export class HouseService {

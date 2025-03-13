@@ -1,4 +1,3 @@
-import { Signature } from './../territory/contracts/index';
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { calculateExpiresIn, uuid } from 'src/shared';
@@ -7,6 +6,7 @@ import { envs } from 'src/infra/envs';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Role } from 'src/enum/role.enum';
 import { SignatureDate } from './usecase/SignatureDate';
+import { getCustomHoursTenancy } from 'src/shared/getCustomHoursTenancy';
 
 type GenerateTerritoryParams = {
   overseer: string;
@@ -86,7 +86,7 @@ export class SignatureService {
     if (territoryBlock?.signature?.id) throw new BadRequestException('Assinatura já gerada');
 
     const uniqueId = uuid();
-    const expirationTime = new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(); // 5 horas
+    const expirationTime = new Date(Date.now() + getCustomHoursTenancy(territoryBlock?.tenantId) * 60 * 60 * 1000).toISOString(); // 5 horas ou customizado
     const token = this.createJWT({ id: uniqueId, territoryId, blockId, roles: [Role.PUBLICADOR], tenantId, round }, expirationTime);
     const signature = await this.createSignature(uniqueId, new Date(expirationTime), token, tenantId);
 
