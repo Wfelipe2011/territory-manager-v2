@@ -17,6 +17,13 @@ export type CreateHouseInput = {
   blockId: number;
 };
 
+function getCustomHoursTenancy(tenantId?: number) {
+  if (tenantId === 6) {
+    return 24 * 7; // 7 dias
+  }
+  return 5; // 5 horas
+}
+
 @Injectable()
 export class HouseService {
   private logger = new Logger(HouseService.name);
@@ -103,7 +110,7 @@ export class HouseService {
     if (!isAdmin && round.completed_date && body.status === false) {
       const now = dayjs();
       const updateDate = dayjs(round.completed_date);
-      if (now.diff(updateDate, 'hours') > 5)
+      if (now.diff(updateDate, 'hours') > getCustomHoursTenancy(house?.tenantId))
         throw new ForbiddenException(`Casa [${house?.territory.name}-${house?.block.name}-${house?.number}] não pode ser atualizada`);
     }
 
