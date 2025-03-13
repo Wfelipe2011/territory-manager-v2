@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 
@@ -13,15 +13,26 @@ import { RoundModule } from './modules/round/round.module';
 import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 import { HouseModule } from './modules/house/house.module';
 import { EventsModule } from './modules/gateway/event.module';
-import { PrismaService } from './infra/prisma.service';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AddressModule } from './modules/address/address.module';
 import { TenancyModule } from './modules/tenancy/tenancy.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { ReportModule } from './modules/report/report.module';
+import { PrismaModule } from './infra/prisma/prisma.module';
+import { PrismaConnectionMiddleware } from './infra/prisma/prisma-connection.middleware';
+import { BlockModule } from './modules/block/block.module';
+import { RecordsModule } from './modules/records/records.module';
+import { HttpModule } from '@nestjs/axios';
+import { TransactionsController } from './transactions.controller';
+import { TransactionsService } from './transactions.service';
 
 @Module({
   imports: [
+    HttpModule,
+    PrismaModule,
     AuthModule,
     TerritoryModule,
+    DashboardModule,
     HouseModule,
     RoundModule,
     SignatureModule,
@@ -39,8 +50,11 @@ import { TenancyModule } from './modules/tenancy/tenancy.module';
       limit: 10000, //
     }),
     TenancyModule,
+    ReportModule,
+    BlockModule,
+    RecordsModule
   ],
-  controllers: [AppController],
+  controllers: [AppController, TransactionsController],
   providers: [
     {
       provide: APP_GUARD,
@@ -58,7 +72,11 @@ import { TenancyModule } from './modules/tenancy/tenancy.module';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
-    PrismaService,
+    TransactionsService
   ],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(PrismaConnectionMiddleware).forRoutes('*');
+  }
+}

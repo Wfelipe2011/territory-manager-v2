@@ -13,9 +13,12 @@ model address {
   name String
 
   // Relacionamentos
-  houses       house[]
-  multitenancy multitenancy @relation(fields: [tenantId], references: [id])
-  tenantId     Int          @map("tenant_id")
+  houses                  house[]
+  multitenancy            multitenancy              @relation(fields: [tenantId], references: [id])
+  tenantId                Int                       @map("tenant_id")
+  zipCode                 String?                   @map("zip_code")
+  // Relacionamentos
+  territory_block_address territory_block_address[]
 }
 
 model type {
@@ -40,26 +43,42 @@ model block {
   round           round[]
 }
 
+enum ReportType {
+  add
+  remove
+  update
+}
+
 model house {
-  id           Int       @id @unique @default(autoincrement())
-  number       String
-  complement   String?
-  legend       String?
-  order        Int?
-  dontVisit    Boolean   @default(false) @map("dont_visit")
-  observations String?
-  block        block     @relation(fields: [blockId], references: [id])
-  blockId      Int       @map("block_id")
-  address      address   @relation(fields: [addressId], references: [id])
-  addressId    Int       @map("address_id")
+  id                      Int       @id @unique @default(autoincrement())
+  number                  String
+  dontVisit               Boolean   @default(false) @map("dont_visit")
+  block                   block     @relation(fields: [blockId], references: [id])
+  blockId                 Int       @map("block_id") /// @deprecated Use `territoryBlockAddressId` instead.
+  address                 address   @relation(fields: [addressId], references: [id])
+  addressId               Int       @map("address_id") /// @deprecated Use `territoryBlockAddressId` instead.
+  territory               territory @relation(fields: [territoryId], references: [id])
+  territoryId             Int       @map("territory_id") /// @deprecated Use `territoryBlockAddressId` instead.
+  territoryBlockAddressId Int?      @map("territory_block_address_id")
+
   phone        String?
-  territory    territory @relation(fields: [territoryId], references: [id])
-  territoryId  Int       @map("territory_id")
+  legend       String?
+  complement   String?
+  order        Int?
+  observations String?
+  reportType   ReportType? @map("report_type")
+  backupData   Json?       @map("backup_data")
 
   // Relacionamentos
-  rounds       round[]
-  multitenancy multitenancy @relation(fields: [tenantId], references: [id])
-  tenantId     Int          @map("tenant_id")
+  rounds                round[]
+  multitenancy          multitenancy             @relation(fields: [tenantId], references: [id])
+  tenantId              Int                      @map("tenant_id")
+  territoryBlockAddress territory_block_address? @relation(fields: [territoryBlockAddressId], references: [id])
+}
+
+model firebase {
+  id     Int  @id @unique @default(autoincrement())
+  config Json
 }
 
 model multitenancy {
@@ -68,16 +87,17 @@ model multitenancy {
   phone String?
 
   // Relacionamentos
-  users              user[]
-  territories        territory[]
-  addresses          address[]
-  blocks             block[]
-  houses             house[]
-  round              round[]
-  type               type[]
-  territory_block    territory_block[]
-  territory_overseer territory_overseer[]
-  signature          signature[]
+  users                   user[]
+  territories             territory[]
+  addresses               address[]
+  blocks                  block[]
+  houses                  house[]
+  round                   round[]
+  type                    type[]
+  territory_block         territory_block[]
+  territory_overseer      territory_overseer[]
+  signature               signature[]
+  territory_block_address territory_block_address[]
 
   @@map("multi_tenancy")
 }
@@ -99,17 +119,31 @@ model territory {
 }
 
 model territory_block {
-  id           Int          @id @unique @default(autoincrement())
-  block        block        @relation(fields: [blockId], references: [id])
-  blockId      Int          @map("block_id")
-  territory    territory    @relation(fields: [territoryId], references: [id])
-  territoryId  Int          @map("territory_id")
-  signature    signature?   @relation(fields: [signatureId], references: [id])
-  signatureId  Int?         @map("signature_id")
-  multitenancy multitenancy @relation(fields: [tenantId], references: [id])
-  tenantId     Int          @map("tenant_id")
+  id                      Int                       @id @unique @default(autoincrement())
+  block                   block                     @relation(fields: [blockId], references: [id])
+  blockId                 Int                       @map("block_id")
+  territory               territory                 @relation(fields: [territoryId], references: [id])
+  territoryId             Int                       @map("territory_id")
+  signature               signature?                @relation(fields: [signatureId], references: [id])
+  signatureId             Int?                      @map("signature_id")
+  multitenancy            multitenancy              @relation(fields: [tenantId], references: [id])
+  tenantId                Int                       @map("tenant_id")
+  territory_block_address territory_block_address[]
 
   @@unique([territoryId, blockId]) // Adicionando a anotação para criar a chave composta
+}
+
+model territory_block_address {
+  id               Int             @id @unique @default(autoincrement())
+  territoryBlock   territory_block @relation(fields: [territoryBlockId], references: [id])
+  territoryBlockId Int             @map("territory_block_id")
+  address          address         @relation(fields: [addressId], references: [id])
+  addressId        Int             @map("address_id")
+  multitenancy     multitenancy    @relation(fields: [tenantId], references: [id])
+  tenantId         Int             @map("tenant_id")
+  house            house[]
+
+  @@unique([territoryBlockId, addressId]) // Adicionando a anotação para criar a chave composta
 }
 
 model territory_overseer {
@@ -129,6 +163,20 @@ model territory_overseer {
   @@index([territoryId, roundNumber])
 }
 
+model round_info {
+  id             Int       @id @unique @default(autoincrement())
+  roundNumber    Int       @map("round_number")
+  name           String
+  theme          ThemeMode
+  tenantId       Int       @map("tenant_id")
+  colorPrimary   String?   @map("color_primary")
+  colorSecondary String?   @map("color_secondary")
+  type           String    @default("Residencial")
+
+  // index unico: tenantId, roundNumber
+  @@unique([tenantId, roundNumber]) // Adicionando a anotação para criar a chave composta
+}
+
 // index unico: houseId, territoryId, blockId, tenantId, roundNumber
 model round {
   id          Int @id @unique @default(autoincrement())
@@ -142,14 +190,16 @@ model round {
   block       block     @relation(fields: [blockId], references: [id])
   blockId     Int       @map("block_id")
 
-  completed  Boolean
-  startDate  DateTime  @default(now()) @map("start_date")
-  updateDate DateTime? @map("update_date")
-  endDate    DateTime? @map("end_date")
+  completed     Boolean
+  startDate     DateTime  @default(now()) @map("start_date")
+  updateDate    DateTime? @map("update_date")
+  completedDate DateTime? @map("completed_date")
+  endDate       DateTime? @map("end_date")
 
   multitenancy multitenancy @relation(fields: [tenantId], references: [id])
   tenantId     Int          @map("tenant_id")
   mode         ThemeMode    @default(default)
+  leaveLetter  Boolean      @default(false) @map("leave_letter")
 
   @@unique([houseId, territoryId, blockId, tenantId, roundNumber]) // Adicionando a anotação para criar a chave composta
 }
@@ -190,4 +240,29 @@ model socket {
   createdAt    DateTime   @default(now()) @map("created_at")
   signatureKey String?    @map("signature_key")
   signature    signature? @relation(fields: [signatureKey], references: [key])
+}
+
+model paypal_transaction {
+  id                      Int      @id @unique @default(autoincrement())
+  transactionId           String   @unique // ID da transação do PayPal
+  date                    DateTime // Data da transação
+  time                    String // Horário da transação
+  timezone                String // Fuso horário
+  description             String? // Descrição da transação
+  currency                String // Moeda usada
+  grossAmount             Float // Valor bruto
+  feeAmount               Float // Tarifa
+  netAmount               Float // Valor líquido
+  balanceAfterTransaction Float? // Saldo após a transação
+  emailFrom               String? // Email do remetente
+  name                    String? // Nome do remetente
+  bankName                String? // Nome do banco
+  bankAccount             String? // Conta bancária
+  shippingAmount          Float? // Valor do frete
+  salesTax                Float? // Imposto sobre vendas
+  invoiceId               String? // ID da fatura
+  referenceTransactionId  String? // ID de referência da transação
+
+  createdAt DateTime @default(now()) // Data de criação do registro
+  updatedAt DateTime @updatedAt // Atualizado automaticamente
 }

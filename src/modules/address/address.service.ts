@@ -1,10 +1,10 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/infra/prisma.service';
+import { PrismaService } from 'src/infra/prisma/prisma.service';
 
 @Injectable()
 export class AddressService {
   private logger = new Logger(AddressService.name);
-  constructor(readonly prisma: PrismaService) {}
+  constructor(readonly prisma: PrismaService) { }
 
   async findAll(territoryId: number) {
     const territory = await this.prisma.territory.findUnique({
@@ -21,5 +21,21 @@ export class AddressService {
       order by a."name"
     `;
     return addresses;
+  }
+
+  async findAllAddresses(tenantId: number) {
+    return this.prisma.address.findMany({
+      select: {
+        id: true,
+        name: true,
+        zipCode: true,
+      },
+      where: {
+        tenantId,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
   }
 }

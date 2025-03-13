@@ -1,9 +1,9 @@
 import { Logger, MethodNotAllowedException, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/infra/prisma.service';
+import { PrismaService } from 'src/infra/prisma/prisma.service';
 
 export class SignatureIsValid {
   logger = new Logger(SignatureIsValid.name);
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
   async execute(signatureId: string): Promise<void> {
     this.logger.log('Validando assinatura');
     const signature = await this.prisma.signature.findUnique({

@@ -1,4 +1,4 @@
-import { PrismaService } from './infra/prisma.service';
+import { PrismaService } from './infra/prisma/prisma.service';
 import { Controller, Get, Logger } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from './decorators/public.decorator';
@@ -53,7 +53,7 @@ export class AppController {
     const cpuUsagePercent = currentLoad.currentLoad.toFixed(2); // Percentual de uso da CPU
 
     return {
-      message: `[${new Date().toISOString()}] - [${process.env.INSTANCE_ID}] - O servidor está em execução - Produção!`,
+      message: `[${new Date().toISOString()}] - [${process.env.INSTANCE_ID}] - O servidor está em execução - Homologação!`,
       signatures: countSignatures,
       sockets,
       database_info: {

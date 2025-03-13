@@ -1,7 +1,7 @@
 import { Logger, UseGuards } from '@nestjs/common';
 import { SubscribeMessage, MessageBody, WebSocketGateway, ConnectedSocket, WebSocketServer, OnGatewayInit } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
-import { PrismaService } from 'src/infra/prisma.service';
+import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { AuthGuard } from '../auth/guard/auth.guard';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
@@ -112,10 +112,10 @@ export class EventsGateway implements OnGatewayInit {
     this.server.to(roomName).emit(`${roomName}`, data);
   }
 
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  // @Cron(CronExpression.EVERY_30_SECONDS)
   async handleCron() {
     this.logger.log('Iniciando verificação de sockets');
-
+    await this.prisma.connectToDatabase();
     this.logger.log('Buscando sockets no banco de dados');
     const sockets = await this.prisma.socket.findMany();
     const socketIds = sockets.map(socket => socket.socketId);

@@ -2,20 +2,22 @@ import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { VersioningType } from '@nestjs/common';
+import { Logger, VersioningType } from '@nestjs/common';
 import fs from 'fs';
 import { uuid } from './shared';
 process.env.INSTANCE_ID = `pod-${uuid()}`;
 process.env.TZ = 'America/Sao_Paulo';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
+  logger.debug('Iniciando a aplicação...');
   const { version, description, title } = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
   const app = await NestFactory.create(AppModule);
   app.enableCors();
   app.enableVersioning({
     type: VersioningType.URI,
   });
-
+  logger.debug('Configurando a documentação da API...');
   const config = new DocumentBuilder()
     .setTitle(title)
     .setDescription('Bem-vindo à API do Territory Manager!')
@@ -26,8 +28,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
 
   SwaggerModule.setup('api', app, document);
-  console.log(process.env);
 
-  await app.listen(process.env.PORT!);
+  await app.listen(process.env.PORT!, () => {
+    logger.debug(`Aplicação iniciada na porta ${process.env.PORT}`);
+  });
 }
 bootstrap();

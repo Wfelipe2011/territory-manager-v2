@@ -1,4 +1,4 @@
-import { PrismaService } from './../../infra/prisma.service';
+import { PrismaService } from '../../infra/prisma/prisma.service';
 import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { BlockSignatureDTO } from './dtos/BlockSignatureDTO';
 import { BlockSignature } from './dtos/BlockSignature';
@@ -6,6 +6,7 @@ import { RawHouse } from './dtos/RawHouse';
 import { Output, Round } from './dtos/Houses';
 import { LegengDTO } from './dtos/Legend';
 import dayjs from 'dayjs';
+import { UpdateHouseOrder } from './contracts/UpdateHouseOrder';
 
 export type CreateHouseInput = {
   streetId: number;
@@ -19,7 +20,7 @@ export type CreateHouseInput = {
 @Injectable()
 export class HouseService {
   private logger = new Logger(HouseService.name);
-  constructor(readonly prisma: PrismaService) {}
+  constructor(readonly prisma: PrismaService) { }
 
   async getAddressPerTerritoryByIdAndBlockById(blockId: number, territoryId: number) {
     const territoryBlock = await this.prisma.territory_block.findUnique({
@@ -52,7 +53,9 @@ export class HouseService {
           h.legend,
           h."order",
           h.dont_visit,
+          h.report_type,
           round.completed as status,
+          round.leave_letter,
           a."name" as street_name,
           b."name" as block_name,
           t."name" as territory_name
@@ -74,14 +77,16 @@ export class HouseService {
       territoryName: territory_name,
       blockName: block_name,
       streetName: street_name,
-      houses: houses.map(house => ({
+      houses: houses.filter(h => h.number !== "ghost").map(house => ({
         id: house.house_id,
         number: house.number,
         complement: house.complement,
+        leaveLetter: house.leave_letter,
         legend: LegengDTO.mapper(house?.legend),
         order: house.order,
         status: house.status,
         dontVisit: house.dont_visit,
+        reportType: house.report_type,
       })),
     };
 
@@ -95,16 +100,19 @@ export class HouseService {
 
     this.logger.log(`Verificando se a casa [${house?.territory.name}-${house?.block.name}-${house?.number}] pode ser atualizada`);
 
-    if (!isAdmin && round.update_date && body.status === false) {
+    if (!isAdmin && round.completed_date && body.status === false) {
       const now = dayjs();
-      const updateDate = dayjs(round.update_date);
+      const updateDate = dayjs(round.completed_date);
       if (now.diff(updateDate, 'day') > 2)
         throw new ForbiddenException(`Casa [${house?.territory.name}-${house?.block.name}-${house?.number}] não pode ser atualizada`);
     }
 
-    await this.prisma.$queryRaw`UPDATE round SET update_date = ${new Date()}, completed = ${
-      body.status
-    } WHERE house_id = ${houseId} AND round_number = ${roundNumber}`;
+    await this.prisma.$queryRaw`
+      UPDATE round SET 
+        update_date = ${new Date()}, 
+        completed = ${body.status}, 
+        completed_date = ${new Date()} 
+      WHERE house_id = ${houseId} AND round_number = ${roundNumber}`;
 
     this.logger.log(`Casa [${house?.territory.name}-${house?.block.name}-${house?.number}] atualizada com sucesso`);
 
@@ -127,7 +135,7 @@ export class HouseService {
       INNER JOIN address a ON a.id = h.address_id 
       INNER JOIN block b ON b.id = h.block_id
       LEFT JOIN territory_overseer to2 on to2.territory_id = t.id  and to2.finished = false 
-      WHERE h.territory_id = ${territoryId} AND h.block_id = ${blockId}
+      WHERE h.territory_id = ${territoryId} AND h.block_id = ${blockId} 
     `;
   }
 
@@ -267,5 +275,21 @@ export class HouseService {
     this.logger.log(`Rodadas deletadas com sucesso da casa ${id}`);
     await this.prisma.house.delete({ where: { id } });
     this.logger.log(`Casa ${id} deletada com sucesso`);
+  }
+
+  async updateOrder(inputs: UpdateHouseOrder): Promise<void> {
+    this.logger.log(`Atualizando ordem das casas`);
+    await this.prisma.$transaction(inputs.houses.map(house => {
+      this.logger.log(`Atualizando casa ${house.id} para a ordem ${house.order}`);
+      return this.prisma.house.update({
+        where: {
+          id: house.id,
+        },
+        data: {
+          order: house.order,
+        },
+      });
+    }));
+    this.logger.log(`Ordem das casas atualizada com sucesso`);
   }
 }

@@ -1,13 +1,14 @@
-import { ConsoleLogger, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/infra/prisma.service';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { TerritoryAllInput, TerritoryAllOutput, TerritoryOneOutput, TerritoryTypesOutput } from './contracts';
 import { RawTerritoryAll, RawTerritoryOne } from './interfaces';
 import { Prisma } from '@prisma/client';
+import { CreateTerritoryParams } from './contracts/UpsertTerritoryParams';
 
 @Injectable()
 export class TerritoryService {
   private readonly logger = new Logger(TerritoryService.name);
-  constructor(readonly prisma: PrismaService) {}
+  constructor(readonly prisma: PrismaService) { }
 
   async findAll(territoryDto: TerritoryAllInput, tenantId: number): Promise<TerritoryAllOutput[]> {
     const { filter = '', type } = territoryDto;
@@ -15,6 +16,7 @@ export class TerritoryService {
     const territories = (await this.prisma.$queryRaw`
       SELECT 
           t.id as territory_id,
+          t.type_id,
           t.name,
           to2.overseer,
           s.key,
@@ -26,7 +28,8 @@ export class TerritoryService {
       INNER JOIN round r ON r.territory_id = t.id and r.round_number = ${+territoryDto.round}
       LEFT JOIN territory_overseer to2 ON to2.territory_id = t.id AND to2.signature_id IS NOT NULL AND to2.round_number = ${+territoryDto.round}
       LEFT JOIN signature s ON s.id = to2.signature_id
-      WHERE t.type_id = ${+type} AND t.tenant_id = ${+tenantId}
+      WHERE t.tenant_id = ${+tenantId}
+      ${type ? Prisma.sql`AND t.type_id = ${+type}` : Prisma.empty}
       ${filter ? Prisma.sql`AND LOWER(t.name) LIKE '%' || ${filter.toLowerCase()} || '%'` : Prisma.empty} 
       GROUP BY t.id, t.name, to2.overseer, s.key, s.expiration_date
       ORDER BY t.name ASC;
@@ -72,14 +75,26 @@ export class TerritoryService {
     if (territoryDto.history.filter(h => !h.finished).length === 0)
       throw new NotFoundException(`Território: ${territoryDto.territoryName} não tem histórico assinatura`);
     await Promise.all(
-      territoryDto.blocks.map(async block => {
-        const like = `%${territoryId}-${block.id}%`;
-        const [connections] = await this.prisma.$queryRaw<{ count: BigInt }[]>`
+      [
+        ...territoryDto.blocks.map(async block => {
+          const houseGhost = await this.prisma.house.count({
+            where: {
+              territoryId,
+              blockId: block.id,
+              number: 'ghost'
+            }
+          })
+          block.positiveCompleted -= houseGhost
+        }),
+        ...territoryDto.blocks.map(async block => {
+          const like = `%${territoryId}-${block.id}%`;
+          const [connections] = await this.prisma.$queryRaw<{ count: BigInt }[]>`
           select count(s.id)  from socket s 
           where s.room LIKE ${like};
         `;
-        block.connections = +connections.count.toString();
-      })
+          block.connections = +connections.count.toString();
+        })
+      ]
     );
 
     this.logger.log(`Território: ${territoryDto.territoryName}`);
@@ -167,7 +182,7 @@ export class TerritoryService {
       typeName: result.type.name,
       imageUrl: result.imageUrl,
       totalHouse: totalHousesByTerritory,
-      house: result.house.map(h => ({
+      house: result.house.filter(h => Boolean(h.number !== 'ghost')).map(h => ({
         id: h.id,
         dontVisit: h.dontVisit,
         legend: h.legend,
@@ -190,6 +205,28 @@ export class TerritoryService {
         pageSize: pagination.pageSize,
       },
     };
+  }
+
+  async create(params: CreateTerritoryParams, tenantId: number) {
+    return this.prisma.territory.create({
+      data: {
+        tenantId,
+        name: params.name,
+        typeId: params.typeId
+      }
+    })
+  }
+
+  async update(territoryId: number, params: CreateTerritoryParams) {
+    return this.prisma.territory.update({
+      where: {
+        id: territoryId
+      },
+      data: {
+        name: params.name,
+        typeId: params.typeId
+      }
+    })
   }
 
   processStreetFilter(streetFilter?: string) {

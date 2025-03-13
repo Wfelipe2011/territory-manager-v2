@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from 'src/infra/prisma.service';
+import { PrismaService } from 'src/infra/prisma/prisma.service';
 import xlsx from 'node-xlsx';
 import EventEmitter from 'events';
 // import { UploadGateway } from '../gateway/upload.gateway';

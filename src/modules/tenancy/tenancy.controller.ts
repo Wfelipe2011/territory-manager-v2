@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enum/role.enum';
 import { VERSION } from 'src/enum/version.enum';
-import { PrismaService } from 'src/infra/prisma.service';
+import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { RequestUser } from 'src/interfaces/RequestUser';
 
 @ApiBearerAuth()
@@ -13,7 +13,7 @@ import { RequestUser } from 'src/interfaces/RequestUser';
 })
 export class TenancyController {
   private logger = new Logger(TenancyController.name);
-  constructor(readonly prisma: PrismaService) {}
+  constructor(readonly prisma: PrismaService) { }
 
   @Roles(Role.ADMIN, Role.DIRIGENTE, Role.PUBLICADOR)
   @Get('/info')
