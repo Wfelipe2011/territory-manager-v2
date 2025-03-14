@@ -60,6 +60,7 @@ export class UpsertAddressDto {
     type: String,
     example: '12345-678'
   })
+  @IsOptional()
   @IsString({ message: 'O campo "cep" deve ser um texto' })
   zipCode?: string;
 }
