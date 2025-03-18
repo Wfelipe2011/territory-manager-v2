@@ -42,7 +42,7 @@ export class TerritoryService {
     this.logger.log('Buscando detalhes do territórios');
 
     const territory = await this.prisma.$queryRaw<RawTerritoryOne[]>`
-      SELECT
+      SELECT DISTINCT
         t.id as territory_id,
         t.image_url,
         t."name" as territory_name,
@@ -62,10 +62,10 @@ export class TerritoryService {
       LEFT JOIN territory_block tb ON tb.territory_id = t.id
       LEFT JOIN block b ON b.id = tb.block_id
       LEFT JOIN house h ON h.block_id = tb.block_id AND h.territory_id = tb.territory_id
-      INNER JOIN round ON round.house_id = h.id  AND round.round_number = ${+round}
+      INNER JOIN round ON round.house_id = h.id  AND round.round_number = ${+round} 
       left join territory_overseer tov on tov.territory_id = t.id AND tov.round_number = ${+round}
        left join signature s on s.id = tb.signature_id
-      WHERE t.id = ${territoryId}
+      WHERE t.id = ${territoryId} and h.number <> 'ghost'
       GROUP BY t.id, t."name", tb.signature_id, b.id, b."name", tov.overseer, tov.finished, tov.initial_date, s."key", tov.expiration_date, s.expiration_date
       ORDER BY negative_completed DESC;
       `;
