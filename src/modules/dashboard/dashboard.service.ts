@@ -16,7 +16,7 @@ export class DashboardService {
 
     const data = await this.prisma.$queryRawUnsafe<any>(`
       SELECT
-          TO_CHAR(r.completed_date, 'YYYY-MM-01') AS date,
+          TO_CHAR(r.completed_date, 'YYYY-MM-DD') AS date,
           ${typeColumns}
       FROM
           round r
@@ -31,7 +31,7 @@ export class DashboardService {
           AND r.tenant_id = ${tenantId}
           AND r.completed_date >= '${oneYearAgoString}'
       GROUP BY
-          TO_CHAR(r.completed_date, 'YYYY-MM-01')
+          TO_CHAR(r.completed_date, 'YYYY-MM-DD')
       ORDER BY
           date;
 `);
