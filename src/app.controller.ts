@@ -19,36 +19,21 @@ export class AppController {
   @ApiOkResponse({ description: 'Servidor está em execução', type: String })
   @Get('/health-check')
   async healthCheck() {
-    const countSignatures = await this.prismaService.signature.count({
-      where: {
-        expirationDate: {
-          gt: new Date(),
-        },
-      },
-    });
 
-    // Consultas ao banco de dados
-    const [{ max_connections }] = (await this.prismaService.$queryRaw`show max_connections`) as { max_connections: string }[];
-    const [{ count: countActive }] = (await this.prismaService
-      .$queryRaw`select count(1) from pg_stat_activity where state = 'active' and datname = ${process.env.POSTGRES_DB}`) as {
-        count: BigInt;
-      }[];
-    const [{ count: countIdle }] = (await this.prismaService
-      .$queryRaw`select count(1) from pg_stat_activity where state = 'idle' and datname = ${process.env.POSTGRES_DB}`) as {
-        count: BigInt;
-      }[];
-    const sockets = await this.prismaService.socket.count();
+    const [databaseInfo, currentLoad, lastChanges] = await Promise.all([
+      this.getDatabaseInfo(),
+      si.currentLoad(),
+      this.getLastChanges(),
+    ]);
 
-    // Informações do sistema operacional
-    const uptime = os.uptime(); // Tempo de atividade do sistema em segundos
-    const totalMem = os.totalmem(); // Memória total (bytes)
-    const freeMem = os.freemem(); // Memória livre (bytes)
-    const usedMem = totalMem - freeMem; // Memória usada (bytes)
-    const memoryUsagePercent = ((usedMem / totalMem) * 100).toFixed(2); // Porcentagem usada
-    const loadAverage = os.loadavg(); // Carga média do sistema nos últimos 1, 5, 15 minutos
-
-    // Informações detalhadas de CPU
-    const currentLoad = await si.currentLoad();
+    const {
+      max_connections,
+      countActive,
+      countIdle,
+      sockets,
+      countSignatures
+    } = databaseInfo
+    const { uptime, totalMem, usedMem, freeMem, memoryUsagePercent, loadAverage } = this.getSystemInfo(); // Carga média do sistema nos últimos 1, 5, 15 minutos
     const cpuUsagePercent = currentLoad.currentLoad.toFixed(2); // Percentual de uso da CPU
 
     return {
@@ -73,6 +58,65 @@ export class AppController {
           "15_min": loadAverage[2],
         },
       },
+      last_changes: lastChanges,
     };
+  }
+
+  private getSystemInfo() {
+    const uptime = os.uptime(); // Tempo de atividade do sistema em segundos
+    const totalMem = os.totalmem(); // Memória total (bytes)
+    const freeMem = os.freemem(); // Memória livre (bytes)
+    const usedMem = totalMem - freeMem; // Memória usada (bytes)
+    const memoryUsagePercent = ((usedMem / totalMem) * 100).toFixed(2); // Porcentagem usada
+    const loadAverage = os.loadavg(); // Carga média do sistema nos últimos 1, 5, 15 minutos
+    return { uptime, totalMem, usedMem, freeMem, memoryUsagePercent, loadAverage };
+  }
+
+  private async getDatabaseInfo() {
+    const [[{ max_connections }], [{ count: countActive }], [{ count: countIdle }], sockets, countSignatures] = await Promise.all([
+      this.prismaService.$queryRaw`show max_connections` as Promise<{ max_connections: string }[]>,
+      this.prismaService.$queryRaw`select count(1) from pg_stat_activity where state = 'active' and datname = ${process.env.POSTGRES_DB}` as Promise<{ count: BigInt }[]>,
+      this.prismaService.$queryRaw`select count(1) from pg_stat_activity where state = 'idle' and datname = ${process.env.POSTGRES_DB}` as Promise<{ count: BigInt }[]>,
+      this.prismaService.socket.count(),
+      this.prismaService.signature.count({
+        where: {
+          expirationDate: {
+            gt: new Date(),
+          },
+        },
+      })
+    ]);
+    return {
+      max_connections,
+      countActive,
+      countIdle,
+      sockets,
+      countSignatures
+    };
+  }
+
+  private async getLastChanges() {
+    return await this.prismaService.$queryRaw`
+      SELECT
+        m.name AS congregation,
+        r.round_number as round,
+        (COALESCE(r.update_date, r.completed_date, r.end_date, r.start_date) - INTERVAL '3 hours') AS last_change_utc_minus3
+      FROM (
+        SELECT 
+          *,
+          ROW_NUMBER() OVER (
+            PARTITION BY tenant_id 
+            ORDER BY 
+              COALESCE(update_date, completed_date, end_date, start_date) DESC
+          ) AS row_num
+        FROM 
+          round
+      ) AS r
+      JOIN multi_tenancy m ON r.tenant_id = m.id
+      WHERE 
+        r.row_num = 1
+      ORDER BY 
+        last_change_utc_minus3 DESC;
+      `;
   }
 }

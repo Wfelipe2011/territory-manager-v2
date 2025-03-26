@@ -85,6 +85,8 @@ model multitenancy {
   id    Int     @id @unique @default(autoincrement())
   name  String
   phone String?
+  city  String  @default("Sorocaba")
+  state String  @default("SP")
 
   // Relacionamentos
   users                   user[]
