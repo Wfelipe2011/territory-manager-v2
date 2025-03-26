@@ -100,6 +100,7 @@ export class AppController {
       SELECT
         m.name AS congregation,
         r.round_number as round,
+        m.city as city,
         (COALESCE(r.update_date, r.completed_date, r.end_date, r.start_date)) AS last_change_utc_minus3
       FROM (
         SELECT 
