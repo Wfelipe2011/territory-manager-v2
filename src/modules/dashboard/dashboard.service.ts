@@ -34,7 +34,10 @@ export class DashboardService {
           TO_CHAR(r.completed_date, 'YYYY-MM-DD')
       ORDER BY
           date;
-`);
+`).catch((err) => {
+      console.log(err);
+      return [];
+    })
     return data;
   }
 
@@ -55,7 +58,13 @@ export class DashboardService {
       house h ON tr.id = h.territory_id
     WHERE
       h.tenant_id = ${tenantId}
-    `);
+    `).catch((err) => {
+      console.log(err);
+      return [{
+        "Residencial": 0,
+        "total": 0
+      }];
+    });
     return data[0];
   }
 }
