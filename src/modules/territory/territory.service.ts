@@ -57,7 +57,8 @@ export class TerritoryService {
         b."name" as block_name,
         s."key" as signature_key,
         tov.expiration_date,
-        s.expiration_date as signature_expiration_date
+        s.expiration_date as signature_expiration_date,
+        MAX(round.update_date) as round_update_at
       FROM territory t
       LEFT JOIN territory_block tb ON tb.territory_id = t.id
       LEFT JOIN block b ON b.id = tb.block_id

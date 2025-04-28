@@ -54,6 +54,8 @@ class Blocks {
   negativeCompleted: number;
   @ApiProperty({ required: false, description: 'Quantidade de conexões', type: Number, example: 1 })
   connections?: number;
+  @ApiProperty({ required: false, description: 'Data de atualização', type: Date, example: '2021-01-01T00:00:00.000Z' })
+  updateAt?: Date;
 }
 
 enum Period {
@@ -153,7 +155,16 @@ export class TerritoryOneOutput {
     this.imageUrl = image_url;
     this.history = territory.map(this.mapHistory).reduce(this.removeDuplicatedHistoryTerritory, []);
     this.hasRounds = has_rounds;
-    this.blocks = territory.map(this.mapBlocks).reduce(this.removeDuplicatedBlocks, []);
+    this.blocks = territory
+      .map(this.mapBlocks)
+      .reduce(this.removeDuplicatedBlocks, [])
+      .sort((a, b) => {
+        if (a.updateAt === null && b.updateAt !== null) return -1; // a vem antes
+        if (a.updateAt !== null && b.updateAt === null) return 1;  // b vem antes
+        if (a.updateAt === null && b.updateAt === null) return 0;  // ambos nulos, mantêm posição
+        if (a.updateAt && b.updateAt) return new Date(a.updateAt).getTime() - new Date(b.updateAt).getTime(); // ordem decrescente
+        return 0;
+      });
   }
 
   private removeDuplicatedHistoryTerritory(acc: HistoryTerritory[], curr: HistoryTerritory): HistoryTerritory[] {
@@ -191,6 +202,7 @@ export class TerritoryOneOutput {
         key: territory?.signature_key,
         expirationDate: territory?.signature_expiration_date,
       },
+      updateAt: territory?.round_update_at,
     };
   }
 }

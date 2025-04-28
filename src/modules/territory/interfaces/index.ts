@@ -27,4 +27,5 @@ export interface RawTerritoryOne {
   finished: boolean;
   signature_key?: string;
   signature_expiration_date?: Date;
+  round_update_at?: Date;
 }
