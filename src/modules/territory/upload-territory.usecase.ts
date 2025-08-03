@@ -259,15 +259,17 @@ export class UploadTerritoryUseCase {
 
   private getDataRows(file: Express.Multer.File) {
     const rows = [] as Row[];
-    const [workSheetsFromFile] = xlsx.parse(file.buffer);
-    const headers = workSheetsFromFile.data[0];
-    for (let i = 1; i < workSheetsFromFile.data.length; i++) {
-      const row = workSheetsFromFile.data[i];
-      const rowObject = {} as any;
-      for (let j = 0; j < headers.length; j++) {
-        rowObject[headers[j]] = row[j];
+    const abas = xlsx.parse(file.buffer);
+    for (const aba of abas) {
+      const headers = aba.data[0];
+      for (let i = 1; i < aba.data.length; i++) {
+        const row = aba.data[i];
+        const rowObject = {} as any;
+        for (let j = 0; j < headers.length; j++) {
+          rowObject[headers[j]] = row[j];
+        }
+        rows.push(rowObject);
       }
-      rows.push(rowObject);
     }
     return rows;
   }
