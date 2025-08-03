@@ -47,6 +47,10 @@ export class UploadTerritoryUseCase {
       }
     }
 
+    logger.log(`Usuário do tenant ${body.tenantId} fez upload de um arquivo com sucesso`);
+    await this.populateTerritoryAddress(body.tenantId);
+    logger.log(`Populando os endereços dos territórios do tenant ${body.tenantId}`);
+
     return rows;
   }
 
@@ -266,6 +270,66 @@ export class UploadTerritoryUseCase {
       rows.push(rowObject);
     }
     return rows;
+  }
+
+  async populateTerritoryAddress(tenantId: number) {
+    const distinctHouses = await this.prisma.house.findMany({
+      distinct: ['territoryId', 'blockId', 'addressId', 'tenantId'],
+      select: {
+        territoryId: true,
+        blockId: true,
+        addressId: true,
+        tenantId: true
+      },
+      where: {
+        tenantId
+      }
+    });
+
+    for (const house of distinctHouses) {
+      await this.prisma.$transaction(async (tsx) => {
+        console.log(`Processing house: ${house.territoryId} - ${house.blockId} - ${house.addressId} - ${house.tenantId}`);
+        const territoryBlock = await tsx.territory_block.findUnique({
+          where: {
+            territoryId_blockId: {
+              territoryId: house.territoryId,
+              blockId: house.blockId
+            }
+          }
+        });
+
+        if (!territoryBlock) {
+          return true;
+        }
+
+        const territoryAddress = await tsx.territory_block_address.create({
+          data: {
+            addressId: house.addressId,
+            tenantId: house.tenantId,
+            territoryBlockId: territoryBlock.id
+          }
+        });
+        await tsx.house.updateMany({
+          where: {
+            territoryId: house.territoryId,
+            blockId: house.blockId,
+            addressId: house.addressId,
+            tenantId: house.tenantId
+          },
+          data: {
+            territoryBlockAddressId: territoryAddress.id
+          }
+        });
+        console.log(`Territory address created: ${territoryAddress.id}`);
+        return true;
+      }, {
+        maxWait: 1000 * 60 * 10, // 10 minutes,
+        timeout: 1000 * 60 * 10 // 10 minutes
+      }).catch((err) => {
+        console.error(err);
+      });
+      console.log('Territory addresses populated');
+    }
   }
 
   // vamos limpar o tenantId
