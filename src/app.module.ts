@@ -25,11 +25,14 @@ import { RecordsModule } from './modules/records/records.module';
 import { HttpModule } from '@nestjs/axios';
 import { TransactionsController } from './transactions.controller';
 import { TransactionsService } from './transactions.service';
+import { FirebaseUploadService } from './firebase-upload.service';
+import { FirebaseModule } from './infra/firebase.module';
 
 @Module({
   imports: [
     HttpModule,
     PrismaModule,
+    FirebaseModule,
     AuthModule,
     TerritoryModule,
     DashboardModule,
@@ -72,7 +75,8 @@ import { TransactionsService } from './transactions.service';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
-    TransactionsService
+    TransactionsService,
+    FirebaseUploadService,
   ],
 })
 export class AppModule implements NestModule {

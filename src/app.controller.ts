@@ -1,10 +1,12 @@
 import { PrismaService } from './infra/prisma/prisma.service';
-import { Controller, Get, Logger } from '@nestjs/common';
+import { Controller, ForbiddenException, Get, Logger, NotFoundException, Param, ParseIntPipe, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from './decorators/public.decorator';
 import { VERSION } from './enum/version.enum';
 import * as os from 'os';
 import si from 'systeminformation'; // Adicione via `npm install systeminformation`
+import { FileInterceptor } from '@nestjs/platform-express';
+import { FirebaseUploadService } from './firebase-upload.service';
 
 @ApiTags('Verificação de Saúde')
 @Controller({
@@ -12,7 +14,7 @@ import si from 'systeminformation'; // Adicione via `npm install systeminformati
 })
 export class AppController {
   logger = new Logger(AppController.name);
-  constructor(private prismaService: PrismaService) { }
+  constructor(private prismaService: PrismaService, private firebaseUploadService: FirebaseUploadService) { }
 
   @Public()
   @ApiOperation({ summary: 'Verificação de saúde do servidor' })
@@ -60,6 +62,39 @@ export class AppController {
       },
       last_changes: lastChanges,
     };
+  }
+
+  @Public()
+  @Post(':id/upload')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.startsWith('image/')) {
+          return callback(new Error('Somente imagens são permitidas'), false);
+        }
+        callback(null, true);
+      },
+      limits: { fileSize: 5 * 1024 * 1024 }, // Limita o tamanho da imagem para 5MB
+    })
+  )
+  async uploadFile(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+    this.logger.log(`Iniciando upload para o ID: ${id}`);
+    try {
+      const maps = {
+        [process.env.ITA!]: 'ita/catalogo'
+      }
+      if (!maps[id]) {
+        this.logger.warn(`Map não encontrado para o ID: ${id}`);
+        throw new ForbiddenException(`Map não encontrado para o ID: ${id}`);
+      }
+      this.logger.log(`Fazendo upload do arquivo: ${file.originalname} para o caminho: ${maps[id]}`);
+      const result = await this.firebaseUploadService.uploadFile(maps[id], file);
+      this.logger.log(`Upload concluído com sucesso para o ID: ${id}.`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Falha no upload para o ID: ${id}`, error.stack);
+      throw error;
+    }
   }
 
   private getSystemInfo() {
