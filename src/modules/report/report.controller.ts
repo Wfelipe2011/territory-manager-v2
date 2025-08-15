@@ -55,6 +55,7 @@ export class ReportController {
   @Roles(Role.ADMIN, Role.DIRIGENTE, Role.PUBLICADOR)
   @UsePipes(new ValidationPipe({ transform: true }))
   async createReport(@CurrentUser() user: UserToken, @Body() body: CreateReportDto) {
+    console.log('createReport', body);
     return this.prismaService.$transaction(async tsx => {
       let backupHouse = null;
       if (body?.id) {

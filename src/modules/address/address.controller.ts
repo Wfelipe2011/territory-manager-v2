@@ -1,14 +1,13 @@
-import { Controller, Get, Param, Request } from '@nestjs/common';
+import { Controller, Get, Logger, Param, Request } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enum/role.enum';
 import { VERSION } from 'src/enum/version.enum';
-import { logger } from 'src/infra/logger';
 import { AddressService } from './address.service';
-import { RequestSignature } from 'src/interfaces/RequestUser';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { UserToken } from '../auth/contracts';
 
+const logger = new Logger('AddressController');
 @ApiBearerAuth()
 @ApiTags('Address')
 @Controller({

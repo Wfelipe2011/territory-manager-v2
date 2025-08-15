@@ -22,12 +22,13 @@ import { Roles } from 'src/decorators/roles.decorator';
 import { TerritoryOneOutput, TerritoryAllInput, TerritoryAllOutput, RoundParams, TerritoryTypesOutput } from './contracts';
 import { VERSION } from 'src/enum/version.enum';
 import { SignatureIsValid } from '../signature/usecase/SignatureIsValid';
-import { logger } from 'src/infra/logger';
 import { RequestSignature, RequestUser } from 'src/interfaces/RequestUser';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadTerritoryUseCase, Row } from './upload-territory.usecase';
 import { Loggable } from 'src/infra/loggable.decorate';
 import { CreateTerritoryParams, UpdateTerritoryParams } from './contracts/UpsertTerritoryParams';
+
+const logger = new Logger('TerritoryController');
 
 @ApiTags('Territórios')
 @ApiBearerAuth()
@@ -69,7 +70,7 @@ export class TerritoryController {
     })
   )
   async createTerritory(@Request() req: RequestUser, @Body() body: CreateTerritoryParams) {
-    logger.info(`Usuário ${JSON.stringify(req.user, null, 2)} está cadastrando um território`);
+    logger.log(`Usuário ${JSON.stringify(req.user, null, 2)} está cadastrando um território`);
     return this.territoryService.create(body, req.user.tenantId)
   }
 
@@ -84,7 +85,7 @@ export class TerritoryController {
     })
   )
   async updateTerritory(@Param('territoryId') territoryId: number, @Body() body: UpdateTerritoryParams) {
-    logger.info(`Usuário está atualizando o território ${territoryId}`);
+    logger.log(`Usuário está atualizando o território ${territoryId}`);
     return this.territoryService.update(territoryId, body)
   }
 
@@ -94,7 +95,7 @@ export class TerritoryController {
   @Roles(Role.ADMIN)
   async getTerritoryTypes(@Request() req: RequestUser): Promise<TerritoryTypesOutput[]> {
     try {
-      logger.info(`Usuário ${JSON.stringify(req.user, null, 2)} está buscando os tipos de territórios`);
+      logger.log(`Usuário ${JSON.stringify(req.user, null, 2)} está buscando os tipos de territórios`);
       return await this.territoryService.findTerritoryTypes(req.user.tenantId);
     } catch (error) {
       logger.error(error);
@@ -134,7 +135,7 @@ export class TerritoryController {
     @Request() req: RequestSignature
   ): Promise<any> {
     try {
-      logger.info(`Usuário ${JSON.stringify(req.user, null, 2)} está buscando para edição o território ${territorySerialize}`);
+      logger.log(`Usuário ${JSON.stringify(req.user, null, 2)} está buscando para edição o território ${territorySerialize}`);
       if (!territorySerialize) throw new BadRequestException('Território são obrigatório');
       if (!query.blockId) throw new BadRequestException('Quadra é obrigatório');
       if (!query.page) throw new BadRequestException('Página é obrigatório');
@@ -175,7 +176,7 @@ export class TerritoryController {
     @Request() req: RequestSignature
   ): Promise<TerritoryOneOutput> {
     try {
-      logger.info(`Usuário ${JSON.stringify(req.user, null, 2)} está buscando o território ${territorySerialize}`);
+      logger.log(`Usuário ${JSON.stringify(req.user, null, 2)} está buscando o território ${territorySerialize}`);
       if (!territorySerialize) throw new BadRequestException('Território são obrigatório');
       const id = Number(territorySerialize);
       if (isNaN(id)) throw new BadRequestException('Território inválido');
@@ -194,7 +195,7 @@ export class TerritoryController {
 
   @ApiResponse({ status: 200 })
   @ApiOperation({ summary: 'Upload de arquivo .xlsx' })
-  @Post('upload')
+  @Post('upload-territory')
   @UseInterceptors(FileInterceptor('file'))
   @Roles(Role.ADMIN)
   async uploadFile(@UploadedFile() file: Express.Multer.File, @Request() req: RequestSignature, @Loggable() logger: Logger): Promise<Row[]> {

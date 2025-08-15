@@ -1,13 +1,13 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Request } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Logger, Param, Post, Request } from '@nestjs/common';
 import { SignatureService } from './signature.service';
 import { ApiBearerAuth, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/decorators/public.decorator';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enum/role.enum';
 import { VERSION } from 'src/enum/version.enum';
-import { logger } from 'src/infra/logger';
 import { RequestSignature, RequestUser } from 'src/interfaces/RequestUser';
 
+const logger = new Logger('SignatureController');
 class InputSignature {
   @ApiProperty({ description: 'Data de expiração', example: '2021-01-01T00:00:00.000Z', required: true })
   expirationTime: string;
@@ -22,7 +22,7 @@ class InputSignature {
   version: VERSION.V1,
 })
 export class SignatureController {
-  constructor(private readonly signatureService: SignatureService) {}
+  constructor(private readonly signatureService: SignatureService) { }
 
   @Public()
   @Get('signature/:signatureId')
