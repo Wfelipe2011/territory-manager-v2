@@ -94,11 +94,11 @@ export class TransactionsController {
                 },
             },
         });
-        // custos: KVM 2 (683.88) + Registro BR 40,00 ano + backup diario (306.73)
+        // custos: KVM 2 (1083.88) + Registro BR 40,00 ano + backup diario (306.73)
         // Custos fixos associados
-        // const fixedCosts = 683.88 + 40 + 306.73; vamos declarar
+        // const fixedCosts = 1083.88 + 40 + 306.73; vamos declarar
         const fixedCosts = {
-            server: 683.88,
+            server: 1083.88,
             registroBr: 40,
             backupDiario: 306.73,
         }
