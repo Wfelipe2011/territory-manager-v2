@@ -42,20 +42,24 @@ export class DashboardService {
   }
 
   async territoryDetails(tenantId: number) {
-    const types = await this.prisma.type.findMany({ where: { tenantId: tenantId } });
-    const typeColumns = types
-      .map((type) => `CAST(SUM(CASE WHEN t.name = '${type.name}' THEN 1 ELSE 0 END) AS INT) AS "${type.name}"`) // ✅ Corrigido aqui
+    const topTypes = await this.prisma.$queryRawUnsafe<{ legend: string; count: number }[]>(`
+      SELECT legend, COUNT(*) as count
+      FROM house
+      WHERE tenant_id = ${tenantId}
+      GROUP BY legend
+      ORDER BY count DESC
+      LIMIT 4
+    `);
+
+    const typeColumns = topTypes
+      .map((type) => `CAST(SUM(CASE WHEN h.legend = '${type.legend}' THEN 1 ELSE 0 END) AS INT) AS "${type.legend}"`) // ✅ Corrigido aqui
       .join(',\n ');
     const data = await this.prisma.$queryRawUnsafe<any>(`
     SELECT
       ${typeColumns},
       CAST(SUM(1) AS INT) AS total
     FROM
-      territory tr
-    JOIN
-      type t ON tr.type_id = t.id
-    JOIN
-      house h ON tr.id = h.territory_id
+      house h
     WHERE
       h.tenant_id = ${tenantId}
     `).catch((err) => {
@@ -65,6 +69,16 @@ export class DashboardService {
         "total": 0
       }];
     });
-    return data[0];
+
+    const sanitizedData = Object.keys(data[0]).reduce((acc, key) => {
+      const sanitizedKey = key
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9]/g, '');
+      acc[sanitizedKey] = data[0][key];
+      return acc;
+    }, {} as Record<string, number>);
+
+    return sanitizedData;
   }
 }
