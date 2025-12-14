@@ -70,15 +70,6 @@ export class DashboardService {
       }];
     });
 
-    const sanitizedData = Object.keys(data[0]).reduce((acc, key) => {
-      const sanitizedKey = key
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-zA-Z0-9]/g, '');
-      acc[sanitizedKey] = data[0][key];
-      return acc;
-    }, {} as Record<string, number>);
-
-    return sanitizedData;
+    return data;
   }
 }
