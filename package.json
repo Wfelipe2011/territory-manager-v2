@@ -27,7 +27,11 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:db:up": "sudo docker compose -f docker-compose.test.yml up -d",
+    "test:db:down": "sudo docker compose -f docker-compose.test.yml down",
+    "test:db:migrate": "dotenv -e .env.test -- npx prisma migrate deploy",
+    "test:integration": "npm run test:db:up && npm run test:db:migrate && dotenv -e .env.test -- jest --config ./test/jest-e2e.json; npm run test:db:down"
   },
   "dependencies": {
     "@logtail/node": "^0.4.12",
@@ -85,6 +89,7 @@
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "csv-parser": "^3.0.0",
+    "dotenv-cli": "11.0.0",
     "eslint": "^8.43.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-config-standard": "^17.1.0",
@@ -121,6 +126,9 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/$1"
+    }
   }
 }
