@@ -32,7 +32,7 @@
     "test:db:up": "docker compose -f docker-compose.test.yml up -d",
     "test:db:down": "docker compose -f docker-compose.test.yml down",
     "test:db:migrate": "dotenv -e .env.test -- npx prisma migrate deploy",
-    "test:integration": "npm run test:db:up && wait-on tcp:5433 && npm run test:db:migrate && dotenv -e .env.test -- jest --config ./test/jest-e2e.json; npm run test:db:down",
+    "test:integration": "npm run test:db:up && wait-on tcp:127.0.0.1:5433 && sleep 2 && npm run test:db:migrate && npm run test:e2e; npm run test:db:down",
     "prepare": "husky"
   },
   "dependencies": {
