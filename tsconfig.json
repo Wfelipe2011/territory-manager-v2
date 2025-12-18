@@ -7,12 +7,15 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "target": "ES2021",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./src",
     "paths": {
-      "src/*": ["*"]
+      "src/*": [
+        "*"
+      ]
     },
     "moduleResolution": "Node",
     "incremental": true,
@@ -25,5 +28,7 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false
   },
-  "include": ["src/**/*"]
+  "include": [
+    "src/**/*"
+  ]
 }
