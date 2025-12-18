@@ -1,0 +1,12 @@
+services:
+  db-test:
+    container_name: db_territory_manager_test
+    image: postgres:13.2-alpine
+    ports:
+      - '5433:5432'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=territory_manager_test
+    tmpfs:
+      - /var/lib/postgresql/data

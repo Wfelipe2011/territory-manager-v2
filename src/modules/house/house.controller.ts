@@ -1,5 +1,5 @@
 import { EventsGateway } from './../gateway/event.gateway';
-import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, Logger, Param, Patch, Post, Put, Query, Request, UsePipes, ValidationPipe } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, Logger, NotFoundException, Param, Patch, Post, Put, Query, Request, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enum/role.enum';
@@ -44,7 +44,7 @@ export class HouseController {
       if (!blockId) throw new BadRequestException('Bloco são obrigatório');
       if (isNaN(+territoryId)) throw new BadRequestException('Território inválido');
       if (isNaN(+blockId)) throw new BadRequestException('Bloco inválido');
-      if (!query.round && isNaN(+query.round)) throw new BadRequestException('Rodada inválida');
+      if (!query.round || isNaN(+query.round)) throw new BadRequestException('Rodada inválida');
       if (req.user.roles.includes(Role.PUBLICADOR)) {
         await this.signatureIsValid.execute(req.user.id);
         if (req.user.territoryId !== +territoryId || req.user.blockId !== +blockId) {
@@ -78,7 +78,7 @@ export class HouseController {
       if (isNaN(+territoryId)) throw new BadRequestException('Território inválido');
       if (isNaN(+blockId)) throw new BadRequestException('Bloco inválido');
       if (isNaN(+addressId)) throw new BadRequestException('Endereço inválido');
-      if (!query.round && isNaN(+query.round)) throw new BadRequestException('Rodada inválida');
+      if (!query.round || isNaN(+query.round)) throw new BadRequestException('Rodada inválida');
 
       if (req.user.roles.includes(Role.PUBLICADOR)) await this.signatureIsValid.execute(req.user.id);
 
@@ -113,9 +113,12 @@ export class HouseController {
       if (!blockId) throw new BadRequestException('Bloco são obrigatório');
       if (!addressId) throw new BadRequestException('Endereço são obrigatório');
       if (isNaN(+houseId)) throw new BadRequestException('Casa inválido');
-      if (!body.status === undefined) throw new BadRequestException('Status são obrigatório');
+      if (isNaN(+territoryId)) throw new BadRequestException('Território inválido');
+      if (isNaN(+blockId)) throw new BadRequestException('Bloco inválido');
+      if (isNaN(+addressId)) throw new BadRequestException('Endereço inválido');
+      if (body.status === undefined) throw new BadRequestException('Status são obrigatório');
       if (req.user.roles.includes(Role.PUBLICADOR)) await this.signatureIsValid.execute(req.user.id);
-      if (!body.round && isNaN(+body.round)) throw new BadRequestException('Rodada inválida');
+      if (!body.round || isNaN(+body.round)) throw new BadRequestException('Rodada inválida');
       const isAdmin = req.user.roles.includes(Role.ADMIN);
 
       const result = await this.houseService.updateHouse(+houseId, body, isAdmin, +body.round);
@@ -138,6 +141,7 @@ export class HouseController {
   async findById(@Param('id') id: number) {
     try {
       const result = await this.houseService.findById(+id);
+      if (!result) throw new NotFoundException('Casa não encontrada');
       return result;
     } catch (error) {
       this.logger.error(error);
@@ -162,7 +166,7 @@ export class HouseController {
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async create(@Body() body: UpsertHouseInput) {
     try {
-      return this.houseService.create(body);
+      return await this.houseService.create(body);
     } catch (error) {
       this.logger.error(error);
       throw error;

@@ -12,7 +12,7 @@ export class UploadGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   @WebSocketServer() server: Server;
 
   afterInit(server: Server) {
-    console.log('WebSocket gateway initialized');
+    this.logger.log('WebSocket gateway initialized');
   }
 
   @UseGuards(AuthGuard)
@@ -22,11 +22,11 @@ export class UploadGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       this.clients.push({ userId: decode.userId, socketId: client.id });
       this.logger.log(`Client connected: ${decode.userName}-${decode.userId}-${client.id}`);
     }
-    console.log(`Client connected: ${client.id}`);
+    this.logger.log(`Client connected: ${client.id}`);
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`Client disconnected: ${client.id}`);
+    this.logger.log(`Client disconnected: ${client.id}`);
     this.clients = this.clients.filter(c => c.socketId !== client.id);
   }
 
