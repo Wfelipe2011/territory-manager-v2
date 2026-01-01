@@ -62,11 +62,14 @@ export class AuthService {
     );
     const info = await transporte
       .sendMail({
-        from: process.env.NODEMAILER_USER,
+        from: '"Território Digital" <atendimento@territory-manager.com.br>',
         to: email,
-        subject: 'Recuperação de senha',
-        text: 'Recuperação de senha',
+        subject: 'Recuperação de senha – Território Digital',
+        text: getText(token),
         html: getHTML(token),
+        headers: {
+          'Content-Language': 'pt-BR',
+        },
       })
       .catch(err => {
         this.logger.error(err);
@@ -119,16 +122,32 @@ export class AuthService {
 
   private createTransporter() {
     return nodemailer.createTransport({
-      service: 'gmail',
-      host: 'smtp.gmail.com',
+      service: 'umbler',
+      host: 'smtp.umbler.com',
       port: 587,
       secure: false,
       auth: {
         user: process.env.NODEMAILER_USER,
         pass: process.env.NODEMAILER_APP_PASS,
       },
+      tls: {
+        rejectUnauthorized: false, // evita problemas com certificados
+      },
     });
   }
+}
+
+function getText(token: string) {
+  return `
+Recuperação de senha – Território Digital
+
+Recebemos uma solicitação para redefinir a senha da sua conta.
+
+Para criar uma nova senha, acesse o link abaixo:
+https://admin.territory-manager.com.br/reset-password?token=${token}
+
+Se você não solicitou esta alteração, ignore este e-mail.
+`;
 }
 
 function getHTML(token: string) {
@@ -137,8 +156,9 @@ function getHTML(token: string) {
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Language" content="pt-BR">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recuperação de Senha - Territory Manager</title>
+    <title>Recuperação de Senha - Território Digital</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -215,12 +235,12 @@ function getHTML(token: string) {
 <body>
     <div class="wrapper">
         <div class="header">
-            <img src="https://admin.territory-manager.com.br/_next/image?url=%2Flogo.png&w=1080&q=75" alt="Territory Manager" class="logo">
+            <img src="https://admin.territory-manager.com.br/_next/image?url=%2Flogo.png&w=1080&q=75" alt="Território Digital" class="logo">
         </div>
         <div class="container">
             <div class="content">
                 <h1>Recuperação de Senha</h1>
-                <p>Olá! Recebemos uma solicitação para redefinir a senha da sua conta no <strong>Territory Manager</strong>.</p>
+                <p>Olá! Recebemos uma solicitação para redefinir a senha da sua conta no <strong>Território Digital</strong>.</p>
                 <p>Para prosseguir com a alteração, clique no botão abaixo:</p>
                 <div class="btn-container">
                     <a href="https://admin.territory-manager.com.br/reset-password?token=${token}" class="btn">REDEFINIR MINHA SENHA</a>
@@ -229,7 +249,7 @@ function getHTML(token: string) {
             </div>
         </div>
         <div class="footer">
-            &copy; ${new Date().getFullYear()} Territory Manager. Todos os direitos reservados.
+            &copy; ${new Date().getFullYear()} Território Digital. Todos os direitos reservados.
         </div>
     </div>
 </body>
