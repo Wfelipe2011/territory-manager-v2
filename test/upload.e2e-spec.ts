@@ -45,7 +45,9 @@ describe('Upload Flow (e2e)', () => {
             .attach('file', buffer, 'territory.xlsx');
 
         expect(response.status).toBe(201);
-        expect(response.body.length).toBe(2);
+        expect(response.body.totalProcessed).toBe(2);
+        expect(response.body.successCount).toBe(2);
+        expect(response.body.errorCount).toBe(0);
 
         // Verify database
         const territories = await prisma.territory.findMany({ where: { tenantId: tenant.id } });

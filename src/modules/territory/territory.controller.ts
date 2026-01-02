@@ -19,12 +19,12 @@ import { TerritoryService } from './territory.service';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Role } from 'src/enum/role.enum';
 import { Roles } from 'src/decorators/roles.decorator';
-import { TerritoryOneOutput, TerritoryAllInput, TerritoryAllOutput, RoundParams, TerritoryTypesOutput } from './contracts';
+import { TerritoryOneOutput, TerritoryAllInput, TerritoryAllOutput, RoundParams, TerritoryTypesOutput, BulkImportInput, ImportReport } from './contracts';
 import { VERSION } from 'src/enum/version.enum';
 import { SignatureIsValid } from '../signature/usecase/SignatureIsValid';
 import { RequestSignature, RequestUser } from 'src/interfaces/RequestUser';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { UploadTerritoryUseCase, Row } from './upload-territory.usecase';
+import { UploadTerritoryUseCase } from './upload-territory.usecase';
 import { Loggable } from 'src/infra/loggable.decorate';
 import { CreateTerritoryParams, UpdateTerritoryParams } from './contracts/UpsertTerritoryParams';
 
@@ -194,11 +194,11 @@ export class TerritoryController {
   }
 
   @ApiResponse({ status: 200 })
-  @ApiOperation({ summary: 'Upload de arquivo .xlsx' })
+  @ApiOperation({ summary: 'Upload de arquivo .xlsx', deprecated: true })
   @Post('upload-territory')
   @UseInterceptors(FileInterceptor('file'))
   @Roles(Role.ADMIN)
-  async uploadFile(@UploadedFile() file: Express.Multer.File, @Request() req: RequestSignature, @Loggable() logger: Logger): Promise<Row[]> {
+  async uploadFile(@UploadedFile() file: Express.Multer.File, @Request() req: RequestSignature, @Loggable() logger: Logger): Promise<any> {
     try {
       logger.log(`Usuário está fazendo upload de um arquivo`);
       if (!file) throw new BadRequestException('Arquivo é obrigatório');
@@ -212,6 +212,35 @@ export class TerritoryController {
       );
     } catch (error) {
       logger.error(error);
+      throw error;
+    }
+  }
+
+  @ApiResponse({ status: 200 })
+  @ApiOperation({ summary: 'Importação em massa de territórios via JSON' })
+  @Post('bulk')
+  @Roles(Role.ADMIN)
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async bulkImport(
+    @Body() body: BulkImportInput,
+    @Request() req: RequestSignature,
+    @Loggable() logger: Logger
+  ): Promise<ImportReport> {
+    try {
+      logger.log(`Usuário ${req.user.userId} do tenant ${req.user.tenantId} está iniciando importação em massa`);
+
+      if (body.rows.length > 1000) {
+        throw new BadRequestException('Limite de 1000 registros por requisição excedido');
+      }
+
+      return await this.uploadTerritoryUseCase.bulkInsert(
+        body.rows,
+        req.user.tenantId,
+        req.user.userId,
+        logger
+      );
+    } catch (error) {
+      logger.error('Erro na importação em massa:', error);
       throw error;
     }
   }

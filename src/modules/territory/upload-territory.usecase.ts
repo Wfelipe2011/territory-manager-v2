@@ -2,6 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
 import xlsx from 'node-xlsx';
 import EventEmitter from 'events';
+import { UploadGateway } from '../gateway/upload.gateway';
+import { BulkImportRow, ImportReport } from './contracts/BulkImportInput';
+import { LegengDTO } from '../house/dtos/Legend';
 
 export interface Row {
   TipoTerritorio: string;
@@ -18,8 +21,11 @@ export interface Row {
 export class UploadTerritoryUseCase {
   private eventEmitter: EventEmitter;
   constructor(
-    readonly prisma: PrismaService
-  ) { }
+    readonly prisma: PrismaService,
+    private readonly uploadGateway: UploadGateway
+  ) {
+    this.eventEmitter = new EventEmitter();
+  }
 
   onProgress(callback: (progress: number) => void) {
     this.eventEmitter.on('progress', callback);
@@ -35,48 +41,82 @@ export class UploadTerritoryUseCase {
   ) {
     logger.log(`Usuário do tenant ${body.tenantId} está fazendo upload de um arquivo`);
     const rows = this.getDataRows(body.file).filter(row => row['Território']);
+
+    const bulkRows: BulkImportRow[] = rows.map(row => ({
+      TipoTerritorio: row.TipoTerritorio,
+      Território: row.Território,
+      Quadra: row.Quadra,
+      Logradouro: row.Logradouro,
+      Numero: row.Numero,
+      Legenda: row.Legenda,
+      Ordem: row.Ordem,
+      'Não Bater': row['Não Bater'] === 'VERDADEIRO'
+    }));
+
+    return this.bulkInsert(bulkRows, body.tenantId, body.userId, logger);
+  }
+
+  async bulkInsert(
+    rows: BulkImportRow[],
+    tenantId: number,
+    userId: number,
+    logger: Logger
+  ): Promise<ImportReport> {
+    const report: ImportReport = {
+      totalProcessed: rows.length,
+      successCount: 0,
+      errorCount: 0,
+      errors: [],
+    };
+
     let porcentagem = 0;
     for (const [i, row] of rows.entries()) {
-      const totalRows = rows.length;
-      await this.insert(row, body.tenantId, logger);
-      const progress = Math.round(((i + 1) / totalRows) * 100);
+      try {
+        await this.insert(row, tenantId, logger);
+        report.successCount++;
+      } catch (error) {
+        report.errorCount++;
+        report.errors.push({
+          index: i,
+          row,
+          error: error.message || 'Erro desconhecido',
+        });
+        logger.error(`Erro na linha ${i}:`, error);
+      }
+
+      const progress = Math.round(((i + 1) / rows.length) * 100);
       if (progress > porcentagem) {
         porcentagem = progress;
+        this.uploadGateway.sendProgress(userId, progress);
       }
     }
 
-    logger.log(`Usuário do tenant ${body.tenantId} fez upload de um arquivo com sucesso`);
-    await this.populateTerritoryAddress(body.tenantId);
-    logger.log(`Populando os endereços dos territórios do tenant ${body.tenantId}`);
+    await this.populateTerritoryAddress(tenantId);
 
-    return rows;
+    return report;
   }
 
-  async insert(row: Row, tenantId: number, logger: Logger) {
-    try {
-      logger.log(`Consultando ou criando o tipo ${row.TipoTerritorio}`);
-      const type = await this.createType(row, tenantId);
+  async insert(row: BulkImportRow, tenantId: number, logger: Logger) {
+    logger.log(`Consultando ou criando o tipo ${row.TipoTerritorio}`);
+    const type = await this.createType(row, tenantId);
 
-      const nameTerritory = row['Território'];
-      logger.log(`Consultando ou criando o território ${nameTerritory}`);
-      const territory = await this.createTerritory(nameTerritory, type, tenantId);
+    const nameTerritory = row['Território'];
+    logger.log(`Consultando ou criando o território ${nameTerritory}`);
+    const territory = await this.createTerritory(nameTerritory, type, tenantId);
 
-      logger.log(`Consultando ou criando o endereço ${row.Logradouro}`);
-      const address = await this.createAddress(row, tenantId);
+    logger.log(`Consultando ou criando o endereço ${row.Logradouro}`);
+    const address = await this.createAddress(row, tenantId);
 
-      logger.log(`Consultando ou criando a quadra ${row.Quadra}`);
-      const block = await this.createBlock(row, tenantId);
+    logger.log(`Consultando ou criando a quadra ${row.Quadra}`);
+    const block = await this.createBlock(row, tenantId);
 
-      logger.log(`Consultando ou criando a casa ${row.Numero}`);
-      const house = await this.createHouse(row, territory, address, block);
+    logger.log(`Consultando ou criando a casa ${row.Numero}`);
+    const house = await this.createHouse(row, territory, address, block);
 
-      logger.log(`Consultando ou criando o território da quadra ${row.Quadra}`);
-      await this.createTerritoryBlock(territory, block, house);
+    logger.log(`Consultando ou criando o território da quadra ${row.Quadra}`);
+    await this.createTerritoryBlock(territory, block, house);
 
-      logger.log(`Casa ${row.Numero} da quadra ${row.Quadra} do território ${nameTerritory} do tipo ${row.TipoTerritorio} importada com sucesso!`);
-    } catch (error) {
-      logger.error('Erro ao importar os dados:', error);
-    }
+    logger.log(`Casa ${row.Numero} da quadra ${row.Quadra} do território ${nameTerritory} do tipo ${row.TipoTerritorio} importada com sucesso!`);
   }
 
   async createTerritoryBlock(
@@ -129,7 +169,7 @@ export class UploadTerritoryUseCase {
   }
 
   async createHouse(
-    row: Row,
+    row: BulkImportRow,
     territory: { id: number; name: string; tenantId: number; typeId: number; imageUrl: string | null },
     address: { id: number; name: string; tenantId: number },
     block: { id: number; name: string; tenantId: number }
@@ -147,15 +187,15 @@ export class UploadTerritoryUseCase {
             id: address.id,
           },
         },
-        legend: row['Legenda'] || 'Residência',
+        legend: LegengDTO.mapper(row.Legenda || 'Residência'),
         observations: '',
         block: {
           connect: {
             id: block.id,
           },
         },
-        order: Number(row.Ordem),
-        dontVisit: row['Não Bater'] == 'FALSO' ? false : true,
+        order: row.Ordem ? Number(row.Ordem) : null,
+        dontVisit: !!row['Não Bater'],
         multitenancy: {
           connect: {
             id: territory.tenantId,
@@ -165,7 +205,7 @@ export class UploadTerritoryUseCase {
     });
   }
 
-  async createBlock(row: Row, tenantId: number) {
+  async createBlock(row: BulkImportRow, tenantId: number) {
     let block = await this.prisma.block.findFirst({
       where: {
         name: 'Quadra ' + row.Quadra,
@@ -187,7 +227,7 @@ export class UploadTerritoryUseCase {
     return block;
   }
 
-  async createAddress(row: Row, tenantId: number) {
+  async createAddress(row: BulkImportRow, tenantId: number) {
     let address = await this.prisma.address.findFirst({
       where: {
         name: row.Logradouro,
@@ -237,7 +277,7 @@ export class UploadTerritoryUseCase {
     return territory;
   }
 
-  async createType(row: Row, tenantId: number) {
+  async createType(row: BulkImportRow, tenantId: number) {
     let type = await this.prisma.type.findFirst({
       where: {
         name: row.TipoTerritorio,
