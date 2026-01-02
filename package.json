@@ -33,7 +33,7 @@
     "test:db:down": "docker compose -f docker-compose.test.yml down",
     "test:db:migrate": "dotenv -e .env.test -- npx prisma migrate deploy",
     "test:integration": "./scripts/test-integration.sh",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "dependencies": {
     "@logtail/node": "^0.4.12",
