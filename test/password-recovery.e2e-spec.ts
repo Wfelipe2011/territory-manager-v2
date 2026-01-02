@@ -3,7 +3,7 @@ import request from 'supertest';
 import { createTestApp } from './utils/app-helper';
 import { PrismaService } from '../src/infra/prisma/prisma.service';
 import { cleanDatabase } from './utils/db-cleaner';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 describe('Password Recovery (e2e)', () => {
     let app: INestApplication;

@@ -4,7 +4,7 @@ import { createTestApp } from './utils/app-helper';
 import { PrismaService } from '../src/infra/prisma/prisma.service';
 import { cleanDatabase } from './utils/db-cleaner';
 import { createTestToken } from './utils/auth-helper';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { Role } from '../src/enum/role.enum';
 
 describe('AuthController (e2e)', () => {
