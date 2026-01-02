@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiOperation, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/decorators/public.decorator';
@@ -27,10 +27,11 @@ export class AuthController {
     return this.authService.forgotPassword(body.email.toLocaleLowerCase());
   }
 
+  @Public()
   @ApiOperation({ summary: 'Reset de senha' })
   @Post('reset-password')
-  async resetPassword(@Body() body: { email: string; password: string }) {
-    return this.authService.resetPassword(body.email.toLocaleLowerCase(), body.password);
+  async resetPassword(@Body() body: { token: string; password: string }) {
+    return this.authService.resetPassword(body.token, body.password);
   }
 
   @Public()

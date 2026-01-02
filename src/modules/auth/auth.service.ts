@@ -52,7 +52,8 @@ export class AuthService {
     const transporte = this.createTransporter();
     const token = jwt.sign(
       {
-        id: user.id,
+        email: user.email,
+        purpose: 'password-recovery',
       },
       envs.JWT_SECRET,
       {
@@ -61,11 +62,14 @@ export class AuthService {
     );
     const info = await transporte
       .sendMail({
-        from: process.env.NODEMAILER_USER,
+        from: '"Território Digital" <atendimento@territory-manager.com.br>',
         to: email,
-        subject: 'Recuperação de senha',
-        text: 'Recuperação de senha',
+        subject: 'Recuperação de senha – Território Digital',
+        text: getText(token),
         html: getHTML(token),
+        headers: {
+          'Content-Language': 'pt-BR',
+        },
       })
       .catch(err => {
         this.logger.error(err);
@@ -77,38 +81,37 @@ export class AuthService {
     return { message: 'Email enviado' };
   }
 
-  async resetPassword(email: string, password: string) {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        email,
-      },
-    });
-    if (!user) throw new BadRequestException('Usuário não encontrado');
-    const newPassword = await bcrypt.hash(password, 10);
-    await this.prisma.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        password: newPassword,
-      },
-    });
-
-    this.logger.log(`Gerando token ${user?.email}`);
-    const token = jwt.sign(
-      {
-        id: uuid(),
-        userId: user.id,
-        userName: user.name,
-        roles: ['admin'],
-        tenantId: user.tenantId,
-      },
-      envs.JWT_SECRET,
-      {
-        expiresIn: '1d',
+  async resetPassword(token: string, password: string) {
+    try {
+      const payload = jwt.verify(token, envs.JWT_SECRET) as { email: string; purpose: string };
+      if (payload.purpose !== 'password-recovery') {
+        throw new UnauthorizedException('Token inválido para esta operação');
       }
-    );
-    return { token };
+
+      const user = await this.prisma.user.findUnique({
+        where: {
+          email: payload.email,
+        },
+      });
+
+      if (!user) throw new BadRequestException('Usuário não encontrado');
+      const newPassword = await bcrypt.hash(password, 10);
+      await this.prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          password: newPassword,
+        },
+      });
+
+      return { message: 'Senha alterada com sucesso' };
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        throw new BadRequestException('Token expirado');
+      }
+      throw new UnauthorizedException('Token inválido');
+    }
   }
 
   hashPassword(password: string) {
@@ -119,16 +122,32 @@ export class AuthService {
 
   private createTransporter() {
     return nodemailer.createTransport({
-      service: 'gmail',
-      host: 'smtp.gmail.com',
+      service: 'umbler',
+      host: 'smtp.umbler.com',
       port: 587,
       secure: false,
       auth: {
         user: process.env.NODEMAILER_USER,
         pass: process.env.NODEMAILER_APP_PASS,
       },
+      tls: {
+        rejectUnauthorized: false, // evita problemas com certificados
+      },
     });
   }
+}
+
+function getText(token: string) {
+  return `
+Recuperação de senha – Território Digital
+
+Recebemos uma solicitação para redefinir a senha da sua conta.
+
+Para criar uma nova senha, acesse o link abaixo:
+https://admin.territory-manager.com.br/reset-password?token=${token}
+
+Se você não solicitou esta alteração, ignore este e-mail.
+`;
 }
 
 function getHTML(token: string) {
@@ -137,52 +156,101 @@ function getHTML(token: string) {
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Language" content="pt-BR">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recuperação de Senha</title>
+    <title>Recuperação de Senha - Território Digital</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
             margin: 0;
             padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+        .wrapper {
+            width: 100%;
+            table-layout: fixed;
+           background-color: #f0f2f5;
+            padding-bottom: 40px;
         }
         .container {
             max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #f0f2f5;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        .header {
+            background-color: #f0f2f5;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .logo {
+            background-color: #7AAD58;
+            padding: 5px;
+            border-radius: 100%;
+            width: 200px;
+            height: auto;
+        }
+        .content {
+            padding: 0 40px 40px 40px;
+            text-align: center;
+            color: #333333;
         }
         h1 {
-            text-align: center;
-            color: #333;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #1a1a1a;
         }
         p {
-            margin-bottom: 20px;
+            font-size: 16px;
             line-height: 1.6;
-            color: #666;
+            margin-bottom: 32px;
+            color: #666666;
+        }
+        .btn-container {
+            margin-bottom: 32px;
         }
         .btn {
             display: inline-block;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: #fff !important;
+            padding: 14px 32px;
+            background-color: #7AAD58;
+            color: #ffffff !important;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
             transition: background-color 0.3s ease;
         }
-        .btn:hover {
-            background-color: #0056b3;
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #999999;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Recuperação de Senha</h1>
-        <p>Olá! Você solicitou a recuperação de senha. Clique no botão abaixo para criar uma nova senha:</p>
-        <p><a href="https://app.territory-manager.com.br/reset-password?token=${token}" class="btn">Clique aqui para recuperar sua senha</a></p>
-        <p>Se você não solicitou essa recuperação, por favor, ignore este email.</p>
+    <div class="wrapper">
+        <div class="header">
+            <img src="https://admin.territory-manager.com.br/_next/image?url=%2Flogo.png&w=1080&q=75" alt="Território Digital" class="logo">
+        </div>
+        <div class="container">
+            <div class="content">
+                <h1>Recuperação de Senha</h1>
+                <p>Olá! Recebemos uma solicitação para redefinir a senha da sua conta no <strong>Território Digital</strong>.</p>
+                <p>Para prosseguir com a alteração, clique no botão abaixo:</p>
+                <div class="btn-container">
+                    <a href="https://admin.territory-manager.com.br/reset-password?token=${token}" class="btn">REDEFINIR MINHA SENHA</a>
+                </div>
+                <p style="font-size: 14px; margin-bottom: 0;">Se você não solicitou esta alteração, pode ignorar este e-mail com segurança. Sua senha atual permanecerá a mesma.</p>
+            </div>
+        </div>
+        <div class="footer">
+            &copy; ${new Date().getFullYear()} Território Digital. Todos os direitos reservados.
+        </div>
     </div>
 </body>
 </html>

@@ -56,12 +56,14 @@ export class DashboardService {
       LIMIT 4
     `);
 
-    const typeColumns = topTypes
-      .map((type) => `CAST(SUM(CASE WHEN h.legend = '${type.legend}' THEN 1 ELSE 0 END) AS INT) AS "${type.legend}"`) // ✅ Corrigido aqui
-      .join(',\n ');
+    const typeColumns = topTypes.length > 0
+      ? topTypes
+        .map((type) => `CAST(SUM(CASE WHEN h.legend = '${type.legend}' THEN 1 ELSE 0 END) AS INT) AS "${type.legend}"`)
+        .join(',\n ') + ','
+      : '';
     const data = await this.prisma.$queryRawUnsafe<any>(`
     SELECT
-      ${typeColumns},
+      ${typeColumns}
       CAST(SUM(1) AS INT) AS total
     FROM
       house h

@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { HouseController } from './house.controller';
 import { HouseService } from './house.service';
-import { EventsGateway } from '../gateway/event.gateway';
 import { HouseWorkerService } from './house-worker.service';
 import { BlockModule } from '../block/block.module';
 import { AddressBlockService } from '../block/adress-block.service';
+import { EventsModule } from '../gateway/event.module';
 
 @Module({
-  imports: [],
+  imports: [EventsModule],
   controllers: [HouseController],
-  providers: [HouseService, EventsGateway, HouseWorkerService, AddressBlockService],
+  providers: [HouseService, HouseWorkerService, AddressBlockService],
 })
 export class HouseModule { }
