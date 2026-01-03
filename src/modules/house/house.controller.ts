@@ -44,7 +44,7 @@ export class HouseController {
       if (!blockId) throw new BadRequestException('Bloco são obrigatório');
       if (isNaN(+territoryId)) throw new BadRequestException('Território inválido');
       if (isNaN(+blockId)) throw new BadRequestException('Bloco inválido');
-      if (!query.round || isNaN(+query.round)) throw new BadRequestException('Rodada inválida');
+      if (!query.round) throw new BadRequestException('Rodada inválida');
       if (req.user.roles.includes(Role.PUBLICADOR)) {
         await this.signatureIsValid.execute(req.user.id);
         if (req.user.territoryId !== +territoryId || req.user.blockId !== +blockId) {

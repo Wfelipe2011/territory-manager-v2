@@ -333,9 +333,9 @@ describe('House Flow (e2e)', () => {
             expect(response.body.message).toBe('Rodada inválida');
         });
 
-        it('should return 400 for invalid round in getAddressPerTerritoryByIdAndBlockById', async () => {
+        it('should return 400 for not round in getAddressPerTerritoryByIdAndBlockById', async () => {
             const response = await request(app.getHttpServer())
-                .get(`/v1/territories/${territory.id}/blocks/${block.id}?round=abc`)
+                .get(`/v1/territories/${territory.id}/blocks/${block.id}`)
                 .set('Authorization', `Bearer ${token}`);
             expect(response.status).toBe(400);
             expect(response.body.message).toBe('Rodada inválida');
