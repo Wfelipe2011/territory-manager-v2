@@ -15,14 +15,19 @@ export class UploadGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     this.logger.log('WebSocket gateway initialized');
   }
 
-  @UseGuards(AuthGuard)
   handleConnection(@ConnectedSocket() client: Socket) {
-    if (client.handshake.auth?.token) {
-      const decode = jwt.verify(client.handshake.auth?.token, envs.JWT_SECRET) as any;
-      this.clients.push({ userId: decode.userId, socketId: client.id });
-      this.logger.log(`Client connected: ${decode.userName}-${decode.userId}-${client.id}`);
+    try {
+      if (client.handshake.auth?.token) {
+        const token = client.handshake.auth.token.replace('Bearer ', '');
+        const decode = jwt.verify(token, envs.JWT_SECRET) as any;
+        this.clients.push({ userId: decode.userId, socketId: client.id });
+        this.logger.log(`Client connected: ${decode.userName}-${decode.userId}-${client.id}`);
+      }
+      this.logger.log(`Client connected: ${client.id}`);
+    } catch (error) {
+      this.logger.error(`Error on connection: ${error.message}`);
+      client.disconnect();
     }
-    this.logger.log(`Client connected: ${client.id}`);
   }
 
   handleDisconnect(client: Socket) {
