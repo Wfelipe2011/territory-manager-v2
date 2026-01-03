@@ -43,9 +43,6 @@ import { join } from 'path';
     SignatureModule,
     EventsModule,
     AddressModule,
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),
-    }),
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     CacheModule.register({
