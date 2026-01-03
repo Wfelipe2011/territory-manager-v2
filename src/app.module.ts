@@ -27,6 +27,8 @@ import { TransactionsController } from './transactions.controller';
 import { TransactionsService } from './transactions.service';
 import { FirebaseUploadService } from './firebase-upload.service';
 import { FirebaseModule } from './infra/firebase.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -41,6 +43,9 @@ import { FirebaseModule } from './infra/firebase.module';
     SignatureModule,
     EventsModule,
     AddressModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+    }),
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     CacheModule.register({
