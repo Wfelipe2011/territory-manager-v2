@@ -25,3 +25,21 @@ export class UserToken {
     this.roles = roles;
   }
 }
+
+export class AdminRegisterInput {
+  @ApiProperty({ description: 'Nome do usuário', example: 'John Doe', required: true })
+  name: string;
+  @ApiProperty({ description: 'Email do usuário', example: 'john@gmail.com', required: true })
+  email: string;
+}
+
+export class PublicRegisterInput {
+  @ApiProperty({ description: 'Nome do usuário', example: 'John Doe', required: true })
+  userName: string;
+  @ApiProperty({ description: 'Email do usuário', example: 'john@gmail.com', required: true })
+  userEmail: string;
+  @ApiProperty({ description: 'Nome da Congregação', example: 'Congregação Central', required: true })
+  tenantName: string;
+  @ApiProperty({ description: 'Telefone da Congregação', example: '11999999999', required: false })
+  tenantPhone?: string;
+}

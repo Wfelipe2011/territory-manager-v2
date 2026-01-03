@@ -1,9 +1,12 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiOperation, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/decorators/public.decorator';
-import { LoginInput, LoginOutput } from './contracts';
+import { AdminRegisterInput, LoginInput, LoginOutput, PublicRegisterInput } from './contracts';
 import { VERSION } from 'src/enum/version.enum';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/enum/role.enum';
+import { RequestUser } from 'src/interfaces/RequestUser';
 
 @ApiTags('Autenticação')
 @Controller({
@@ -18,6 +21,20 @@ export class AuthController {
   @Post('login')
   async login(@Body() loginDto: LoginInput) {
     return this.authService.login(loginDto.email.toLocaleLowerCase(), loginDto.password);
+  }
+
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Registro de novo administrador (Restrito)' })
+  @Post('auth/admin/register')
+  async adminRegister(@Body() input: AdminRegisterInput, @Request() req: RequestUser) {
+    return this.authService.adminRegister(input, req.user.tenantId);
+  }
+
+  @Public()
+  @ApiOperation({ summary: 'Registro público (Novo Usuário + Novo Tenant)' })
+  @Post('auth/public/register')
+  async publicRegister(@Body() input: PublicRegisterInput) {
+    return this.authService.publicRegister(input);
   }
 
   @Public()

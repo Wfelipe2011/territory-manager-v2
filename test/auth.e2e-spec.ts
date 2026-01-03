@@ -103,6 +103,134 @@ describe('AuthController (e2e)', () => {
         });
     });
 
+    describe('/v1/auth/admin/register (POST)', () => {
+        it('should register a new admin successfully', async () => {
+            // Arrange
+            const tenant = await prisma.multitenancy.create({
+                data: { name: 'Test Congregation' },
+            });
+            const adminToken = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
+
+            const payload = {
+                name: 'New Admin',
+                email: 'wfelipe2011@gmail.com',
+            };
+
+            // Act
+            const response = await request(app.getHttpServer())
+                .post('/v1/auth/admin/register')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send(payload);
+
+            // Assert
+            expect(response.status).toBe(201);
+            expect(response.body.message).toBe('Administrador registrado com sucesso');
+
+            const user = await prisma.user.findUnique({ where: { email: payload.email } });
+            expect(user).toBeDefined();
+            expect(user?.name).toBe(payload.name);
+            expect(user?.tenantId).toBe(tenant.id);
+        });
+
+        it('should return 403 if user is not an admin', async () => {
+            const token = createTestToken({ roles: [Role.PUBLICADOR] });
+            const payload = { name: 'New Admin', email: 'wfelipe2011@gmail.com' };
+
+            const response = await request(app.getHttpServer())
+                .post('/v1/auth/admin/register')
+                .set('Authorization', `Bearer ${token}`)
+                .send(payload);
+
+            expect(response.status).toBe(403);
+        });
+
+        it('should return 400 if email is already in use', async () => {
+            // Arrange
+            const tenant = await prisma.multitenancy.create({
+                data: { name: 'Test Congregation' },
+            });
+            await prisma.user.create({
+                data: {
+                    name: 'Existing User',
+                    email: 'existing@example.com',
+                    password: 'hashedpassword',
+                    tenantId: tenant.id,
+                },
+            });
+            const adminToken = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
+
+            const payload = {
+                name: 'New Admin',
+                email: 'existing@example.com',
+            };
+
+            // Act
+            const response = await request(app.getHttpServer())
+                .post('/v1/auth/admin/register')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send(payload);
+
+            // Assert
+            expect(response.status).toBe(400);
+            expect(response.body.message).toBe('Email já está em uso');
+        });
+    });
+
+    describe('/v1/auth/public/register (POST)', () => {
+        it('should register a new user and tenant successfully', async () => {
+            const payload = {
+                userName: 'Public User',
+                userEmail: 'wfelipe2011@gmail.com',
+                tenantName: 'New Congregation',
+                tenantPhone: '11999999999',
+            };
+
+            const response = await request(app.getHttpServer())
+                .post('/v1/auth/public/register')
+                .send(payload);
+
+            expect(response.status).toBe(201);
+            expect(response.body.message).toBe('Usuário e organização registrados com sucesso');
+
+            const tenant = await prisma.multitenancy.findFirst({ where: { name: payload.tenantName } });
+            expect(tenant).toBeDefined();
+
+            const user = await prisma.user.findUnique({ where: { email: payload.userEmail } });
+            expect(user).toBeDefined();
+            expect(user?.tenantId).toBe(tenant?.id);
+        });
+
+        it('should return 400 if email is already in use', async () => {
+            // Arrange
+            const tenant = await prisma.multitenancy.create({
+                data: { name: 'Test Congregation' },
+            });
+            await prisma.user.create({
+                data: {
+                    name: 'Existing User',
+                    email: 'existing@example.com',
+                    password: 'hashedpassword',
+                    tenantId: tenant.id,
+                },
+            });
+
+            const payload = {
+                userName: 'Public User',
+                userEmail: 'existing@example.com',
+                tenantName: 'New Congregation',
+            };
+
+            // Act
+            const response = await request(app.getHttpServer())
+                .post('/v1/auth/public/register')
+                .send(payload);
+
+            // Assert
+            expect(response.status).toBe(400);
+            expect(response.body.message).toBe('Email já está em uso');
+        });
+    });
+
     describe('Route Protection & Roles', () => {
         it('should return 401 when accessing a protected route without token', async () => {
             const response = await request(app.getHttpServer()).get('/v1/territories');
