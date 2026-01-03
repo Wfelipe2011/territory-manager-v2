@@ -1,8 +1,8 @@
-import { Body, Controller, Post, Request } from '@nestjs/common';
+import { Body, Controller, Get, Post, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiOperation, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/decorators/public.decorator';
-import { AdminRegisterInput, LoginInput, LoginOutput, PublicRegisterInput } from './contracts';
+import { AdminRegisterInput, LoginInput, LoginOutput, PublicRegisterInput, UserOutput } from './contracts';
 import { VERSION } from 'src/enum/version.enum';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enum/role.enum';
@@ -28,6 +28,14 @@ export class AuthController {
   @Post('auth/admin/register')
   async adminRegister(@Body() input: AdminRegisterInput, @Request() req: RequestUser) {
     return this.authService.adminRegister(input, req.user.tenantId);
+  }
+
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Lista usuários do tenant (Restrito)' })
+  @ApiResponse({ status: 200, type: UserOutput, isArray: true })
+  @Get('auth/admin/users')
+  async listUsers(@Request() req: RequestUser) {
+    return this.authService.listUsers(req.user.tenantId);
   }
 
   @Public()

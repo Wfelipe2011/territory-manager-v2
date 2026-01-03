@@ -176,6 +176,44 @@ describe('AuthController (e2e)', () => {
         });
     });
 
+    describe('/v1/auth/admin/users (GET)', () => {
+        it('should list users for the admin tenant', async () => {
+            // Arrange
+            const tenant = await prisma.multitenancy.create({
+                data: { name: 'Test Congregation' },
+            });
+            await prisma.user.createMany({
+                data: [
+                    { name: 'User 1', email: 'user1@example.com', password: 'hash', tenantId: tenant.id },
+                    { name: 'User 2', email: 'user2@example.com', password: 'hash', tenantId: tenant.id },
+                ],
+            });
+            const adminToken = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
+
+            // Act
+            const response = await request(app.getHttpServer())
+                .get('/v1/auth/admin/users')
+                .set('Authorization', `Bearer ${adminToken}`);
+
+            // Assert
+            expect(response.status).toBe(200);
+            expect(response.body).toHaveLength(2);
+            expect(response.body[0]).toHaveProperty('name');
+            expect(response.body[0]).toHaveProperty('email');
+            expect(response.body[0]).not.toHaveProperty('password');
+        });
+
+        it('should return 403 if user is not an admin', async () => {
+            const token = createTestToken({ roles: [Role.PUBLICADOR] });
+
+            const response = await request(app.getHttpServer())
+                .get('/v1/auth/admin/users')
+                .set('Authorization', `Bearer ${token}`);
+
+            expect(response.status).toBe(403);
+        });
+    });
+
     describe('/v1/auth/public/register (POST)', () => {
         it('should register a new user and tenant successfully', async () => {
             const payload = {

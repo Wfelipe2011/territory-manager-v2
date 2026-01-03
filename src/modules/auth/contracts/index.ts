@@ -43,3 +43,12 @@ export class PublicRegisterInput {
   @ApiProperty({ description: 'Telefone da Congregação', example: '11999999999', required: false })
   tenantPhone?: string;
 }
+
+export class UserOutput {
+  @ApiProperty({ description: 'ID do usuário', example: 1 })
+  id: number;
+  @ApiProperty({ description: 'Nome do usuário', example: 'John Doe' })
+  name: string;
+  @ApiProperty({ description: 'Email do usuário', example: 'john@gmail.com' })
+  email: string;
+}

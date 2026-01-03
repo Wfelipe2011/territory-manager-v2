@@ -5,7 +5,7 @@ import * as jwt from 'jsonwebtoken';
 import { uuid } from 'src/shared/uuid.shared';
 import { envs } from 'src/infra/envs';
 import nodemailer from 'nodemailer';
-import { AdminRegisterInput, PublicRegisterInput } from './contracts';
+import { AdminRegisterInput, PublicRegisterInput, UserOutput } from './contracts';
 
 @Injectable()
 export class AuthService {
@@ -139,6 +139,19 @@ export class AuthService {
     await this.sendWelcomeEmail(user.email);
 
     return { message: 'Administrador registrado com sucesso' };
+  }
+
+  async listUsers(tenantId: number): Promise<UserOutput[]> {
+    return this.prisma.user.findMany({
+      where: {
+        tenantId,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
   }
 
   async publicRegister(input: PublicRegisterInput) {
