@@ -114,18 +114,18 @@ export class EventsGateway implements OnGatewayInit {
 
   @Cron(CronExpression.EVERY_30_SECONDS)
   async handleCron() {
-    this.logger.log('Iniciando verificação de sockets');
+    this.logger.debug('Iniciando verificação de sockets');
     await this.prisma.connectToDatabase();
-    this.logger.log('Buscando sockets no banco de dados');
+    this.logger.debug('Buscando sockets no banco de dados');
     const sockets = await this.prisma.socket.findMany();
     const socketIds = sockets.map(socket => socket.socketId);
-    this.logger.log('Sockets encontrados: ' + socketIds);
+    this.logger.debug('Sockets encontrados: ' + socketIds);
     const connectedSockets = Array.from(this.server.sockets.sockets.keys());
-    this.logger.log('Sockets conectados: ' + connectedSockets);
+    this.logger.debug('Sockets conectados: ' + connectedSockets);
 
     const disconnectedSockets = socketIds.filter(socketId => !connectedSockets.includes(socketId));
     if (disconnectedSockets.length === 0) {
-      this.logger.log('Nenhum socket desconectado');
+      this.logger.debug('Nenhum socket desconectado');
       return;
     }
     this.logger.log('Sockets desconectados: ' + disconnectedSockets);
@@ -163,6 +163,6 @@ export class EventsGateway implements OnGatewayInit {
       })
     );
 
-    this.logger.log('Verificação de sockets finalizada');
+    this.logger.debug('Verificação de sockets finalizada');
   }
 }

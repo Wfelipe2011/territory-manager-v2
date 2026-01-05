@@ -21,6 +21,11 @@ const prisma = new PrismaClient();
         { name: 'Rural' },
     ]
 
+    const defaults = [
+        { key: 'SIGNATURE_EXPIRATION_HOURS', value: '5', description: 'Tempo de expiração da assinatura em horas' },
+        { key: 'ROUND_START_DATE_MONTHS', value: '6', description: 'Meses para considerar o início de um novo round com cartas ativas' }
+    ];
+
     await prisma.multitenancy.create({
         data: {
             ...tenant,
@@ -34,6 +39,11 @@ const prisma = new PrismaClient();
             type: {
                 createMany: {
                     data: types
+                }
+            },
+            parameter: {
+                createMany: {
+                    data: defaults
                 }
             }
         }

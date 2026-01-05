@@ -9,7 +9,7 @@ export class PrismaConnectionMiddleware implements NestMiddleware {
     constructor(private readonly prisma: PrismaService) { }
 
     async use(req: Request, res: Response, next: NextFunction) {
-        this.logger.log('Verificando conexão com o banco de dados...');
+        this.logger.debug('Verificando conexão com o banco de dados...');
         if (!this.prisma.isConnected) {
             this.logger.warn('Banco desconectado. Tentando reconectar...');
 

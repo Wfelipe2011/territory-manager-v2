@@ -33,6 +33,7 @@
     "test:db:down": "docker compose -f docker-compose.test.yml down",
     "test:db:migrate": "dotenv -e .env.test -- npx prisma migrate deploy",
     "test:integration": "./scripts/test-integration.sh",
+    "migrate:parameters": "npx tsx scripts/migrateParameters.ts",
     "prepare": "husky || true"
   },
   "dependencies": {

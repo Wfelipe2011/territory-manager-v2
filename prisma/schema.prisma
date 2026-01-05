@@ -100,8 +100,21 @@ model multitenancy {
   territory_overseer      territory_overseer[]
   signature               signature[]
   territory_block_address territory_block_address[]
+  parameters              parameter[]
 
   @@map("multi_tenancy")
+}
+
+model parameter {
+  id           Int          @id @unique @default(autoincrement())
+  key          String
+  value        String
+  description  String?
+  multitenancy multitenancy @relation(fields: [tenantId], references: [id])
+  tenantId     Int          @map("tenant_id")
+
+  @@unique([tenantId, key])
+  @@map("parameter")
 }
 
 model territory {
