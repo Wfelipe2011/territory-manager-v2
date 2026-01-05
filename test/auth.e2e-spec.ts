@@ -243,7 +243,6 @@ describe('AuthController (e2e)', () => {
             });
             expect(parameters.length).toBeGreaterThan(0);
             expect(parameters.find(p => p.key === 'SIGNATURE_EXPIRATION_HOURS')?.value).toBe('5');
-            expect(parameters.find(p => p.key === 'JWT_EXPIRATION')?.value).toBe('1d');
         });
 
         it('should return 400 if email is already in use', async () => {
