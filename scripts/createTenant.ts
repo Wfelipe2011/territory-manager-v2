@@ -41,7 +41,7 @@ const prisma = new PrismaClient();
                     data: types
                 }
             },
-            parameter: {
+            parameters: {
                 createMany: {
                     data: defaults
                 }

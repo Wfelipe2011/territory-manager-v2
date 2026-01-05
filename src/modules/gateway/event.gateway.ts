@@ -125,7 +125,7 @@ export class EventsGateway implements OnGatewayInit {
 
     const disconnectedSockets = socketIds.filter(socketId => !connectedSockets.includes(socketId));
     if (disconnectedSockets.length === 0) {
-      this.logger.debug('Nenhum socket desconectado');
+      this.logger.log('Nenhum socket desconectado');
       return;
     }
     this.logger.log('Sockets desconectados: ' + disconnectedSockets);
