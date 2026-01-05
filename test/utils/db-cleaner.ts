@@ -12,7 +12,9 @@ export const cleanDatabase = async (prisma: PrismaClient) => {
         .join(', ');
 
     try {
-        await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tables} CASCADE;`);
+        if (tables) {
+            await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tables} CASCADE;`);
+        }
     } catch (error) {
         console.log({ error });
     }

@@ -236,6 +236,14 @@ describe('AuthController (e2e)', () => {
             const user = await prisma.user.findUnique({ where: { email: payload.userEmail } });
             expect(user).toBeDefined();
             expect(user?.tenantId).toBe(tenant?.id);
+
+            // Check if default parameters were created
+            const parameters = await prisma.parameter.findMany({
+                where: { tenantId: tenant?.id },
+            });
+            expect(parameters.length).toBeGreaterThan(0);
+            expect(parameters.find(p => p.key === 'SIGNATURE_EXPIRATION_HOURS')?.value).toBe('5');
+            expect(parameters.find(p => p.key === 'JWT_EXPIRATION')?.value).toBe('1d');
         });
 
         it('should return 400 if email is already in use', async () => {

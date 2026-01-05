@@ -6,11 +6,15 @@ import { uuid } from 'src/shared/uuid.shared';
 import { envs } from 'src/infra/envs';
 import nodemailer from 'nodemailer';
 import { AdminRegisterInput, PublicRegisterInput, UserOutput } from './contracts';
+import { ParametersService } from '../parameters/parameters.service';
 
 @Injectable()
 export class AuthService {
   logger = new Logger(AuthService.name);
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private parametersService: ParametersService,
+  ) { }
 
   async login(email: string, password: string) {
     this.logger.log(`login ${email}`);
@@ -169,6 +173,8 @@ export class AuthService {
         phone: input.tenantPhone,
       },
     });
+
+    await this.parametersService.createDefaultParameters(tenant.id);
 
     const temporaryPassword = Math.random().toString(36).slice(-10);
     const hashedPassword = await bcrypt.hash(temporaryPassword, 10);

@@ -7,7 +7,7 @@ import { Output, Round } from './dtos/Houses';
 import { LegengDTO } from './dtos/Legend';
 import dayjs from 'dayjs';
 import { UpdateHouseOrder } from './contracts/UpdateHouseOrder';
-import { getCustomHoursTenancy } from 'src/shared/getCustomHoursTenancy';
+import { ParametersService } from '../parameters/parameters.service';
 
 export type CreateHouseInput = {
   streetId: number;
@@ -21,7 +21,10 @@ export type CreateHouseInput = {
 @Injectable()
 export class HouseService {
   private logger = new Logger(HouseService.name);
-  constructor(readonly prisma: PrismaService) { }
+  constructor(
+    readonly prisma: PrismaService,
+    private readonly parametersService: ParametersService
+  ) { }
 
   async getAddressPerTerritoryByIdAndBlockById(blockId: number, territoryId: number) {
     const territoryBlock = await this.prisma.territory_block.findUnique({
@@ -98,13 +101,15 @@ export class HouseService {
     const [round] = await this.prisma.$queryRaw<Round[]>`SELECT * FROM round WHERE house_id = ${houseId} AND round_number = ${roundNumber}`;
     if (!round) throw new BadRequestException('Casa não encontrada');
     const house = await this.prisma.house.findUnique({ where: { id: houseId }, include: { territory: true, block: true } });
-
+    if (!house) throw new NotFoundException('Casa não encontrada');
     this.logger.log(`Verificando se a casa [${house?.territory.name}-${house?.block.name}-${house?.number}] pode ser atualizada`);
 
     if (!isAdmin && round.completed_date && body.status === false) {
       const now = dayjs();
       const updateDate = dayjs(round.completed_date);
-      if (now.diff(updateDate, 'hours') > getCustomHoursTenancy(house?.tenantId))
+      const customHours = await this.parametersService.getValue(house.tenantId, 'SIGNATURE_EXPIRATION_HOURS');
+      const hours = customHours ? parseInt(customHours) : 5;
+      if (now.diff(updateDate, 'hours') > hours)
         throw new ForbiddenException(`Casa [${house?.territory.name}-${house?.block.name}-${house?.number}] não pode ser atualizada`);
     }
 

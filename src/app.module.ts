@@ -18,6 +18,7 @@ import { AddressModule } from './modules/address/address.module';
 import { TenancyModule } from './modules/tenancy/tenancy.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ReportModule } from './modules/report/report.module';
+import { ParametersModule } from './modules/parameters/parameters.module';
 import { PrismaModule } from './infra/prisma/prisma.module';
 import { PrismaConnectionMiddleware } from './infra/prisma/prisma-connection.middleware';
 import { BlockModule } from './modules/block/block.module';
@@ -57,7 +58,8 @@ import { join } from 'path';
     TenancyModule,
     ReportModule,
     BlockModule,
-    RecordsModule
+    RecordsModule,
+    ParametersModule
   ],
   controllers: [AppController, TransactionsController],
   providers: [

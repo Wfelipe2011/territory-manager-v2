@@ -6,7 +6,7 @@ import { envs } from 'src/infra/envs';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Role } from 'src/enum/role.enum';
 import { SignatureDate } from './usecase/SignatureDate';
-import { getCustomHoursTenancy } from 'src/shared/getCustomHoursTenancy';
+import { ParametersService } from '../parameters/parameters.service';
 
 type GenerateTerritoryParams = {
   overseer: string;
@@ -37,7 +37,10 @@ type TokenData = {
 export class SignatureService {
   private logger = new Logger(SignatureService.name);
   private signatureDate = new SignatureDate();
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly parametersService: ParametersService
+  ) { }
 
   async generateTerritory({ overseer, expirationTime, territoryId, tenantId, round }: GenerateTerritoryParams): Promise<{ signature: string }> {
     this.signatureDate.isValidDate(expirationTime);
@@ -86,7 +89,9 @@ export class SignatureService {
     if (territoryBlock?.signature?.id) throw new BadRequestException('Assinatura já gerada');
 
     const uniqueId = uuid();
-    const expirationTime = new Date(Date.now() + getCustomHoursTenancy(territoryBlock?.tenantId) * 60 * 60 * 1000).toISOString(); // 5 horas ou customizado
+    const customHours = await this.parametersService.getValue(territoryBlock?.tenantId, 'SIGNATURE_EXPIRATION_HOURS');
+    const hours = customHours ? parseInt(customHours) : 5;
+    const expirationTime = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString(); // 5 horas ou customizado
     const token = this.createJWT({ id: uniqueId, territoryId, blockId, roles: [Role.PUBLICADOR], tenantId, round }, expirationTime);
     const signature = await this.createSignature(uniqueId, new Date(expirationTime), token, tenantId);
 

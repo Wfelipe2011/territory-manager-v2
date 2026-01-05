@@ -5,13 +5,15 @@ import { ThemeMode } from '@prisma/client';
 import { themeColors } from 'src/constants/themeColors';
 import dayjs from 'dayjs';
 import { CreateRoundDto } from './contracts/CreateRoundDto';
+import { ParametersService } from '../parameters/parameters.service';
 
 @Injectable()
 export class RoundService {
   private logger = new Logger(RoundService.name);
   constructor(
     readonly prisma: PrismaService,
-    private readonly signatureService: SignatureService
+    private readonly signatureService: SignatureService,
+    private readonly parametersService: ParametersService
   ) { }
 
   async getRoundInfo(tenantId: number): Promise<any> {
@@ -168,6 +170,7 @@ export class RoundService {
   }
 
   private async createRound(tenantId: number, rounds: any[], body: CreateRoundDto) {
+    const roundStartDate = await this.getRoundStartDate(tenantId);
     await this.prisma.$transaction(async txt => {
       this.logger.log(`Iniciando criação da rodada para o inquilino ${tenantId}`);
       const houses = await txt.house.findMany({
@@ -190,7 +193,7 @@ export class RoundService {
             where: {
               mode: ThemeMode.default,
               startDate: {
-                gte: getRoundStartDate(tenantId),
+                gte: roundStartDate,
               },
             },
             select: {
@@ -237,12 +240,13 @@ export class RoundService {
       this.logger.log(`Rodada ${roundInfo.roundNumber} para congregação ${houses[0].multitenancy.name} iniciada`);
     }, { timeout: 120_000 });
   }
-}
 
-function getRoundStartDate(tenantId: number) {
-  if (tenantId === 2) return dayjs().subtract(1, 'year').toDate();
-  if (tenantId === 5) return dayjs().subtract(3, 'months').toDate();
-  if (tenantId === 9) return dayjs().subtract(3, 'months').toDate();
-  return dayjs().subtract(6, 'months').toDate();
+  private async getRoundStartDate(tenantId: number) {
+    const customMonths = await this.parametersService.getValue(tenantId, 'ROUND_START_DATE_MONTHS');
+    if (customMonths) {
+      return dayjs().subtract(parseInt(customMonths), 'months').toDate();
+    }
+    return dayjs().subtract(6, 'months').toDate();
+  }
 }
 

@@ -10,12 +10,12 @@ import { UserToken } from '../contracts';
 @Injectable()
 export class AuthGuard implements CanActivate {
   logger = new Logger(AuthGuard.name);
-  constructor(private reflector: Reflector) {}
+  constructor(private reflector: Reflector) { }
   canActivate(context: ExecutionContext): boolean {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [context.getHandler(), context.getClass()]);
     const request = context.switchToHttp().getRequest<RequestUser>();
     if (isPublic) {
-      this.logger.log(`Rota pública - ${request.url} - ${request.method}`);
+      this.logger.debug(`Rota pública - ${request.url} - ${request.method}`);
       return true;
     }
     const token = this.extractTokenFromHeader(request);
@@ -23,7 +23,7 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Não autorizado');
     }
 
-    this.logger.log(`Rota privada - ${request.url} - ${request.method} - ${token}`);
+    this.logger.debug(`Rota privada - ${request.url} - ${request.method} - ${token}`);
 
     const payload = this.validateToken(token);
     request['user'] = payload;
