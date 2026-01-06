@@ -115,13 +115,14 @@ export class AddressBlockService {
                 }
 
                 this.logger.log(`Buscando endereço similar para: ${address.street}`);
-                // Se não houver ID, busca um endereço similar com mais de 80% de similaridade
+                // Se não houver ID, busca um endereço similar com mais de 60% de similaridade
                 const similarAddress = await prisma.$queryRaw<
                     { id: number; name: string }[]
                 >`
                     SELECT id, name
                     FROM "address"
-                    WHERE similarity(name, ${address.street}) > 0.5
+                    WHERE similarity(name, ${address.street}) > 0.6
+                      AND tenant_id = ${tenantId}
                     ORDER BY similarity(name, ${address.street}) DESC
                     LIMIT 1
                 `;
