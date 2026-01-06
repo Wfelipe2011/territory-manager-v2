@@ -117,8 +117,7 @@ export class ReportController {
         this.logger.error(`Report ${id} não encontrado`);
         throw new Error('Registro não encontrado');
       }
-      this.logger.log(`Report ${id} encontrado`);
-      this.logger.log(`Tipo de report: ${house.reportType}`);
+      this.logger.log(`Report ${id} encontrado. reportType: ${house.reportType}`);
 
       if (house.reportType === 'remove') {
         this.logger.log(`Deletando registros relacionados ao report ${id}`);
@@ -148,17 +147,35 @@ export class ReportController {
         },
       });
       this.logger.log(`Report ${id} aprovado com sucesso e backup removido`);
+
+      const filter = {
+        number: 'ghost',
+        tenantId: house.tenantId,
+        territoryId: house.territoryId,
+        OR: [] as any[]
+      };
+
+      if (house.territoryBlockAddressId) {
+        filter.OR.push({ territoryBlockAddressId: house.territoryBlockAddressId });
+      }
+
+      if (house.blockId && house.addressId) {
+        filter.OR.push({
+          AND: [
+            { blockId: house.blockId },
+            { addressId: house.addressId }
+          ]
+        });
+      }
+
       // buscar house ghost e remover
+      console.log(`DEBUG: Buscando casa fantasma para remover. Filtro: ${JSON.stringify(filter)}`);
       const houseGhost = await txt.house.findFirst({
-        where: {
-          number: 'ghost',
-          tenantId: house.tenantId,
-          territoryBlockAddressId: house.territoryBlockAddressId,
-        }
+        where: filter
       })
 
       if (houseGhost) {
-        this.logger.log(`Removendo casa fantasma`);
+        console.log(`DEBUG: Casa fantasma encontrada: ${houseGhost.id}. Removendo...`);
         await txt.round.deleteMany({
           where: {
             houseId: houseGhost.id,

@@ -23,6 +23,10 @@ export class CreateReportDto {
   @IsNumber({}, { message: 'O campo "addressId" deve ser um número.' })
   addressId!: number;
 
+  @IsOptional()
+  @IsNumber({}, { message: 'O campo "territoryBlockAddressId" deve ser um número.' })
+  territoryBlockAddressId?: number;
+
   @IsNotEmpty({ message: 'O campo "observations" é obrigatório.' })
   @IsString({ message: 'O campo "observations" deve ser uma string.' })
   observations!: string;
