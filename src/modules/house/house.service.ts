@@ -8,6 +8,7 @@ import { LegengDTO } from './dtos/Legend';
 import dayjs from 'dayjs';
 import { UpdateHouseOrder } from './contracts/UpdateHouseOrder';
 import { ParametersService } from '../parameters/parameters.service';
+import { AddressBlockService } from '../block/adress-block.service';
 
 export type CreateHouseInput = {
   streetId: number;
@@ -23,7 +24,8 @@ export class HouseService {
   private logger = new Logger(HouseService.name);
   constructor(
     readonly prisma: PrismaService,
-    private readonly parametersService: ParametersService
+    private readonly parametersService: ParametersService,
+    private readonly addressBlockService: AddressBlockService
   ) { }
 
   async getAddressPerTerritoryByIdAndBlockById(blockId: number, territoryId: number) {
@@ -37,6 +39,13 @@ export class HouseService {
       include: { signature: true, territory: true, block: true },
     });
     this.logger.log(`Buscando as ruas do território: [${territoryBlock?.territory.name}-${territoryBlock?.block.name}]`);
+
+    if (territoryBlock) {
+      await this.addressBlockService.syncGhostHouses(territoryId, blockId, territoryBlock.tenantId).catch(err => {
+        this.logger.error(`Erro ao sincronizar casas fantasmas para o território: [${territoryBlock?.territory.name}-${territoryBlock?.block.name}]`);
+        this.logger.error(err);
+      });
+    }
 
     this.logger.log(`Verificando se [${territoryBlock?.territory.name}-${territoryBlock?.block.name}] tem assinatura`);
     if (!territoryBlock?.signatureId) throw new NotFoundException('Quadra não tem assinatura');

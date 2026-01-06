@@ -17,7 +17,7 @@ export class HouseWorkerService {
   private logger = new Logger(HouseWorkerService.name);
   constructor(readonly prisma: PrismaService, readonly addressBlockService: AddressBlockService) { }
 
-  @Cron(CronExpression.EVERY_DAY_AT_1AM)
+  // @Cron(CronExpression.EVERY_DAY_AT_1AM)
   async removeGhostHouse() {
     this.logger.log('Iniciando a tarefa de remoção de casas fantasmas');
     const ghostHouses = await this.prisma.house.findMany({
@@ -60,7 +60,7 @@ export class HouseWorkerService {
     this.logger.log('Tarefa de remoção de casas fantasmas concluída');
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_1AM)
+  // @Cron(CronExpression.EVERY_DAY_AT_1AM)
   async createGhostHouse() {
     this.logger.log('Iniciando a tarefa de criação de casas fantasmas');
     const blocks = await this.prisma.territory_block_address.findMany({

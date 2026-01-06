@@ -169,13 +169,11 @@ export class ReportController {
       }
 
       // buscar house ghost e remover
-      console.log(`DEBUG: Buscando casa fantasma para remover. Filtro: ${JSON.stringify(filter)}`);
       const houseGhost = await txt.house.findFirst({
         where: filter
       })
 
       if (houseGhost) {
-        console.log(`DEBUG: Casa fantasma encontrada: ${houseGhost.id}. Removendo...`);
         await txt.round.deleteMany({
           where: {
             houseId: houseGhost.id,

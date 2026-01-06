@@ -232,4 +232,54 @@ export class AddressBlockService {
             this.logger.log(`Round criado para casa fantasma: ${house.id}, round: ${round.roundNumber}`);
         }
     }
+
+    async syncGhostHouses(territoryId: number, blockId: number, tenantId: number, prisma: PrismaTransaction = this.prisma) {
+        this.logger.log(`Sincronizando casas fantasmas para o território ${territoryId} e quadra ${blockId}`);
+
+        // 1. Criar casas fantasmas para endereços que não têm nenhuma casa
+        const missingGhostHouses = await prisma.territory_block_address.findMany({
+            where: {
+                territoryBlock: {
+                    territoryId,
+                    blockId
+                },
+                house: {
+                    none: {},
+                },
+            },
+            include: {
+                territoryBlock: true,
+            },
+        });
+
+        for (const tba of missingGhostHouses) {
+            await this.createGhostHouse(tba.addressId, tba.territoryBlock, tba.id, tenantId, prisma);
+        }
+
+        // 2. Remover casas fantasmas que agora têm casas reais
+        const ghostHousesToCleanup = await prisma.house.findMany({
+            where: {
+                number: 'ghost',
+                territoryId,
+                blockId,
+                tenantId
+            },
+        });
+
+        for (const ghostHouse of ghostHousesToCleanup) {
+            const allHouses = await prisma.house.findMany({
+                where: {
+                    territoryBlockAddressId: ghostHouse.territoryBlockAddressId,
+                },
+            });
+
+            const realHousesCount = allHouses.filter(h => h.number !== 'ghost').length;
+
+            if (realHousesCount > 0) {
+                this.logger.log(`Removendo casa fantasma órfã ID ${ghostHouse.id} pois já existem casas reais.`);
+                await prisma.round.deleteMany({ where: { houseId: ghostHouse.id } });
+                await prisma.house.delete({ where: { id: ghostHouse.id } });
+            }
+        }
+    }
 }

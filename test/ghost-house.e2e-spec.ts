@@ -113,7 +113,7 @@ describe('Ghost House Flow (e2e)', () => {
                 reportType: 'add',
                 observations: 'New house added'
             });
-        
+
         expect(reportResponse.status).toBe(201);
         const reportId = reportResponse.body.id;
 
@@ -122,7 +122,103 @@ describe('Ghost House Flow (e2e)', () => {
             .post(`/v1/reports/approve/${reportId}`)
             .set('Authorization', `Bearer ${adminToken}`)
             .send();
-        
+
         expect(approveResponse.status).toBe(201);
+
+        // 4. Assert: Check if the ghost house was removed
+        const ghostHouseAfter = await prisma.house.findFirst({
+            where: { number: 'ghost', territoryBlockAddressId }
+        });
+        expect(ghostHouseAfter).toBeNull();
+    });
+
+    it('should sync ghost houses on demand when accessing block details', async () => {
+        // Arrange
+        const tenant = await prisma.multitenancy.create({ data: { name: 'Test Tenant' } });
+        const type = await prisma.type.create({ data: { name: 'Type 1', tenantId: tenant.id } });
+        const territory = await prisma.territory.create({
+            data: { name: 'Territory 1', typeId: type.id, tenantId: tenant.id },
+        });
+        const block = await prisma.block.create({ data: { name: 'Block Test', tenantId: tenant.id } });
+        const address = await prisma.address.create({ data: { name: 'Street Test', tenantId: tenant.id } });
+        const tb = await prisma.territory_block.create({
+            data: {
+                territoryId: territory.id,
+                blockId: block.id,
+                tenantId: tenant.id
+            }
+        });
+        const tba = await prisma.territory_block_address.create({
+            data: {
+                addressId: address.id,
+                territoryBlockId: tb.id,
+                tenantId: tenant.id
+            }
+        });
+
+        // 1. Manually satisfy the requirement for ghost house creation but don't create it yet
+        // A TBA with no houses should have a ghost house CREATED ON DEMAND.
+        // We ensure no house exists before the API call.
+        await prisma.house.deleteMany({
+            where: { territoryBlockAddressId: tba.id }
+        });
+
+        let ghostHouse = await prisma.house.findFirst({
+            where: { territoryBlockAddressId: tba.id, number: 'ghost' }
+        });
+        expect(ghostHouse).toBeNull();
+
+        // We need a signature to access the block
+        const signature = await prisma.signature.create({
+            data: {
+                key: 'test-key',
+                token: createTestToken({
+                    territoryId: territory.id,
+                    round: 1,
+                    tenantId: tenant.id,
+                    roles: [Role.DIRIGENTE]
+                }),
+                expirationDate: new Date(Date.now() + 100000),
+                tenantId: tenant.id
+            }
+        });
+        await prisma.territory_block.update({
+            where: { id: tb.id },
+            data: { signatureId: signature.id }
+        });
+
+        const overseerToken = createTestToken({ tenantId: tenant.id, roles: [Role.DIRIGENTE] });
+
+        // Act: Access block details
+        const response = await request(app.getHttpServer())
+            .get(`/v1/territories/${territory.id}/blocks/${block.id}?round=1`)
+            .set('Authorization', `Bearer ${overseerToken}`);
+
+        expect(response.status).toBe(200);
+
+        // 2. Now add a real house and verify cleanup on next access
+        const realHouse = await prisma.house.create({
+            data: {
+                number: '100',
+                territoryId: territory.id,
+                blockId: block.id,
+                addressId: address.id,
+                tenantId: tenant.id,
+                territoryBlockAddressId: tba.id
+            }
+        });
+
+        // Act: Access again - using cacheBuster to bypass global CacheInterceptor and trigger another sync
+        const response2 = await request(app.getHttpServer())
+            .get(`/v1/territories/${territory.id}/blocks/${block.id}?round=1&cacheBuster=${Date.now()}`)
+            .set('Authorization', `Bearer ${overseerToken}`);
+
+        expect(response2.status).toBe(200);
+
+        // Assert: Ghost house should have been cleaned up on demand
+        ghostHouse = await prisma.house.findFirst({
+            where: { territoryBlockAddressId: tba.id, number: 'ghost' }
+        });
+        expect(ghostHouse).toBeNull();
     });
 });
