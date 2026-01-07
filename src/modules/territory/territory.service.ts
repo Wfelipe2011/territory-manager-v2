@@ -66,7 +66,7 @@ export class TerritoryService {
       INNER JOIN round ON round.house_id = h.id  AND round.round_number = ${+round} 
       left join territory_overseer tov on tov.territory_id = t.id AND tov.round_number = ${+round}
        left join signature s on s.id = tb.signature_id
-      WHERE t.id = ${territoryId} and h.number <> 'ghost'
+      WHERE t.id = ${territoryId}
       GROUP BY t.id, t."name", tb.signature_id, b.id, b."name", tov.overseer, tov.finished, tov.initial_date, s."key", tov.expiration_date, s.expiration_date
       ORDER BY negative_completed DESC;
       `;
