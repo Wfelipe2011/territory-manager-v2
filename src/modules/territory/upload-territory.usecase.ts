@@ -9,7 +9,7 @@ import { LegengDTO } from '../house/dtos/Legend';
 export interface Row {
   TipoTerritorio: string;
   Território: string;
-  Quadra: number;
+  Quadra: string | number;
   Logradouro: string;
   Numero: string;
   Legenda: string;
@@ -45,7 +45,7 @@ export class UploadTerritoryUseCase {
     const bulkRows: BulkImportRow[] = rows.map(row => ({
       TipoTerritorio: row.TipoTerritorio,
       Território: row.Território,
-      Quadra: row.Quadra,
+      Quadra: String(row.Quadra),
       Logradouro: row.Logradouro,
       Numero: row.Numero,
       Legenda: row.Legenda,

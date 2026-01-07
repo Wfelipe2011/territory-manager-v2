@@ -32,7 +32,7 @@ describe('Territory Bulk Import (e2e)', () => {
                 {
                     TipoTerritorio: 'Residencial',
                     Território: 'Território 01',
-                    Quadra: 1,
+                    Quadra: '1',
                     Logradouro: 'Rua das Flores',
                     Numero: '100',
                     Legenda: 'Residência',
@@ -42,7 +42,7 @@ describe('Territory Bulk Import (e2e)', () => {
                 {
                     TipoTerritorio: 'Residencial',
                     Território: 'Território 01',
-                    Quadra: 1,
+                    Quadra: '1',
                     Logradouro: 'Rua das Flores',
                     Numero: '101',
                     Legenda: 'Comércio',
@@ -52,7 +52,7 @@ describe('Territory Bulk Import (e2e)', () => {
                 {
                     TipoTerritorio: 'Comercial',
                     Território: 'Território 02',
-                    Quadra: 2,
+                    Quadra: '2',
                     Logradouro: 'Av. Principal',
                     Numero: '500',
                     Legenda: 'Terreno',
@@ -105,7 +105,7 @@ describe('Territory Bulk Import (e2e)', () => {
                 {
                     TipoTerritorio: 'Residencial',
                     Território: 'Território 01',
-                    Quadra: 1,
+                    Quadra: '1',
                     Logradouro: 'Rua das Flores',
                     Numero: '100',
                 },
@@ -136,7 +136,7 @@ describe('Territory Bulk Import (e2e)', () => {
                 {
                     TipoTerritorio: 'Residencial',
                     Território: 'T1',
-                    Quadra: 1,
+                    Quadra: '1',
                     Logradouro: 'Rua 1',
                     Numero: '1',
                 },

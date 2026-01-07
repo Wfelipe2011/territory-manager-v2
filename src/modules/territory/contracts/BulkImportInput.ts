@@ -13,10 +13,10 @@ export class BulkImportRow {
     @IsNotEmpty()
     Território: string;
 
-    @ApiProperty({ example: 1 })
-    @IsNumber()
+    @ApiProperty({ example: '1' })
+    @IsString()
     @IsNotEmpty()
-    Quadra: number;
+    Quadra: string;
 
     @ApiProperty({ example: 'Rua das Flores' })
     @IsString()
