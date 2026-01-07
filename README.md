@@ -1,73 +1,180 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Território Digital (Territory Manager)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+> **Gestão Digital de Territórios: Rápido, Simples e Eficiente.**
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+O **Território Digital** é uma plataforma moderna projetada para auxiliar congregações na gestão de territórios. O sistema resolve problemas comuns como extravio de registros em papel, dificuldade na localização de quadras e limitações no controle de visitas ("repescagens").
 
-## Description
+🌐 **Site Oficial:** [td.territory-manager.com.br](https://td.territory-manager.com.br)  
+📱 **Demo:** [Faça um teste online](https://app.territory-manager.com.br/home?p=territorio%2F3%3Fround%3D7&s=c6b85860-76b2-4b0e-a8a4-66afc68d926c)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository. 
+---
 
-## Installation
+## 🚀 Principais Recursos
 
-```bash
-$ npm install
+### Para Quem Gerencia (Administração)
+- **Controle Centralizado:** Gerencie territórios, quadras, ruas e casas em um painel unificado.
+- **Links Seguros:** Gere links de acesso temporário para dirigentes e publicadores, sem necessidade de login/senha para usuários finais.
+- **Auditabilidade:** Histórico completo de quem trabalhou em qual território e quando (`Records Module`).
+- **Backup Diário:** Segurança dos dados garantida.
+
+### Para Quem Usa (Campo)
+- **Marcação em Tempo Real:** Atualizações via WebSocket mostram instantaneamente casas visitadas ou "não em casa" para todos no mesmo território.
+- **Mapas Integrados:** Integração nativa com Google Maps para localização exata.
+- **Sem Coleta de Dados Pessoais:** Foco na estrutura do território, respeitando a privacidade.
+
+---
+
+## 🏗️ Arquitetura do Sistema
+
+O sistema é uma API RESTful robusta construída com **NestJS**, seguindo uma arquitetura modular e orientada a eventos.
+
+### Visão Macro (Container Diagram)
+
+```mermaid
+graph TD
+    User((Usuário))
+    Admin((Administrador))
+
+    subgraph "External Providers"
+        Firebase[Firebase Admin]
+        Logtail[Logtail / BetterStack]
+        Nodemailer[Email Service]
+    end
+
+    subgraph "Territory Manager Platform"
+        LB[Load Balancer / Ingress]
+        
+        subgraph "API Core (NestJS)"
+            Gateway[API Gateway / Controllers]
+            Auth[Auth Module]
+            Logic[Business Logic Modules]
+            Socket[Event Gateway - Socket.io]
+        end
+        
+        subgraph "Data & State"
+            DB[(PostgreSQL)]
+            Cache[(In-Memory Cache)]
+        end
+    end
+
+    User -->|HTTPS| LB
+    Admin -->|HTTPS| LB
+    LB -->|Terminação SSL| Gateway
+    
+    Gateway --> Auth
+    Auth --> Logic
+    Logic --> DB
+    Logic --> Cache
+    
+    Gateway --> Socket
+    
+    Logic -.->|Uploads/Notifications| Firebase
+    Logic -.->|Logs| Logtail
+    Logic -.->|Emails| Nodemailer
+
+    style User fill:#f9f,stroke:#333
+    style Admin fill:#f9f,stroke:#333
+    style DB fill:#58a,stroke:#333
+    style Firebase fill:#ffa,stroke:#333
 ```
 
-## Running the app
+### Stack Tecnológico
 
-```bash
-# development
-$ npm run start
+*   **Backend Framework:** [NestJS](https://nestjs.com/) (Node.js)
+*   **Database:** PostgreSQL 14+ (via Prisma ORM)
+*   **Real-time:** Socket.io (WebSockets)
+*   **Infrastructure:** Docker & Docker Compose
+*   **Cloud Services:** Firebase (Storage/Push), Logtail (Logging)
 
-# watch mode
-$ npm run start:dev
+---
 
-# production mode
-$ npm run start:prod
-```
+## 🛡️ Qualidade de Código (Testes)
 
-## Test
+O projeto mantém um alto padrão de confiabilidade, com cobertura abrangente de testes de integração (E2E).
 
-```bash
-# unit tests
-$ npm run test
+| Métrica | Cobertura |
+| :--- | :--- |
+| **Statements** | 83% |
+| **Functions** | 79% |
+| **Lines** | 85% |
+| **Tests Passed** | 113/113 |
 
-# e2e tests
-$ npm run test:e2e
+Executamos testes E2E rigorosos para garantir que fluxos críticos como **Assinatura de Territórios**, **Atualização de Rodadas** e **WebSockets** funcionem perfeitamente.
 
-# test coverage
-$ npm run test:cov
-```
+---
 
-## Support
+## 🧩 Módulos Principais
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+A aplicação é dividida em contextos de negócio para facilitar a manutenção e escalabilidade.
 
-## Stay in touch
+### 1. Colaboração em Tempo Real (Gateway Module)
+Gerencia a presença dos usuários nos territórios.
+*   **Funcionalidade:** Quando um usuário abre um território, ele entra em uma "Sala" (Room).
+*   **Sincronização:** Se um usuário marca uma casa como visitada, todos na mesma sala recebem a atualização instantaneamente.
+*   **Mecanismo:** WebSockets com autenticação JWT e persistência de estado de sessão para recuperação de falhas.
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### 2. Acesso Efêmero (Signature Module)
+Permite que publicadores acessem o sistema sem criar conta.
+*   **Tokens Temporários:** O sistema gera URLs únicas com validade definida (ex: 5 horas).
+*   **Segurança:** Utiliza JSON Web Tokens (JWT) assinados que expiram automaticamente.
 
-## License
+### 3. Analytics e Relatórios (Dashboard & Records)
+*   **Dashboard:** Visão gerencial com estatísticas de cobertura do território.
+*   **Records:** Auditoria histórica de designações para o secretário da congregação.
 
-Nest is [MIT licensed](LICENSE).
+---
+
+## 💻 Desenvolvimento e Instalação
+
+### Pré-requisitos
+*   Docker & Docker Compose
+*   Node.js 18+ (para desenvolvimento local sem Docker)
+
+### Configuração Inicial
+
+1.  **Clone o repositório:**
+    ```bash
+    git clone https://github.com/seu-usuario/territory-manager.git
+    cd territory-manager
+    ```
+
+2.  **Configure as variáveis de ambiente:**
+    Copie o arquivo de exemplo (se houver) ou crie um `.env` com base no `docker-compose.yml`.
+
+3.  **Inicie o ambiente (Docker):**
+    ```bash
+    # Inicia App e Banco de Dados em modo de desenvolvimento
+    npm run docker:app:dev
+    ```
+    A API estará disponível em `http://localhost:3000`.
+
+### Comandos Úteis
+
+| Comando | Descrição |
+| :--- | :--- |
+| `npm run start:dev` | Roda a API localmente (watch mode) |
+| `npm run test` | Executa testes unitários |
+| `npm run test:e2e` | Executa testes ponta-a-ponta |
+| `npm run docker:db:dev` | Sobe apenas o banco de dados via Docker |
+| `npm run prisma:studio` | Abre interface visual para o banco de dados |
+
+---
+
+## 📞 Suporte e Contato
+
+Dúvidas ou sugestões? Entre em contato através do nosso canal oficial.
+
+*   [WhatsApp de Suporte](https://wa.me/5515981785706)
+*   [Website Oficial](https://td.territory-manager.com.br)
+
+---
+
+## ☕ Pague o meu café
+
+Este projeto é desenvolvido com carinho para ajudar congregações. Se ele tem sido útil para você, considere fazer uma doação para ajudar nos custos do servidor e do desenvolvimento.
+
+[<img src="https://www.paypalobjects.com/pt_BR/BR/i/btn/btn_donateCC_LG.gif" alt="Doar com PayPal" />](https://www.paypal.com/donate/?hosted_button_id=VKVMUKKR6QCSA&locale.x=pt_BR)
+
+---
+
+© 2025 Território Digital. Todos os direitos reservados.
