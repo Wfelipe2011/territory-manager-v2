@@ -117,6 +117,77 @@ export class TerritoryService {
     });
   }
 
+  async delete(id: number, tenantId: number): Promise<void> {
+    const territory = await this.prisma.territory.findFirst({
+      where: { id, tenantId },
+    });
+
+    if (!territory) {
+      throw new NotFoundException('Território não encontrado');
+    }
+
+    await this.prisma.$transaction(async (prisma) => {
+      this.logger.log(`Iniciando exclusão do território: ${id}`);
+
+      // 1. Delete Rounds
+      await prisma.round.deleteMany({
+        where: { territoryId: id, tenantId },
+      });
+      this.logger.log('Rounds deletados');
+
+      // 2. Preparar dados para deletar Houses, Addresses e Blocks
+      const territoryBlocks = await prisma.territory_block.findMany({
+        where: { territoryId: id, tenantId },
+        include: { territory_block_address: true },
+      });
+
+      const territoryBlockAddressIds = territoryBlocks.flatMap((tb) =>
+        tb.territory_block_address.map((tba) => tba.id),
+      );
+
+      if (territoryBlockAddressIds.length > 0) {
+        // 3. Delete Houses
+        await prisma.house.deleteMany({
+          where: {
+            OR: [
+              { territoryBlockAddressId: { in: territoryBlockAddressIds } },
+              { territoryId: id }
+            ],
+            tenantId,
+          },
+        });
+        this.logger.log('Houses deletadas');
+
+        // 4. Delete Territory Block Addresses
+        await prisma.territory_block_address.deleteMany({
+          where: {
+            id: { in: territoryBlockAddressIds },
+            tenantId,
+          },
+        });
+        this.logger.log('Territory Block Addresses deletados');
+      }
+
+      // 5. Delete Territory Blocks
+      await prisma.territory_block.deleteMany({
+        where: { territoryId: id, tenantId },
+      });
+      this.logger.log('Territory Blocks deletados');
+
+      // 6. Delete Overseers (Histórico)
+      await prisma.territory_overseer.deleteMany({
+        where: { territoryId: id, tenantId },
+      });
+      this.logger.log('Territory Overseers deletados');
+
+      // 7. Delete Territory
+      await prisma.territory.delete({
+        where: { id },
+      });
+      this.logger.log('Território deletado com sucesso');
+    });
+  }
+
   async findEditById(query: TerritoryEditQuery, pagination: { page: number; pageSize: number }): Promise<TerritoryEditOutput> {
     const { streetName, houseNumber } = this.processStreetFilter(query.streetFilter);
     const whereCondition = this.buildWhereCondition(query, streetName, houseNumber) as any;

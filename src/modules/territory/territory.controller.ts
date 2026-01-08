@@ -2,8 +2,10 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
+  HttpCode,
   Logger,
   Param,
   Post,
@@ -87,6 +89,17 @@ export class TerritoryController {
   async updateTerritory(@Param('territoryId') territoryId: number, @Body() body: UpdateTerritoryParams) {
     logger.log(`Usuário está atualizando o território ${territoryId}`);
     return this.territoryService.update(territoryId, body)
+  }
+
+  @ApiResponse({ status: 204, description: 'Território excluído com sucesso' })
+  @ApiOperation({ summary: 'Exclui um território' })
+  @Delete(':id')
+  @HttpCode(204)
+  @Roles(Role.ADMIN)
+  async delete(@Param('id') id: number, @Request() req: RequestUser): Promise<void> {
+    const { tenantId } = req.user;
+    logger.log(`Usuário ${req.user.id} está excluindo o território ${id}`);
+    await this.territoryService.delete(+id, tenantId);
   }
 
   @ApiResponse({ status: 200, type: TerritoryTypesOutput, isArray: true })
