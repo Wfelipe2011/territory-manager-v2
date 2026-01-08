@@ -198,6 +198,7 @@ export class TerritoryOneOutput {
     return {
       id: territory.block_id,
       name: territory.block_name,
+      connections: Number(territory.connections),
       positiveCompleted: Number(territory.positive_completed),
       negativeCompleted: Number(territory.negative_completed),
       signature: {

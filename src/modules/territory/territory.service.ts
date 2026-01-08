@@ -58,7 +58,12 @@ export class TerritoryService {
         s."key" as signature_key,
         tov.expiration_date,
         s.expiration_date as signature_expiration_date,
-        MAX(round.update_date) as round_update_at
+        MAX(round.update_date) as round_update_at,
+        (
+          SELECT COUNT(so.id)
+          FROM socket so
+          WHERE so.room ~ ('\\y' || t.id::text || '-' || b.id::text || '\\y')
+        ) as connections
       FROM territory t
       LEFT JOIN territory_block tb ON tb.territory_id = t.id
       LEFT JOIN block b ON b.id = tb.block_id
@@ -75,18 +80,6 @@ export class TerritoryService {
     if (!territoryDto.history.length) throw new NotFoundException(`Território: ${territoryDto.territoryName} não tem histórico`);
     if (territoryDto.history.filter(h => !h.finished).length === 0)
       throw new NotFoundException(`Território: ${territoryDto.territoryName} não tem histórico assinatura`);
-    await Promise.all(
-      [
-        ...territoryDto.blocks.map(async block => {
-          const like = `%${territoryId}-${block.id}%`;
-          const [connections] = await this.prisma.$queryRaw<{ count: BigInt }[]>`
-          select count(s.id)  from socket s 
-          where s.room LIKE ${like};
-        `;
-          block.connections = +connections.count.toString();
-        })
-      ]
-    );
 
     this.logger.log(`Território: ${territoryDto.territoryName}`);
 

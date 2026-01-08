@@ -22,6 +22,7 @@ export interface RawTerritoryOne {
   negative_completed: string;
   block_id: number;
   block_name: string;
+  connections: number;
   initial_date: Date;
   expiration_date?: Date;
   finished: boolean;
