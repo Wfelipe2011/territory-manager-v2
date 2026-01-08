@@ -78,16 +78,6 @@ export class TerritoryService {
     await Promise.all(
       [
         ...territoryDto.blocks.map(async block => {
-          const houseGhost = await this.prisma.house.count({
-            where: {
-              territoryId,
-              blockId: block.id,
-              number: 'ghost'
-            }
-          })
-          block.positiveCompleted -= houseGhost
-        }),
-        ...territoryDto.blocks.map(async block => {
           const like = `%${territoryId}-${block.id}%`;
           const [connections] = await this.prisma.$queryRaw<{ count: BigInt }[]>`
           select count(s.id)  from socket s 
