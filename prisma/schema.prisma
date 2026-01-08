@@ -281,3 +281,13 @@ model paypal_transaction {
   createdAt DateTime @default(now()) // Data de criação do registro
   updatedAt DateTime @updatedAt // Atualizado automaticamente
 }
+
+model ChangeSet {
+  idString    String   @id @default(uuid())
+  tenantId    Int
+  batchId     String   // ID único do lote de envio
+  payload     Json     // Array de visitas [{ houseId: 1, completed: true, date: ... }]
+  processedAt DateTime @default(now())
+  
+  @@index([tenantId])
+}

@@ -30,6 +30,7 @@ import { FirebaseUploadService } from './firebase-upload.service';
 import { FirebaseModule } from './infra/firebase.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { OfflineModule } from './modules/offline/offline.module';
 
 @Module({
   imports: [
@@ -59,7 +60,8 @@ import { join } from 'path';
     ReportModule,
     BlockModule,
     RecordsModule,
-    ParametersModule
+    ParametersModule,
+    OfflineModule
   ],
   controllers: [AppController, TransactionsController],
   providers: [
