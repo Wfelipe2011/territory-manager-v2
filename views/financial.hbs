@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão Financeira - Territory Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #121212; color: #E0E0E0; font-family: 'Inter', sans-serif; }
+        .card { background-color: #1E1E1E; border-radius: 12px; padding: 1.5rem; }
+        .table-row:nth-child(even) { background-color: #252525; }
+        .modal { transition: opacity 0.25s ease; }
+        body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
+    </style>
+</head>
+<body class="bg-[#121212] flex min-h-screen">
+    {{> sidebar}}
+
+    <main class="flex-1 md:ml-64 p-4 md:p-8">
+        <div class="max-w-6xl mx-auto">
+            <header class="flex justify-between items-center mb-8">
+                <h1 class="text-3xl font-bold text-white">Gestão Financeira</h1>
+                <button onclick="openModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                    <i class="fas fa-plus"></i> Novo Lançamento
+                </button>
+            </header>
+
+            <!-- Cards Resumo Consolidado -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="card border-l-4 border-green-500">
+                    <p class="text-gray-400 text-sm uppercase font-semibold">Total Entradas</p>
+                    <h2 class="text-3xl font-bold text-green-400 mt-2">R$ {{summary.totalEntries}}</h2>
+                    <p class="text-xs text-gray-500 mt-1">Acumulado global</p>
+                </div>
+                <div class="card border-l-4 border-red-500">
+                    <p class="text-gray-400 text-sm uppercase font-semibold">Total Saídas</p>
+                    <h2 class="text-3xl font-bold text-red-400 mt-2">R$ {{summary.totalExits}}</h2>
+                    <p class="text-xs text-gray-500 mt-1">Acumulado global</p>
+                </div>
+                <div class="card border-l-4 border-blue-500">
+                    <p class="text-gray-400 text-sm uppercase font-semibold">Saldo Atual</p>
+                    <h2 class="text-3xl font-bold text-blue-400 mt-2">R$ {{summary.balance}}</h2>
+                    <p class="text-xs text-gray-500 mt-1">Consolidado do sistema</p>
+                </div>
+            </div>
+
+            <!-- Tabela de Lançamentos -->
+            <div class="card overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b border-gray-800 text-gray-400 text-sm">
+                                <th class="pb-4 font-semibold">Data</th>
+                                <th class="pb-4 font-semibold">Descrição</th>
+                                <th class="pb-4 font-semibold">Tipo</th>
+                                <th class="pb-4 font-semibold">Valor</th>
+                                <th class="pb-4 font-semibold">Ciclo</th>
+                                <th class="pb-4 font-semibold text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm">
+                            {{#each entries}}
+                            <tr class="table-row border-b border-gray-800/50">
+                                <td class="py-4 text-gray-300">{{formatDate date}}</td>
+                                <td class="py-4 text-white font-medium">
+                                    {{description}}
+                                    {{#if donorName}} <span class="text-xs text-gray-500 block">Doador: {{donorName}}</span> {{/if}}
+                                </td>
+                                <td class="py-4">
+                                    {{#if (eq type "POSITIVE")}}
+                                    <span class="px-2 py-1 bg-green-500/10 text-green-500 rounded text-xs uppercase">Entrada</span>
+                                    {{else}}
+                                    <span class="px-2 py-1 bg-red-500/10 text-red-500 rounded text-xs uppercase">Saída</span>
+                                    {{/if}}
+                                </td>
+                                <td class="py-4 font-mono {{#if (eq type "POSITIVE")}}text-green-400{{else}}text-red-400{{/if}}">
+                                    R$ {{value}}
+                                </td>
+                                <td class="py-4 text-gray-400">{{cycle}}</td>
+                                <td class="py-4 text-right">
+                                    <button class="text-gray-500 hover:text-white transition-colors p-2" onclick="editEntry('{{id}}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="text-gray-500 hover:text-red-500 transition-colors p-2" onclick="deleteEntry('{{id}}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal para Novo/Editar Lançamento -->
+    <div id="entryModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-black opacity-80"></div>
+        <div class="modal-container bg-[#1E1E1E] w-11/12 md:max-w-md mx-auto rounded-xl shadow-2xl z-50 overflow-y-auto">
+            <div class="modal-content py-6 text-left px-8">
+                <div class="flex justify-between items-center pb-6">
+                    <p class="text-2xl font-bold text-white" id="modalTitle">Novo Lançamento</p>
+                    <div class="modal-close cursor-pointer z-50" onclick="toggleModal('entryModal')">
+                        <i class="fas fa-times text-gray-400"></i>
+                    </div>
+                </div>
+
+                <form id="financialForm" onsubmit="saveEntry(event)">
+                    <input type="hidden" id="entryId">
+                    <div class="mb-4">
+                        <label class="block text-gray-400 text-sm font-semibold mb-2">Descrição</label>
+                        <input type="text" id="description" required class="w-full bg-[#121212] border border-gray-800 rounded-lg py-2 px-4 text-white focus:outline-none focus:border-green-500">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-400 text-sm font-semibold mb-2">Doador (Congregação)</label>
+                        <select id="donorName" class="w-full bg-[#121212] border border-gray-800 rounded-lg py-2 px-4 text-white focus:outline-none focus:border-green-500">
+                            <option value="">Nenhum (Lançamento avulso)</option>
+                            {{#each tenants}}
+                            <option value="{{name}}">{{name}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-gray-400 text-sm font-semibold mb-2">Valor (R$)</label>
+                            <input type="number" id="value" step="0.01" required class="w-full bg-[#121212] border border-gray-800 rounded-lg py-2 px-4 text-white focus:outline-none focus:border-green-500">
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 text-sm font-semibold mb-2">Tipo</label>
+                            <select id="type" required class="w-full bg-[#121212] border border-gray-800 rounded-lg py-2 px-4 text-white focus:outline-none focus:border-green-500">
+                                <option value="POSITIVE">Entrada (Donativo)</option>
+                                <option value="NEGATIVE">Saída (Gasto)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-400 text-sm font-semibold mb-2">Data</label>
+                        <input type="date" id="date" required class="w-full bg-[#121212] border border-gray-800 rounded-lg py-2 px-4 text-white focus:outline-none focus:border-green-500">
+                    </div>
+                    <div class="flex justify-end pt-2 gap-4">
+                        <button type="button" onclick="toggleModal('entryModal')" class="bg-transparent hover:bg-gray-800 text-gray-400 py-2 px-6 rounded-lg transition-colors">Cancelar</button>
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white py-2 px-6 rounded-lg font-bold transition-colors">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleModal(modalID) {
+            const modal = document.getElementById(modalID);
+            modal.classList.toggle('opacity-0');
+            modal.classList.toggle('pointer-events-none');
+            document.body.classList.toggle('modal-active');
+        }
+
+        async function saveEntry(event) {
+            event.preventDefault();
+            const id = document.getElementById('entryId').value;
+            const data = {
+                description: document.getElementById('description').value,
+                value: document.getElementById('value').value,
+                type: document.getElementById('type').value,
+                date: document.getElementById('date').value,
+                donorName: document.getElementById('donorName').value
+            };
+
+            const url = id ? `/v1/financial/entries/${id}` : '/v1/financial/entries';
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Erro ao salvar lançamento');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function deleteEntry(id) {
+            if (!confirm('Deseja realmente excluir este lançamento?')) return;
+            try {
+                const response = await fetch(`/v1/financial/entries/${id}`, { method: 'DELETE' });
+                if (response.ok) window.location.reload();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function openModal(id = null) {
+            const modalTitle = document.getElementById('modalTitle');
+            const entryId = document.getElementById('entryId');
+            const form = document.getElementById('financialForm');
+            
+            form.reset();
+            entryId.value = '';
+
+            if (id) {
+                modalTitle.innerText = 'Editar Lançamento';
+                try {
+                    const response = await fetch(`/v1/financial/entries/${id}`);
+                    const entry = await response.json();
+                    
+                    document.getElementById('entryId').value = entry.id;
+                    document.getElementById('description').value = entry.description;
+                    document.getElementById('value').value = entry.value;
+                    document.getElementById('type').value = entry.type;
+                    document.getElementById('donorName').value = entry.donorName || '';
+                    
+                    const date = new Date(entry.date);
+                    const formattedDate = date.toISOString().split('T')[0];
+                    document.getElementById('date').value = formattedDate;
+                    
+                } catch (error) {
+                    console.error('Erro ao buscar dados:', error);
+                    return;
+                }
+            } else {
+                modalTitle.innerText = 'Novo Lançamento';
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('date').value = today;
+            }
+            
+            toggleModal('entryModal');
+        }
+
+        function editEntry(id) {
+            openModal(id);
+        }
+    </script>
+</body>
+</html>

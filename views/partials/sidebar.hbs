@@ -12,6 +12,11 @@
             <i class="fas fa-chart-line w-5"></i>
             <span>Dashboard</span>
         </a>
+
+        <a href="/v1/financial" class="flex items-center gap-3 px-4 py-3 rounded-lg {{#if (eq activePage 'financial')}}bg-green-500/10 text-green-400 font-medium{{else}}text-gray-400 hover:bg-gray-800 hover:text-white{{/if}} transition-colors">
+            <i class="fas fa-wallet w-5"></i>
+            <span>Financeiro</span>
+        </a>
         
         {{#if isSuperAdmin}}
         <a href="/v1/dashboard/tenants" class="flex items-center gap-3 px-4 py-3 rounded-lg {{#if (eq activePage 'tenants')}}bg-green-500/10 text-green-400 font-medium{{else}}text-gray-400 hover:bg-gray-800 hover:text-white{{/if}} transition-colors">

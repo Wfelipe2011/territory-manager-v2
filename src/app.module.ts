@@ -23,6 +23,7 @@ import { PrismaModule } from './infra/prisma/prisma.module';
 import { PrismaConnectionMiddleware } from './infra/prisma/prisma-connection.middleware';
 import { BlockModule } from './modules/block/block.module';
 import { RecordsModule } from './modules/records/records.module';
+import { FinancialModule } from './modules/financial/financial.module';
 import { HttpModule } from '@nestjs/axios';
 import { TransactionsController } from './transactions.controller';
 import { TransactionsService } from './transactions.service';
@@ -59,7 +60,8 @@ import { join } from 'path';
     ReportModule,
     BlockModule,
     RecordsModule,
-    ParametersModule
+    ParametersModule,
+    FinancialModule
   ],
   controllers: [AppController, TransactionsController],
   providers: [

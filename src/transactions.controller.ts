@@ -76,57 +76,60 @@ export class TransactionsController {
 
     @Public()
     @Get('balance')
-    async getBalance(
-        @Query('startDate') startDate: string,
-        @Query('endDate') endDate: string,
-    ) {
-        // Converte as datas para o formato correto
-        const start = dayjs(startDate, 'YYYY-MM-DD').startOf('day').toDate();
-        const end = dayjs(endDate, 'YYYY-MM-DD').endOf('day').toDate();
+    async getBalance() {
+        const currentYear = new Date().getFullYear();
 
-        // Busca as transações dentro do intervalo
-        const transactions = await this.prisma.paypal_transaction.findMany({
+        // Busca os lançamentos do ciclo atual
+        const entries = await this.prisma.financial_entry.findMany({
             where: {
-                description: 'Pagamento de doação',
-                date: {
-                    gte: start,
-                    lte: end,
-                },
+                cycle: currentYear,
             },
         });
-        // custos: KVM 2 (1083.88) + Registro BR 40,00 ano + backup diario (306.73)
-        // Custos fixos associados
-        // const fixedCosts = 1083.88 + 40 + 306.73; vamos declarar
-        const fixedCosts = {
-            server: 1083.88,
-            registroBr: 40,
-            backupDiario: 306.73,
-        }
-        // Soma dos custos fixos
-        const costs = Object.values(fixedCosts).reduce((sum, cost) => sum + cost, 0);
 
-        // Soma dos valores das transações
-        const totalDonations = transactions.reduce((sum, transaction) => sum + transaction.netAmount, 0);
+        // Soma dos donativos (Entradas)
+        const totalDonations = entries
+            .filter((e) => e.type === 'POSITIVE')
+            .reduce((sum, e) => sum + e.value, 0);
 
+        // Mapeamento de custos para manter o contrato original
+        const serverCost = entries
+            .filter((e) => e.type === 'NEGATIVE' && e.description?.toLowerCase().includes('server'))
+            .reduce((sum, e) => sum + e.value, 0);
+
+        const registroBrCost = entries
+            .filter((e) => e.type === 'NEGATIVE' && e.description?.toLowerCase().includes('registro'))
+            .reduce((sum, e) => sum + e.value, 0);
+
+        const backupCost = entries
+            .filter((e) => e.type === 'NEGATIVE' && e.description?.toLowerCase().includes('backup'))
+            .reduce((sum, e) => sum + e.value, 0);
+
+        const totalCosts = entries
+            .filter((e) => e.type === 'NEGATIVE')
+            .reduce((sum, e) => sum + e.value, 0);
 
         return {
             balance: {
                 totalDonations,
                 fixedCosts: {
-                    ...fixedCosts,
-                    total: costs,
+                    server: serverCost,
+                    registroBr: registroBrCost,
+                    backupDiario: backupCost,
+                    total: totalCosts,
                 },
-                balance: totalDonations - costs,
+                balance: totalDonations - totalCosts,
             },
-            transactions: transactions.map((t) => ({
-                date: t.date,
-                time: t.time,
-                timezone: t.timezone,
-                currency: t.currency,
-                total: t.netAmount,
-                transactionId: t.transactionId, // Mantemos o ID da transação
-                donor: t.name ? t.name.slice(0, 3).toUpperCase() : 'N/A', // Exibe as 3 primeiras letras em maiúsculas
-            })),
+            transactions: entries
+                .filter((e) => e.type === 'POSITIVE')
+                .map((t) => ({
+                    date: t.date,
+                    time: dayjs(t.date).format('HH:mm:ss'),
+                    timezone: 'UTC',
+                    currency: 'BRL',
+                    total: t.value,
+                    transactionId: t.externalId || `FIN-${t.id}`,
+                    donor: t.donorName ? t.donorName.slice(0, 3).toUpperCase() : 'N/A',
+                })),
         };
     }
 }

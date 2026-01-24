@@ -101,6 +101,7 @@ model multitenancy {
   signature               signature[]
   territory_block_address territory_block_address[]
   parameters              parameter[]
+  financial_entries       financial_entry[]
 
   @@map("multi_tenancy")
 }
@@ -281,3 +282,29 @@ model paypal_transaction {
   createdAt DateTime @default(now()) // Data de criação do registro
   updatedAt DateTime @updatedAt // Atualizado automaticamente
 }
+
+enum FinancialEntryType {
+  POSITIVE
+  NEGATIVE
+}
+
+model financial_entry {
+  id           Int                @id @unique @default(autoincrement())
+  tenantId     Int                @map("tenant_id")
+  multitenancy multitenancy       @relation(fields: [tenantId], references: [id])
+  
+  description  String?
+  value        Float
+  date         DateTime
+  cycle        Int
+  type         FinancialEntryType
+  
+  donorName    String?            @map("donor_name")
+  externalId   String?            @unique @map("external_id")
+
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+
+  @@index([tenantId, cycle])
+}
+
