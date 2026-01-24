@@ -26,6 +26,8 @@ WORKDIR /app
 # Copy only necessary files from the builder stage
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/views ./views
+COPY --from=builder /app/public ./public
 COPY package*.json ./
 
 # Install openssl

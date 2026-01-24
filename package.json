@@ -26,9 +26,10 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "dotenv -e .env.test -- jest --config ./test/jest-e2e.json --runInBand",
-    "test:e2e:cov": "dotenv -e .env.test -- jest --config ./test/jest-e2e.json --coverage --runInBand",
+    "test:debug": "jest --detectOpenHandles",
+    "test:e2e": "dotenv -e .env.test -- jest --config ./test/jest-e2e.config.js --runInBand",
+    "test:e2e:cov": "dotenv -e .env.test -- jest --config ./test/jest-e2e.config.js --coverage --runInBand",
+    "test:e2e:debug": "dotenv -e .env.test -- jest --config ./test/jest-e2e.config.js --runInBand --detectOpenHandles",
     "test:db:up": "docker compose -f docker-compose.test.yml up -d",
     "test:db:down": "docker compose -f docker-compose.test.yml down",
     "test:db:migrate": "dotenv -e .env.test -- npx prisma migrate deploy",
@@ -80,6 +81,7 @@
     "@nestjs/testing": "^10.0.0",
     "@swc/cli": "^0.1.62",
     "@swc/core": "^1.3.76",
+    "@swc/jest": "0.2.39",
     "@types/bcryptjs": "3.0.0",
     "@types/cookie-parser": "1.4.10",
     "@types/cron": "^2.4.0",
@@ -120,25 +122,5 @@
     "tsx": "^3.12.7",
     "typescript": "^5.1.3",
     "wait-on": "9.0.3"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node",
-    "moduleNameMapper": {
-      "^src/(.*)$": "<rootDir>/$1"
-    }
   }
 }

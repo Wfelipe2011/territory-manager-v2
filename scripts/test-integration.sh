@@ -11,7 +11,7 @@ sleep 2
 npm run test:db:migrate
 
 # Executa os testes e captura o exit code
-npm run test:e2e
+npm run test:e2e:cov
 TEST_EXIT_CODE=$?
 
 # Derruba o banco de dados (limpeza)
