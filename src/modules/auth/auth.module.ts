@@ -7,5 +7,6 @@ import { ParametersModule } from '../parameters/parameters.module';
   imports: [ParametersModule],
   controllers: [AuthController],
   providers: [AuthService],
+  exports: [AuthService],
 })
 export class AuthModule { }

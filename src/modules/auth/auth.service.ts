@@ -30,12 +30,65 @@ export class AuthService {
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) throw new UnauthorizedException('Não autorizado');
     this.logger.log(`Gerando token ${user?.email}`);
+
+    const roles = ['admin'];
+    if (process.env.SUPER_ADMIN_ID && user.id === +process.env.SUPER_ADMIN_ID) {
+      roles.push('super_admin');
+    }
+
     const token = jwt.sign(
       {
         id: uuid(),
         userId: user.id,
         userName: user.name,
-        roles: ['admin'],
+        roles,
+        tenantId: user.tenantId,
+      },
+      envs.JWT_SECRET,
+      {
+        expiresIn: '1d',
+      }
+    );
+
+    return { token };
+  }
+
+  async listAllTenants() {
+    return this.prisma.multitenancy.findMany({
+      select: {
+        id: true,
+        name: true,
+        city: true,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+  }
+
+  async switchTenant(userId: number, tenantId: number) {
+    const tenant = await this.prisma.multitenancy.findUnique({
+      where: { id: tenantId },
+    });
+    if (!tenant) throw new BadRequestException('Tenant não encontrado');
+
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { tenantId },
+    });
+
+    // Gera um novo token com o novo tenantId
+    const roles = ['admin'];
+    if (process.env.SUPER_ADMIN_ID && user.id === +process.env.SUPER_ADMIN_ID) {
+      roles.push('super_admin');
+    }
+
+    const token = jwt.sign(
+      {
+        id: uuid(),
+        userId: user.id,
+        userName: user.name,
+        roles,
         tenantId: user.tenantId,
       },
       envs.JWT_SECRET,

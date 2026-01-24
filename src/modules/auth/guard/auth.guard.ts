@@ -35,6 +35,8 @@ export class AuthGuard implements CanActivate {
     let token = '';
     if (request?.headers?.authorization) {
       token = request?.headers?.authorization;
+    } else if (request?.cookies?.['access_token']) {
+      token = request.cookies['access_token'];
     } else if (request?.handshake?.auth.token) {
       token = request?.handshake?.auth.token;
     }

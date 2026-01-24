@@ -1,0 +1,59 @@
+<!-- Sidebar -->
+<aside id="sidebar" class="bg-[#1E1E1E] w-64 border-r border-gray-800 flex flex-col fixed inset-y-0 z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-200">
+    <div class="p-6 border-b border-gray-800">
+        <h1 class="text-xl font-bold text-white tracking-tight flex items-center gap-3">
+            <i class="fas fa-microchip text-green-500"></i>
+            <span>TM Health</span>
+        </h1>
+    </div>
+
+    <nav class="flex-1 p-4 space-y-2 mt-4">
+        <a href="/v1/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-lg {{#if (eq activePage 'dashboard')}}bg-green-500/10 text-green-400 font-medium{{else}}text-gray-400 hover:bg-gray-800 hover:text-white{{/if}} transition-colors">
+            <i class="fas fa-chart-line w-5"></i>
+            <span>Dashboard</span>
+        </a>
+        
+        {{#if isSuperAdmin}}
+        <a href="/v1/dashboard/tenants" class="flex items-center gap-3 px-4 py-3 rounded-lg {{#if (eq activePage 'tenants')}}bg-green-500/10 text-green-400 font-medium{{else}}text-gray-400 hover:bg-gray-800 hover:text-white{{/if}} transition-colors">
+            <i class="fas fa-exchange-alt w-5"></i>
+            <span>Trocar Tenant</span>
+        </a>
+        {{/if}}
+
+        <div class="pt-4 mt-4 border-t border-gray-800">
+            <p class="px-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Links Externos</p>
+            <a href="https://admin.territory-manager.com.br/login" target="_blank" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors">
+                <i class="fas fa-external-link-alt w-5 text-xs"></i>
+                <span>App Admin</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="p-4 border-t border-gray-800">
+        <div class="flex items-center gap-3 px-2 py-3 mb-4">
+            <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-white">
+                {{#if user.userName}}{{user.userName.[0]}}{{else}}U{{/if}}
+            </div>
+            <div class="flex-1 overflow-hidden">
+                <p class="text-sm font-medium text-white truncate">{{user.userName}}</p>
+                <p class="text-[10px] text-gray-500 truncate uppercase mt-0.5">{{#if isSuperAdmin}}Super Admin{{else}}Admin{{/if}}</p>
+            </div>
+        </div>
+        <a href="/v1/dashboard/logout" class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors">
+            <i class="fas fa-sign-out-alt w-5"></i>
+            <span>Sair</span>
+        </a>
+    </div>
+</aside>
+
+<!-- Overlay for mobile sidebar -->
+<div id="sidebar-overlay" class="hidden fixed inset-0 bg-black/50 z-40 md:hidden" onclick="toggleSidebar()"></div>
+
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+    }
+</script>

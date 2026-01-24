@@ -33,23 +33,37 @@
         }
     </style>
 </head>
-<body class="p-4 md:p-8">
-    <div class="max-w-6xl mx-auto">
-        <!-- Header -->
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-            <div>
-                <h1 class="text-3xl font-bold text-white">Painel de Saúde</h1>
-                <p class="text-gray-400 text-sm mt-1">
-                    Última atualização: <span id="last-update-time">{{lastUpdateTime}}</span>
-                </p>
-            </div>
-            <button onclick="refreshData()" class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
-                <i class="fas fa-sync-alt" id="refresh-icon"></i>
-                <span>Atualizar</span>
-            </button>
-        </header>
+<body class="bg-[#121212] flex min-h-screen">
+    {{> sidebar}}
 
-        <!-- Server Status -->
+    <!-- Main Content -->
+    <main class="flex-1 md:ml-64 p-4 md:p-8">
+        <div class="max-w-6xl mx-auto">
+            <!-- Mobile Header with Menu Toggle -->
+            <div class="flex md:hidden justify-between items-center mb-6">
+                 <button onclick="toggleSidebar()" class="text-gray-400 p-2 hover:bg-gray-800 rounded-lg">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <h1 class="text-lg font-bold text-white">TM Health</h1>
+                <div class="w-10"></div> <!-- Placeholder for centering -->
+            </div>
+
+            <!-- Header -->
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-white">Painel de Saúde</h1>
+                    <p class="text-gray-400 text-sm mt-1">
+                        Última atualização: <span id="last-update-time">{{lastUpdateTime}}</span>
+                    </p>
+                </div>
+                <button onclick="refreshData()" class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                    <i class="fas fa-sync-alt" id="refresh-icon"></i>
+                    <span>Atualizar</span>
+                </button>
+            </header>
+
+
+            <!-- ... rest of the content ... -->
         <div class="card mb-6 border-l-4 border-green-500">
             <div class="flex items-center gap-3">
                 <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
@@ -197,7 +211,7 @@
                 </table>
             </div>
         </div>
-    </div>
+    </main>
 
     <script>
         async function refreshData() {
