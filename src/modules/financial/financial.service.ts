@@ -24,9 +24,10 @@ export class FinancialService {
         });
     }
 
-    async findAll(tenantId: number) {
+    async findAll(tenantId?: number) {
+        const where = tenantId ? { tenantId } : {};
         return this.prisma.financial_entry.findMany({
-            where: { tenantId },
+            where,
             orderBy: { date: 'desc' },
             include: { multitenancy: true }
         });

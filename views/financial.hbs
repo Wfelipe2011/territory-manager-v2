@@ -19,7 +19,18 @@
 
     <main class="flex-1 md:ml-64 p-4 md:p-8">
         <div class="max-w-6xl mx-auto">
-            <header class="flex justify-between items-center mb-8">
+            <!-- Mobile Header -->
+            <div class="flex md:hidden justify-between items-center mb-6">
+                <button onclick="toggleSidebar()" class="text-gray-400 p-2 hover:bg-gray-800 rounded-lg">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <h1 class="text-lg font-bold text-white">Gestão Financeira</h1>
+                <button onclick="openModal()" class="bg-green-600 p-2 rounded-lg text-white">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+
+            <header class="hidden md:flex justify-between items-center mb-8">
                 <h1 class="text-3xl font-bold text-white">Gestão Financeira</h1>
                 <button onclick="openModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
                     <i class="fas fa-plus"></i> Novo Lançamento
@@ -52,6 +63,9 @@
                         <thead>
                             <tr class="border-b border-gray-800 text-gray-400 text-sm">
                                 <th class="pb-4 font-semibold">Data</th>
+                                {{#if isSuperAdmin}}
+                                <th class="pb-4 font-semibold">Congregação</th>
+                                {{/if}}
                                 <th class="pb-4 font-semibold">Descrição</th>
                                 <th class="pb-4 font-semibold">Tipo</th>
                                 <th class="pb-4 font-semibold">Valor</th>
@@ -63,6 +77,9 @@
                             {{#each entries}}
                             <tr class="table-row border-b border-gray-800/50">
                                 <td class="py-4 text-gray-300">{{formatDate date}}</td>
+                                {{#if ../isSuperAdmin}}
+                                <td class="py-4 text-gray-400 text-xs">{{multitenancy.name}}</td>
+                                {{/if}}
                                 <td class="py-4 text-white font-medium">
                                     {{description}}
                                     {{#if donorName}} <span class="text-xs text-gray-500 block">Doador: {{donorName}}</span> {{/if}}

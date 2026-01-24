@@ -12,6 +12,11 @@
             color: #E0E0E0;
             font-family: 'Inter', sans-serif;
         }
+        .card {
+            background-color: #1E1E1E;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
     </style>
 </head>
 <body class="bg-[#121212] flex min-h-screen">
@@ -24,16 +29,18 @@
                  <button onclick="toggleSidebar()" class="text-gray-400 p-2 hover:bg-gray-800 rounded-lg">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <h1 class="text-lg font-bold text-white">TM Health</h1>
-                <div class="w-10"></div>
+                <h1 class="text-lg font-bold text-white">Congregações</h1>
+                <a href="/v1/dashboard" class="text-gray-400 p-2 hover:bg-gray-800 rounded-lg">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
             </div>
 
-            <header class="mb-8 flex justify-between items-center">
+            <header class="hidden md:flex mb-8 justify-between items-center">
                  <div>
                     <h1 class="text-3xl font-bold text-white">Trocar de Congregação</h1>
                     <p class="text-gray-400 mt-1">Super Admin Mode</p>
                 </div>
-                <a href="/v1/dashboard" class="hidden md:flex text-gray-400 hover:text-white items-center gap-2 transition-colors">
+                <a href="/v1/dashboard" class="text-gray-400 hover:text-white items-center gap-2 transition-colors">
                     <i class="fas fa-arrow-left"></i>
                     <span>Voltar ao Dashboard</span>
                 </a>
@@ -43,7 +50,7 @@
                 {{#each tenants}}
                 <form action="/v1/dashboard/switch-tenant" method="POST">
                     <input type="hidden" name="tenantId" value="{{this.id}}">
-                    <button type="submit" class="w-full text-left bg-[#1E1E1E] hover:bg-gray-800 border {{#if (eq this.id ../user.tenantId)}}border-green-500 bg-green-500/5{{else}}border-gray-800{{/if}} rounded-xl p-6 transition-all group">
+                    <button type="submit" class="card w-full text-left hover:bg-gray-800 border {{#if (eq this.id ../user.tenantId)}}border-green-500 bg-green-500/5{{else}}border-gray-800{{/if}} transition-all group">
                         <div class="flex justify-between items-center">
                             <div>
                                 <h3 class="text-lg font-bold text-white group-hover:text-green-400">{{this.name}}</h3>

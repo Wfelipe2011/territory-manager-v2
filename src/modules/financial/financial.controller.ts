@@ -18,13 +18,11 @@ export class FinancialController {
     @Render('financial')
     async financialPage(@Request() req: RequestUser) {
         const isSuperAdmin = req.user.roles.includes(Role.SUPER_ADMIN);
-
-        // Conforme o PRD, a tabela reflete o tenant selecionado (contexto atual)
         const tenantId = req.user.tenantId;
-        const entries = await this.financialService.findAll(tenantId);
 
-        // O resumo consolidado (Global) é exibido apenas para o Super Admin.
-        // Para outros, o resumo é do próprio tenant.
+        // Para o Super Admin, mostramos a visão global (todas as transações e resumo global)
+        // Para os demais, restringimos ao tenant selecionado.
+        const entries = await this.financialService.findAll(isSuperAdmin ? undefined : tenantId);
         const summary = await this.financialService.getSummary(isSuperAdmin ? undefined : tenantId);
 
         const tenants = await this.financialService.getTenants();
