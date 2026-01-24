@@ -10,6 +10,7 @@ import { VERSION } from 'src/enum/version.enum';
     version: VERSION.V1,
     path: 'financial',
 })
+@Roles(Role.SUPER_ADMIN)
 export class FinancialController {
     constructor(private readonly financialService: FinancialService) { }
 

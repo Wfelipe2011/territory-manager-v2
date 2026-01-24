@@ -9,12 +9,14 @@ import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enum/role.enum';
 import { AuthService } from '../auth/auth.service';
 import { Response } from 'express';
+import * as jwt from 'jsonwebtoken';
 
 @ApiTags('Dashboard')
 @Controller({
   version: VERSION.V1,
   path: 'dashboard',
 })
+@Roles(Role.SUPER_ADMIN)
 export class DashboardController {
   constructor(
     readonly dashBoardService: DashboardService,
@@ -34,6 +36,16 @@ export class DashboardController {
   async login(@Body() body: any, @Res() res: Response) {
     try {
       const { token } = await this.authService.login(body.email, body.password);
+
+      // Validação de regra: Somente Super Admin pode acessar o dashboard
+      const payload = jwt.decode(token) as any;
+      if (!payload || !payload.roles.includes(Role.SUPER_ADMIN)) {
+        return res.render('login', {
+          error: 'Acesso restrito a Super Administradores',
+          layout: false
+        });
+      }
+
       res.cookie('access_token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -45,6 +57,7 @@ export class DashboardController {
     }
   }
 
+  @Public()
   @Get('logout')
   logout(@Res() res: Response) {
     res.clearCookie('access_token');
