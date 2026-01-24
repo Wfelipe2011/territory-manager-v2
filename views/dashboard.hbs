@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Saúde - Territory Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #121212;
+            color: #E0E0E0;
+            font-family: 'Inter', sans-serif;
+        }
+        .card {
+            background-color: #1E1E1E;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .progress-bar {
+            background-color: #333;
+            border-radius: 9999px;
+            height: 0.5rem;
+            overflow: hidden;
+        }
+        .progress-value {
+            background-color: #4CAF50;
+            height: 100%;
+            transition: width 0.5s ease-in-out;
+        }
+        .table-row:nth-child(even) {
+            background-color: #252525;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-white">Painel de Saúde</h1>
+                <p class="text-gray-400 text-sm mt-1">
+                    Última atualização: <span id="last-update-time">{{lastUpdateTime}}</span>
+                </p>
+            </div>
+            <button onclick="refreshData()" class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                <i class="fas fa-sync-alt" id="refresh-icon"></i>
+                <span>Atualizar</span>
+            </button>
+        </header>
+
+        <!-- Server Status -->
+        <div class="card mb-6 border-l-4 border-green-500">
+            <div class="flex items-center gap-3">
+                <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <p class="font-mono text-sm md:text-base text-gray-300" id="server-message">{{health.message}}</p>
+            </div>
+        </div>
+
+        <!-- Metric Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Signatures & Sockets -->
+            <div class="grid grid-rows-2 gap-6">
+                <div class="card flex justify-between items-center">
+                    <div>
+                        <p class="text-gray-400 text-sm uppercase font-semibold">Assinaturas</p>
+                        <h2 class="text-3xl font-bold text-white mt-1" id="signatures-count">{{health.signatures}}</h2>
+                    </div>
+                    <i class="fas fa-file-signature text-green-500 text-2xl opacity-50"></i>
+                </div>
+                <div class="card flex justify-between items-center">
+                    <div>
+                        <p class="text-gray-400 text-sm uppercase font-semibold">Sockets</p>
+                        <h2 class="text-3xl font-bold text-white mt-1" id="sockets-count">{{health.sockets}}</h2>
+                    </div>
+                    <i class="fas fa-plug text-green-500 text-2xl opacity-50"></i>
+                </div>
+            </div>
+
+            <!-- Database Connections -->
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-gray-400 text-sm uppercase font-semibold">Banco de Dados</p>
+                    <i class="fas fa-database text-green-500 opacity-50"></i>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex justify-between text-sm">
+                        <span>Ativas: <span id="db-active" class="text-white font-bold">{{health.database_info.active}}</span></span>
+                        <span>Ociosas: <span id="db-idle" class="text-white font-bold">{{health.database_info.idle}}</span></span>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span>Uso de Conexões</span>
+                            <span id="db-percent-text">{{dbPercent}}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-value" id="db-progress" style="width: {{dbPercent}}%"></div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 text-right">Máximo: <span id="db-max">{{health.database_info.max_connections}}</span></p>
+                </div>
+            </div>
+
+            <!-- Memory Usage -->
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-gray-400 text-sm uppercase font-semibold">Memória</p>
+                    <i class="fas fa-memory text-green-500 opacity-50"></i>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span>Uso de Memória</span>
+                            <span id="mem-percent-text">{{health.system_info.memory_usage_percent}}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-value" id="mem-progress" style="width: {{health.system_info.memory_usage_percent}}%"></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-center text-xs mt-4">
+                        <div class="bg-gray-800 p-2 rounded">
+                            <p class="text-gray-500 mb-1">Total</p>
+                            <p id="mem-total" class="font-bold text-white">{{health.system_info.total_memory_mb}} MB</p>
+                        </div>
+                        <div class="bg-gray-800 p-2 rounded">
+                            <p class="text-gray-500 mb-1">Usada</p>
+                            <p id="mem-used" class="font-bold text-white">{{health.system_info.used_memory_mb}} MB</p>
+                        </div>
+                        <div class="bg-gray-800 p-2 rounded">
+                            <p class="text-gray-500 mb-1">Livre</p>
+                            <p id="mem-free" class="font-bold text-white">{{health.system_info.free_memory_mb}} MB</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CPU & System -->
+            <div class="card lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <p class="text-gray-400 text-sm uppercase font-semibold mb-2">Uso de CPU</p>
+                    <div class="flex items-end gap-3">
+                        <h2 class="text-3xl font-bold text-white" id="cpu-percent">{{health.system_info.cpu_usage_percent}}%</h2>
+                        <div class="flex-1 pb-2">
+                             <div class="progress-bar">
+                                <div class="progress-value" id="cpu-progress" style="width: {{health.system_info.cpu_usage_percent}}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-sm uppercase font-semibold mb-2">Tempo Ativo (Uptime)</p>
+                    <h2 class="text-2xl font-bold text-white" id="uptime-text">{{uptimeFormatted}}</h2>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-sm uppercase font-semibold mb-2">Carga Média (Load Avg)</p>
+                    <div class="flex gap-4 font-mono">
+                        <div class="text-center">
+                            <span id="load-1" class="text-white block font-bold">{{health.system_info.load_average.1_min}}</span>
+                            <span class="text-[10px] text-gray-500">1m</span>
+                        </div>
+                        <div class="text-center">
+                            <span id="load-5" class="text-white block font-bold">{{health.system_info.load_average.5_min}}</span>
+                            <span class="text-[10px] text-gray-500">5m</span>
+                        </div>
+                        <div class="text-center">
+                            <span id="load-15" class="text-white block font-bold">{{health.system_info.load_average.15_min}}</span>
+                            <span class="text-[10px] text-gray-500">15m</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Last Changes Table -->
+        <div class="card overflow-hidden">
+            <h3 class="text-lg font-bold text-white mb-6">Últimas Alterações</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-gray-400 text-sm uppercase">
+                            <th class="pb-4 px-4 font-semibold">Congregação</th>
+                            <th class="pb-4 px-4 font-semibold">Cidade</th>
+                            <th class="pb-4 px-4 font-semibold text-center">Rodada</th>
+                            <th class="pb-4 px-4 font-semibold text-right">Última Alteração</th>
+                        </tr>
+                    </thead>
+                    <tbody id="changes-table-body" class="text-sm">
+                        {{#each health.last_changes}}
+                        <tr class="table-row border-t border-gray-800">
+                            <td class="py-4 px-4 font-medium text-white">{{this.congregation}}</td>
+                            <td class="py-4 px-4">{{this.city}}</td>
+                            <td class="py-4 px-4 text-center">{{this.round}}</td>
+                            <td class="py-4 px-4 text-right tabular-nums">{{formatDate this.last_change_utc_minus3}}</td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function refreshData() {
+            const btn = document.querySelector('button');
+            const icon = document.getElementById('refresh-icon');
+            
+            // Start Loading
+            btn.disabled = true;
+            icon.classList.add('animate-spin');
+            
+            try {
+                const response = await fetch('/v1/health-check');
+                const data = await response.json();
+                
+                // Update text elements
+                document.getElementById('last-update-time').innerText = new Date().toLocaleTimeString('pt-BR');
+                document.getElementById('server-message').innerText = data.message;
+                document.getElementById('signatures-count').innerText = data.signatures;
+                document.getElementById('sockets-count').innerText = data.sockets;
+                
+                document.getElementById('db-active').innerText = data.database_info.active;
+                document.getElementById('db-idle').innerText = data.database_info.idle;
+                document.getElementById('db-max').innerText = data.database_info.max_connections;
+                
+                const dbPercent = ((data.database_info.active / data.database_info.max_connections) * 100).toFixed(1);
+                document.getElementById('db-percent-text').innerText = dbPercent + '%';
+                document.getElementById('db-progress').style.width = dbPercent + '%';
+                
+                document.getElementById('mem-percent-text').innerText = data.system_info.memory_usage_percent + '%';
+                document.getElementById('mem-progress').style.width = data.system_info.memory_usage_percent + '%';
+                document.getElementById('mem-total').innerText = data.system_info.total_memory_mb + ' MB';
+                document.getElementById('mem-used').innerText = data.system_info.used_memory_mb + ' MB';
+                document.getElementById('mem-free').innerText = data.system_info.free_memory_mb + ' MB';
+                
+                document.getElementById('cpu-percent').innerText = data.system_info.cpu_usage_percent + '%';
+                document.getElementById('cpu-progress').style.width = data.system_info.cpu_usage_percent + '%';
+                
+                // Format Uptime (Simple client side version)
+                const uptime = data.system_info.uptime_seconds;
+                const d = Math.floor(uptime / (3600*24));
+                const h = Math.floor(uptime % (3600*24) / 3600);
+                const m = Math.floor(uptime % 3600 / 60);
+                const s = Math.floor(uptime % 60);
+                document.getElementById('uptime-text').innerText = `${d}d ${h}h ${m}m ${s}s`;
+                
+                document.getElementById('load-1').innerText = data.system_info.load_average['1_min'];
+                document.getElementById('load-5').innerText = data.system_info.load_average['5_min'];
+                document.getElementById('load-15').innerText = data.system_info.load_average['15_min'];
+                
+                // Update Table
+                const tbody = document.getElementById('changes-table-body');
+                tbody.innerHTML = '';
+                data.last_changes.forEach(change => {
+                    const date = new Date(change.last_change_utc_minus3).toLocaleString('pt-BR');
+                    tbody.innerHTML += `
+                        <tr class="table-row border-t border-gray-800">
+                            <td class="py-4 px-4 font-medium text-white">${change.congregation}</td>
+                            <td class="py-4 px-4">${change.city}</td>
+                            <td class="py-4 px-4 text-center">${change.round}</td>
+                            <td class="py-4 px-4 text-right tabular-nums">${date}</td>
+                        </tr>
+                    `;
+                });
+
+            } catch (error) {
+                console.error('Falha ao atualizar dados:', error);
+                alert('Ocorreu um erro ao atualizar os dados de saúde.');
+            } finally {
+                // End Loading
+                btn.disabled = false;
+                icon.classList.remove('animate-spin');
+            }
+        }
+    </script>
+</body>
+</html>
