@@ -39,6 +39,11 @@ async function bootstrap() {
     return a === b;
   });
 
+  hbs.registerHelper('formatCurrency', (value: number) => {
+    if (value === undefined || value === null) return '0,00';
+    return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+  });
+
   logger.debug('Configurando a documentação da API...');
   const config = new DocumentBuilder()
     .setTitle(title)

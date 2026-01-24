@@ -30,17 +30,17 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="card border-l-4 border-green-500">
                     <p class="text-gray-400 text-sm uppercase font-semibold">Total Entradas</p>
-                    <h2 class="text-3xl font-bold text-green-400 mt-2">R$ {{summary.totalEntries}}</h2>
+                    <h2 class="text-3xl font-bold text-green-400 mt-2">R$ {{formatCurrency summary.totalEntries}}</h2>
                     <p class="text-xs text-gray-500 mt-1">Acumulado global</p>
                 </div>
                 <div class="card border-l-4 border-red-500">
                     <p class="text-gray-400 text-sm uppercase font-semibold">Total Saídas</p>
-                    <h2 class="text-3xl font-bold text-red-400 mt-2">R$ {{summary.totalExits}}</h2>
+                    <h2 class="text-3xl font-bold text-red-400 mt-2">R$ {{formatCurrency summary.totalExits}}</h2>
                     <p class="text-xs text-gray-500 mt-1">Acumulado global</p>
                 </div>
                 <div class="card border-l-4 border-blue-500">
                     <p class="text-gray-400 text-sm uppercase font-semibold">Saldo Atual</p>
-                    <h2 class="text-3xl font-bold text-blue-400 mt-2">R$ {{summary.balance}}</h2>
+                    <h2 class="text-3xl font-bold text-blue-400 mt-2">R$ {{formatCurrency summary.balance}}</h2>
                     <p class="text-xs text-gray-500 mt-1">Consolidado do sistema</p>
                 </div>
             </div>
@@ -75,7 +75,7 @@
                                     {{/if}}
                                 </td>
                                 <td class="py-4 font-mono {{#if (eq type "POSITIVE")}}text-green-400{{else}}text-red-400{{/if}}">
-                                    R$ {{value}}
+                                    R$ {{formatCurrency value}}
                                 </td>
                                 <td class="py-4 text-gray-400">{{cycle}}</td>
                                 <td class="py-4 text-right">
