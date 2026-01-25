@@ -79,4 +79,37 @@ export class DashboardService {
 
     return data[0];
   }
+
+  async getBusinessMetrics() {
+    const [tenants, houses, territories, users, financial] = await Promise.all([
+      this.prisma.multitenancy.count(),
+      this.prisma.house.count(),
+      this.prisma.territory.count(),
+      this.prisma.user.count(),
+      this.prisma.financial_entry.aggregate({
+        where: {
+          type: 'POSITIVE',
+        },
+        _sum: {
+          value: true,
+        },
+      }),
+    ]);
+
+    // Calcular atividade (territórios sendo trabalhados agora)
+    const activeSignatures = await this.prisma.territory_overseer.count({
+      where: {
+        finished: false,
+      }
+    });
+
+    return {
+      totalTenants: tenants,
+      totalHouses: houses,
+      totalTerritories: territories,
+      totalUsers: users,
+      activeSignatures,
+      globalBalance: financial._sum.value || 0,
+    };
+  }
 }

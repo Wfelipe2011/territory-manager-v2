@@ -67,6 +67,19 @@ export class DashboardController {
   @Get()
   @Render('dashboard')
   async root(@Request() req: RequestUser) {
+    const metrics = await this.dashBoardService.getBusinessMetrics();
+
+    return {
+      metrics,
+      user: req.user,
+      isSuperAdmin: true,
+      activePage: 'dashboard',
+    };
+  }
+
+  @Get('health')
+  @Render('health')
+  async healthPage(@Request() req: RequestUser) {
     const health = await this.healthService.getHealthData();
 
     // Formatação de Uptime para o SSR inicial
@@ -76,50 +89,15 @@ export class DashboardController {
     const m = Math.floor(uptime % 3600 / 60);
     const s = Math.floor(uptime % 60);
 
-    const isSuperAdmin = req.user.roles.includes(Role.SUPER_ADMIN);
-
     return {
       health,
       user: req.user,
-      isSuperAdmin,
-      activePage: 'dashboard',
+      isSuperAdmin: true,
+      activePage: 'health',
       lastUpdateTime: new Date().toLocaleTimeString('pt-BR'),
       dbPercent: ((health.database_info.active / health.database_info.max_connections) * 100).toFixed(1),
       uptimeFormatted: `${d}d ${h}h ${m}m ${s}s`,
     };
-  }
-
-  @Roles(Role.SUPER_ADMIN)
-  @Get('tenants')
-  @Render('tenants')
-  async tenantsPage(@Request() req: RequestUser) {
-    const tenants = await this.authService.listAllTenants();
-    return {
-      tenants,
-      user: req.user,
-      isSuperAdmin: true,
-      activePage: 'tenants',
-    };
-  }
-
-  @Roles(Role.SUPER_ADMIN)
-  @Post('switch-tenant')
-  async switchTenant(@Body('tenantId') tenantId: string, @Request() req: RequestUser, @Res() res: Response) {
-    const { token } = await this.authService.switchTenant(req.user.userId, +tenantId);
-    res.cookie('access_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 24 * 60 * 60 * 1000,
-    });
-    return res.redirect('/v1/dashboard');
-  }
-
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Busca todas as casas marcadas' })
-  @Get('marked-houses')
-  @Roles(Role.ADMIN)
-  async findAll(@Request() req: RequestUser) {
-    return this.dashBoardService.findMarkedHouses(req.user.tenantId);
   }
 
   @ApiResponse({ status: 200 })

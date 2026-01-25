@@ -3,70 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trocar Tenant - Territory Manager</title>
+    <title>Gerenciar Congregações - Territory Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            background-color: #121212;
-            color: #E0E0E0;
-            font-family: 'Inter', sans-serif;
-        }
-        .card {
-            background-color: #1E1E1E;
-            border-radius: 12px;
-            padding: 1.5rem;
-        }
+        body { background-color: #121212; color: #E0E0E0; font-family: 'Inter', sans-serif; }
+        .card { background-color: #1E1E1E; border-radius: 12px; padding: 1.5rem; }
+        .modal { transition: opacity 0.25s ease; }
+        body.modal-active { overflow: hidden; }
     </style>
 </head>
 <body class="bg-[#121212] flex min-h-screen">
     {{> sidebar}}
 
     <main class="flex-1 md:ml-64 p-4 md:p-8">
-        <div class="max-w-4xl mx-auto">
-            <!-- Mobile Header with Menu Toggle -->
+        <div class="max-w-6xl mx-auto">
+            <!-- Mobile Header -->
             <div class="flex md:hidden justify-between items-center mb-6">
-                 <button onclick="toggleSidebar()" class="text-gray-400 p-2 hover:bg-gray-800 rounded-lg">
+                <button onclick="toggleSidebar()" class="text-gray-400 p-2 hover:bg-gray-800 rounded-lg">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
                 <h1 class="text-lg font-bold text-white">Congregações</h1>
-                <a href="/v1/dashboard" class="text-gray-400 p-2 hover:bg-gray-800 rounded-lg">
-                    <i class="fas fa-arrow-left"></i>
-                </a>
+                <div class="w-8"></div>
             </div>
 
             <header class="hidden md:flex mb-8 justify-between items-center">
                  <div>
-                    <h1 class="text-3xl font-bold text-white">Trocar de Congregação</h1>
-                    <p class="text-gray-400 mt-1">Super Admin Mode</p>
+                    <h1 class="text-3xl font-bold text-white">Gestão de Congregações</h1>
+                    <p class="text-gray-400 mt-1">Super Admin Mode - Controle global de acessos</p>
                 </div>
-                <a href="/v1/dashboard" class="text-gray-400 hover:text-white items-center gap-2 transition-colors">
-                    <i class="fas fa-arrow-left"></i>
-                    <span>Voltar ao Dashboard</span>
-                </a>
             </header>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {{#each tenants}}
-                <form action="/v1/dashboard/switch-tenant" method="POST">
-                    <input type="hidden" name="tenantId" value="{{this.id}}">
-                    <button type="submit" class="card w-full text-left hover:bg-gray-800 border {{#if (eq this.id ../user.tenantId)}}border-green-500 bg-green-500/5{{else}}border-gray-800{{/if}} transition-all group">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <h3 class="text-lg font-bold text-white group-hover:text-green-400">{{this.name}}</h3>
-                                <p class="text-gray-500 text-sm mt-1">ID: {{this.id}} | Cidade: {{this.city}}</p>
+                <div class="card border border-gray-800 flex flex-col justify-between group">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 {{#if this.isInactive}}bg-red-500/10 text-red-500{{else}}bg-green-500/10 text-green-500{{/if}} rounded-lg flex items-center justify-center">
+                                <i class="fas fa-building text-xl"></i>
                             </div>
-                            {{#if (eq this.id ../user.tenantId)}}
-                            <span class="bg-green-600 text-white text-[10px] uppercase font-bold px-2 py-1 rounded">Ativo</span>
-                            {{else}}
-                            <i class="fas fa-chevron-right text-gray-700 group-hover:text-gray-500 transition-colors"></i>
-                            {{/if}}
+                            <div class="flex gap-2">
+                                <button onclick="openEditModal({{this.id}}, '{{this.name}}', '{{this.city}}', '{{this.state}}', '{{this.phone}}')" class="p-2 text-gray-500 hover:text-white transition-colors">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <form action="/v1/admin/tenants/switch" method="POST" class="inline">
+                                    <input type="hidden" name="tenantId" value="{{this.id}}">
+                                    <button type="submit" class="p-2 text-gray-500 hover:text-green-500 transition-colors" title="Acessar como esta congregação">
+                                        <i class="fas fa-sign-in-alt"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
-                    </button>
-                </form>
+                        
+                        <h3 class="text-xl font-bold text-white mb-1">{{this.name}}</h3>
+                        <p class="text-gray-500 text-sm mb-4"><i class="fas fa-map-marker-alt mr-2"></i>{{this.city}}, {{this.state}}</p>
+
+                        <div class="grid grid-cols-3 gap-2 py-4 border-t border-gray-800/50">
+                            <div class="text-center">
+                                <p class="text-white font-bold">{{this._count.users}}</p>
+                                <p class="text-[10px] text-gray-500 uppercase">Users</p>
+                            </div>
+                            <div class="text-center border-x border-gray-800/50">
+                                <p class="text-white font-bold">{{this._count.territories}}</p>
+                                <p class="text-[10px] text-gray-500 uppercase">Territ.</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-white font-bold">{{this._count.houses}}</p>
+                                <p class="text-[10px] text-gray-500 uppercase">Casas</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-2 flex items-center gap-1.5">
+                            <i class="fas fa-clock text-[10px] {{#if this.isInactive}}text-red-400{{else}}text-blue-400{{/if}}"></i>
+                            <span class="text-[11px] text-gray-400">Visto por último: 
+                                <span class="{{#if this.isInactive}}text-red-400/80{{else}}text-gray-300{{/if}}">
+                                    {{#if this.lastActivity}}
+                                        {{formatDate this.lastActivity}}
+                                    {{else}}
+                                        Nunca
+                                    {{/if}}
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-4 border-t border-gray-800 flex justify-between items-center">
+                        <span class="text-xs font-mono text-gray-600">ID: {{this.id}}</span>
+                        {{#if (eq this.id ../user.tenantId)}}
+                        <span class="bg-green-600/10 text-green-500 text-[10px] uppercase font-bold px-2 py-1 rounded">Visualizando Agora</span>
+                        {{/if}}
+                    </div>
+                </div>
                 {{/each}}
             </div>
         </div>
     </main>
+
+    <!-- Modal de Edição -->
+    <div id="tenantModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-black opacity-80" onclick="toggleModal()"></div>
+        <div class="card w-11/12 md:max-w-md mx-auto z-50 overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <p class="text-2xl font-bold text-white">Editar Congregação</p>
+                <button onclick="toggleModal()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="editForm" onsubmit="saveTenant(event)">
+                <input type="hidden" id="edit-id">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-400 text-sm font-semibold mb-2">Nome</label>
+                        <input type="text" id="edit-name" required class="w-full bg-[#121212] border border-gray-800 rounded-lg py-2 px-4 text-white focus:outline-none focus:border-green-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-400 text-sm font-semibold mb-2">Cidade</label>
+                            <input type="text" id="edit-city" required class="w-full bg-[#121212] border border-gray-800 rounded-lg py-2 px-4 text-white focus:outline-none focus:border-green-500">
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 text-sm font-semibold mb-2">Estado</label>
+                            <input type="text" id="edit-state" maxlength="2" required class="w-full bg-[#121212] border border-gray-800 rounded-lg py-2 px-4 text-white focus:outline-none focus:border-green-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm font-semibold mb-2">Telefone</label>
+                        <input type="text" id="edit-phone" class="w-full bg-[#121212] border border-gray-800 rounded-lg py-2 px-4 text-white focus:outline-none focus:border-green-500">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-8">
+                    <button type="button" onclick="toggleModal()" class="px-6 py-2 text-gray-400 hover:bg-gray-800 rounded-lg transition-colors">Cancelar</button>
+                    <button type="submit" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-colors">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleModal() {
+            const modal = document.getElementById('tenantModal');
+            modal.classList.toggle('opacity-0');
+            modal.classList.toggle('pointer-events-none');
+            document.body.classList.toggle('modal-active');
+        }
+
+        function openEditModal(id, name, city, state, phone) {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-name').value = name;
+            document.getElementById('edit-city').value = city;
+            document.getElementById('edit-state').value = state;
+            document.getElementById('edit-phone').value = phone === 'null' ? '' : phone;
+            toggleModal();
+        }
+
+        async function saveTenant(event) {
+            event.preventDefault();
+            const id = document.getElementById('edit-id').value;
+            const data = {
+                name: document.getElementById('edit-name').value,
+                city: document.getElementById('edit-city').value,
+                state: document.getElementById('edit-state').value,
+                phone: document.getElementById('edit-phone').value
+            };
+
+            try {
+                const response = await fetch(`/v1/admin/tenants/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Erro ao atualizar congregação');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+    </script>
 </body>
 </html>

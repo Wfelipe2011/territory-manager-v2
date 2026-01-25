@@ -9,21 +9,26 @@
 
     <nav class="flex-1 p-4 space-y-2 mt-4">
         <a href="/v1/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-lg {{#if (eq activePage 'dashboard')}}bg-green-500/10 text-green-400 font-medium{{else}}text-gray-400 hover:bg-gray-800 hover:text-white{{/if}} transition-colors">
-            <i class="fas fa-chart-line w-5"></i>
+            <i class="fas fa-chart-pie w-5"></i>
             <span>Dashboard</span>
         </a>
+
+        {{#if isSuperAdmin}}
+        <a href="/v1/dashboard/health" class="flex items-center gap-3 px-4 py-3 rounded-lg {{#if (eq activePage 'health')}}bg-green-500/10 text-green-400 font-medium{{else}}text-gray-400 hover:bg-gray-800 hover:text-white{{/if}} transition-colors">
+            <i class="fas fa-server w-5"></i>
+            <span>Saúde do Sistema</span>
+        </a>
+
+        <a href="/v1/admin/tenants" class="flex items-center gap-3 px-4 py-3 rounded-lg {{#if (eq activePage 'tenants')}}bg-green-500/10 text-green-400 font-medium{{else}}text-gray-400 hover:bg-gray-800 hover:text-white{{/if}} transition-colors">
+            <i class="fas fa-building w-5"></i>
+            <span>Congregações</span>
+        </a>
+        {{/if}}
 
         <a href="/v1/financial" class="flex items-center gap-3 px-4 py-3 rounded-lg {{#if (eq activePage 'financial')}}bg-green-500/10 text-green-400 font-medium{{else}}text-gray-400 hover:bg-gray-800 hover:text-white{{/if}} transition-colors">
             <i class="fas fa-wallet w-5"></i>
             <span>Financeiro</span>
         </a>
-        
-        {{#if isSuperAdmin}}
-        <a href="/v1/dashboard/tenants" class="flex items-center gap-3 px-4 py-3 rounded-lg {{#if (eq activePage 'tenants')}}bg-green-500/10 text-green-400 font-medium{{else}}text-gray-400 hover:bg-gray-800 hover:text-white{{/if}} transition-colors">
-            <i class="fas fa-exchange-alt w-5"></i>
-            <span>Trocar Congregação</span>
-        </a>
-        {{/if}}
 
         <div class="pt-4 mt-4 border-t border-gray-800">
             <p class="px-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Links Externos</p>
