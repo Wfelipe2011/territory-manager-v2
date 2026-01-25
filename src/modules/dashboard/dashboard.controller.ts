@@ -39,7 +39,7 @@ export class DashboardController {
 
       // Validação de regra: Somente Super Admin pode acessar o dashboard
       const payload = jwt.decode(token) as any;
-      if (!payload || !payload.roles.includes(Role.SUPER_ADMIN)) {
+      if (!payload || !payload?.roles?.includes(Role.SUPER_ADMIN)) {
         return res.render('login', {
           error: 'Acesso restrito a Super Administradores',
           layout: false

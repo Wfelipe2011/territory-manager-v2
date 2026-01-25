@@ -9,7 +9,7 @@ import fs from 'fs';
 import { uuid } from './shared';
 import hbs from 'hbs';
 import cookieParser from 'cookie-parser';
-import { DashboardAuthFilter } from './middleware/dashboard-auth-filter';
+import { AllExceptionsFilter } from './middleware/all-exceptions.filter';
 process.env.INSTANCE_ID = `pod-${uuid()}`;
 process.env.TZ = 'America/Sao_Paulo';
 
@@ -19,7 +19,7 @@ async function bootstrap() {
   const { version, description, title } = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.use(cookieParser());
-  app.useGlobalFilters(new DashboardAuthFilter());
+  app.useGlobalFilters(new AllExceptionsFilter());
   app.enableCors();
   app.enableVersioning({
     type: VersioningType.URI,
