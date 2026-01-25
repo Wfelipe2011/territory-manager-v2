@@ -19,7 +19,7 @@ export class AddressBlockService {
     async manageAddresses(territoryBlockId: number, addresses: AddressDto[] = [], tenantId: number, prisma: PrismaTransaction = this.prisma) {
         this.logger.log('Gerenciando endereços associados');
 
-        const territoryBlock = await prisma.territory_block.findUnique({ where: { id: territoryBlockId } });
+        const territoryBlock = await prisma.territory_block.findUnique({ where: { id: territoryBlockId, tenantId } });
         if (!territoryBlock) {
             this.logger.error(`Bloco de território não encontrado com ID: ${territoryBlockId}`);
             return;
@@ -30,12 +30,11 @@ export class AddressBlockService {
         if (!addresses.length) {
             this.logger.log('Nenhum endereço fornecido. Removendo todas as associações.');
 
-            const existingAddresses = await prisma.territory_block_address.findMany({ where: { territoryBlockId } });
+            const existingAddresses = await prisma.territory_block_address.findMany({ where: { territoryBlockId, tenantId } });
             const existingAddressIds = existingAddresses.map((a) => a.id);
 
             await this.deleteHousesAndRounds(existingAddressIds, territoryBlockId, tenantId, prisma);
-            await prisma.territory_block_address.deleteMany({ where: { territoryBlockId } });
-
+            await prisma.territory_block_address.deleteMany({ where: { territoryBlockId, tenantId } });
             this.logger.log('Todas as associações foram removidas.');
             return;
         }
@@ -47,7 +46,7 @@ export class AddressBlockService {
 
         // Busca endereços existentes associados ao bloco
         const existingAddresses = await prisma.territory_block_address.findMany({
-            where: { territoryBlockId },
+            where: { territoryBlockId, tenantId },
         });
         this.logger.log(`Endereços existentes: ${JSON.stringify(existingAddresses)}`);
 
@@ -60,6 +59,7 @@ export class AddressBlockService {
             const territoryBlockAddress = await prisma.territory_block_address.findMany({
                 where: {
                     territoryBlockId,
+                    tenantId,
                     addressId: { in: addressesToDelete }
                 },
                 select: {
@@ -69,7 +69,7 @@ export class AddressBlockService {
             const territoryBlockAddressIds = territoryBlockAddress.map(tba => tba.id)
             await this.deleteHousesAndRounds(territoryBlockAddressIds, territoryBlockId, tenantId, prisma);
             await prisma.territory_block_address.deleteMany({
-                where: { id: { in: territoryBlockAddressIds } },
+                where: { id: { in: territoryBlockAddressIds }, tenantId },
             });
             this.logger.log(`Endereços removidos: ${addressesToDelete}`);
         }
@@ -239,6 +239,7 @@ export class AddressBlockService {
         // 1. Criar casas fantasmas para endereços que não têm nenhuma casa
         const missingGhostHouses = await prisma.territory_block_address.findMany({
             where: {
+                tenantId,
                 territoryBlock: {
                     territoryId,
                     blockId
@@ -270,6 +271,7 @@ export class AddressBlockService {
             const allHouses = await prisma.house.findMany({
                 where: {
                     territoryBlockAddressId: ghostHouse.territoryBlockAddressId,
+                    tenantId
                 },
             });
 
@@ -277,8 +279,8 @@ export class AddressBlockService {
 
             if (realHousesCount > 0) {
                 this.logger.log(`Removendo casa fantasma órfã ID ${ghostHouse.id} pois já existem casas reais.`);
-                await prisma.round.deleteMany({ where: { houseId: ghostHouse.id } });
-                await prisma.house.delete({ where: { id: ghostHouse.id } });
+                await prisma.round.deleteMany({ where: { houseId: ghostHouse.id, tenantId } });
+                await prisma.house.delete({ where: { id: ghostHouse.id, tenantId } });
             }
         }
     }
