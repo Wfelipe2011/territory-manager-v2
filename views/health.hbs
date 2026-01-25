@@ -186,33 +186,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Last Changes Table -->
-        <div class="card overflow-hidden">
-            <h3 class="text-lg font-bold text-white mb-6">Últimas Alterações</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="text-gray-400 text-sm uppercase">
-                            <th class="pb-4 px-4 font-semibold">Congregação</th>
-                            <th class="pb-4 px-4 font-semibold">Cidade</th>
-                            <th class="pb-4 px-4 font-semibold text-center">Rodada</th>
-                            <th class="pb-4 px-4 font-semibold text-right">Última Alteração</th>
-                        </tr>
-                    </thead>
-                    <tbody id="changes-table-body" class="text-sm">
-                        {{#each health.last_changes}}
-                        <tr class="table-row border-t border-gray-800">
-                            <td class="py-4 px-4 font-medium text-white">{{this.congregation}}</td>
-                            <td class="py-4 px-4">{{this.city}}</td>
-                            <td class="py-4 px-4 text-center">{{this.round}}</td>
-                            <td class="py-4 px-4 text-right tabular-nums">{{formatDate this.last_change_utc_minus3}}</td>
-                        </tr>
-                        {{/each}}
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </main>
 
     <script>
@@ -229,7 +202,7 @@
                 const data = await response.json();
                 
                 // Update text elements
-                document.getElementById('last-update-time').innerText = new Date().toLocaleTimeString('pt-BR');
+                document.getElementById('last-update-time').innerText = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' });
                 document.getElementById('server-message').innerText = data.message;
                 document.getElementById('signatures-count').innerText = data.signatures;
                 document.getElementById('sockets-count').innerText = data.sockets;
@@ -262,21 +235,6 @@
                 document.getElementById('load-1').innerText = data.system_info.load_average['1_min'];
                 document.getElementById('load-5').innerText = data.system_info.load_average['5_min'];
                 document.getElementById('load-15').innerText = data.system_info.load_average['15_min'];
-                
-                // Update Table
-                const tbody = document.getElementById('changes-table-body');
-                tbody.innerHTML = '';
-                data.last_changes.forEach(change => {
-                    const date = new Date(change.last_change_utc_minus3).toLocaleString('pt-BR');
-                    tbody.innerHTML += `
-                        <tr class="table-row border-t border-gray-800">
-                            <td class="py-4 px-4 font-medium text-white">${change.congregation}</td>
-                            <td class="py-4 px-4">${change.city}</td>
-                            <td class="py-4 px-4 text-center">${change.round}</td>
-                            <td class="py-4 px-4 text-right tabular-nums">${date}</td>
-                        </tr>
-                    `;
-                });
 
             } catch (error) {
                 console.error('Falha ao atualizar dados:', error);

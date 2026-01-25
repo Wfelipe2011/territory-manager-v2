@@ -32,7 +32,7 @@ async function bootstrap() {
 
   hbs.registerHelper('formatDate', (date: string) => {
     if (!date) return '';
-    return new Date(date).toLocaleString('pt-BR');
+    return new Date(date).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
   });
 
   hbs.registerHelper('eq', function (a: any, b: any) {

@@ -40,8 +40,8 @@
                             <i class="fas fa-building text-xl"></i>
                         </div>
                         <div>
-                            <p class="text-gray-400 text-xs uppercase font-bold tracking-wider">Congregações</p>
-                            <h2 class="text-2xl font-bold text-white">{{metrics.totalTenants}}</h2>
+                            <p class="text-gray-400 text-xs uppercase font-bold tracking-wider">Congregações Ativas</p>
+                            <h2 class="text-2xl font-bold text-white">{{metrics.activeTenants}}</h2>
                         </div>
                     </div>
                 </div>
@@ -52,7 +52,7 @@
                             <i class="fas fa-users text-xl"></i>
                         </div>
                         <div>
-                            <p class="text-gray-400 text-xs uppercase font-bold tracking-wider">Usuários</p>
+                            <p class="text-gray-400 text-xs uppercase font-bold tracking-wider">Usuários Ativos</p>
                             <h2 class="text-2xl font-bold text-white">{{metrics.totalUsers}}</h2>
                         </div>
                     </div>
@@ -64,7 +64,7 @@
                             <i class="fas fa-map-marked-alt text-xl"></i>
                         </div>
                         <div>
-                            <p class="text-gray-400 text-xs uppercase font-bold tracking-wider">Territórios</p>
+                            <p class="text-gray-400 text-xs uppercase font-bold tracking-wider">Territórios Ativos</p>
                             <h2 class="text-2xl font-bold text-white">{{metrics.totalTerritories}}</h2>
                         </div>
                     </div>
@@ -73,11 +73,11 @@
                 <div class="card border-l-4 border-yellow-500">
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 bg-yellow-500/10 rounded-full flex items-center justify-center text-yellow-500">
-                            <i class="fas fa-hand-holding-heart text-xl"></i>
+                            <i class="fas fa-chart-line text-xl"></i>
                         </div>
                         <div>
-                            <p class="text-gray-400 text-xs uppercase font-bold tracking-wider">Atividade Real</p>
-                            <h2 class="text-2xl font-bold text-white">{{metrics.activeSignatures}}</h2>
+                            <p class="text-gray-400 text-xs uppercase font-bold tracking-wider">Taxa Atividade</p>
+                            <h2 class="text-2xl font-bold text-white">{{metrics.activeTenants}}/{{metrics.totalTenants}}</h2>
                         </div>
                     </div>
                 </div>
@@ -86,11 +86,11 @@
             <!-- Second Row -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div class="lg:col-span-2 card">
-                    <h3 class="text-lg font-bold text-white mb-6">Status dos Dados</h3>
+                    <h3 class="text-lg font-bold text-white mb-6">Status dos Dados Ativos</h3>
                     <div class="space-y-6">
                         <div>
                             <div class="flex justify-between text-sm mb-2">
-                                <span class="text-gray-400">Total de Casas</span>
+                                <span class="text-gray-400">Casas em Uso</span>
                                 <span class="text-white font-mono">{{metrics.totalHouses}}</span>
                             </div>
                             <div class="w-full bg-gray-800 rounded-full h-2">
@@ -99,7 +99,7 @@
                         </div>
                          <div>
                             <div class="flex justify-between text-sm mb-2">
-                                <span class="text-gray-400">Arrecadação Global</span>
+                                <span class="text-gray-400">Arrecadação (Congregações Ativas)</span>
                                 <span class="text-green-400 font-mono">R$ {{formatCurrency metrics.globalBalance}}</span>
                             </div>
                             <div class="w-full bg-gray-800 rounded-full h-2">

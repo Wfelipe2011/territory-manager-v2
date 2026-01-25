@@ -94,7 +94,7 @@ export class DashboardController {
       user: req.user,
       isSuperAdmin: true,
       activePage: 'health',
-      lastUpdateTime: new Date().toLocaleTimeString('pt-BR'),
+      lastUpdateTime: new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
       dbPercent: ((health.database_info.active / health.database_info.max_connections) * 100).toFixed(1),
       uptimeFormatted: `${d}d ${h}h ${m}m ${s}s`,
     };

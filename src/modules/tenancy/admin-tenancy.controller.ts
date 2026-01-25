@@ -33,11 +33,7 @@ export class AdminTenancyController {
                     }
                 },
                 round: {
-                    where: {
-                        // not null
-                        updateDate: { not: null }
-                    },
-                    orderBy: { updateDate: 'desc' },
+                    orderBy: { startDate: 'desc' },
                     take: 1,
                     select: {
                         updateDate: true,

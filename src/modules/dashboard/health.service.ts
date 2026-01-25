@@ -28,7 +28,7 @@ export class HealthService {
         const cpuUsagePercent = currentLoad.currentLoad.toFixed(2);
 
         return {
-            message: `[${new Date().toISOString()}] - [${process.env.INSTANCE_ID}] - O servidor está em execução - Produção!`,
+            message: `[${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}] - [${process.env.INSTANCE_ID}] - O servidor está em execução - Produção!`,
             signatures: countSignatures,
             sockets,
             database_info: {

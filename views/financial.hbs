@@ -234,7 +234,8 @@
                     document.getElementById('donorName').value = entry.donorName || '';
                     
                     const date = new Date(entry.date);
-                    const formattedDate = date.toISOString().split('T')[0];
+                    // Força a exibição correta no timezone de Brasília para evitar troca de dia
+                    const formattedDate = date.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
                     document.getElementById('date').value = formattedDate;
                     
                 } catch (error) {
@@ -243,7 +244,7 @@
                 }
             } else {
                 modalTitle.innerText = 'Novo Lançamento';
-                const today = new Date().toISOString().split('T')[0];
+                const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
                 document.getElementById('date').value = today;
             }
             

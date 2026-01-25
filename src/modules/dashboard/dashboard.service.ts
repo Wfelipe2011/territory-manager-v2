@@ -81,33 +81,87 @@ export class DashboardService {
   }
 
   async getBusinessMetrics() {
-    const [tenants, houses, territories, users, financial] = await Promise.all([
-      this.prisma.multitenancy.count(),
-      this.prisma.house.count(),
-      this.prisma.territory.count(),
-      this.prisma.user.count(),
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // 1. Identificar as congregações ativas (IDs)
+    const activeTenants = await this.prisma.multitenancy.findMany({
+      where: {
+        round: {
+          some: {
+            OR: [
+              { updateDate: { gte: thirtyDaysAgo } },
+              { startDate: { gte: thirtyDaysAgo } },
+              { completedDate: { gte: thirtyDaysAgo } },
+            ],
+          },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        city: true,
+        round: {
+          where: {
+            OR: [
+              { updateDate: { gte: thirtyDaysAgo } },
+              { startDate: { gte: thirtyDaysAgo } },
+              { completedDate: { gte: thirtyDaysAgo } },
+            ],
+          },
+          orderBy: { updateDate: 'desc' },
+          take: 1,
+          select: {
+            updateDate: true,
+          }
+        },
+        _count: {
+          select: {
+            users: true,
+            territories: true
+          }
+        }
+      },
+      orderBy: { name: 'asc' }
+    });
+
+    const activeIds = activeTenants.map(t => t.id);
+
+    // 2. Buscar as métricas filtradas apenas para estas congregações ativas
+    const [houses, territories, users, financial, totalTenantsCount] = await Promise.all([
+      this.prisma.house.count({ where: { tenantId: { in: activeIds } } }),
+      this.prisma.territory.count({ where: { tenantId: { in: activeIds } } }),
+      this.prisma.user.count({ where: { tenantId: { in: activeIds } } }),
       this.prisma.financial_entry.aggregate({
         where: {
           type: 'POSITIVE',
+          tenantId: { in: activeIds }
         },
         _sum: {
           value: true,
         },
       }),
+      this.prisma.multitenancy.count() // Mantemos o total global apenas para referência se precisar
     ]);
 
-    // Calcular atividade (territórios sendo trabalhados agora)
+    // Calcular atividade (territórios sendo trabalhados agora em tenants ativos)
     const activeSignatures = await this.prisma.territory_overseer.count({
       where: {
         finished: false,
+        tenantId: { in: activeIds }
       }
     });
 
     return {
-      totalTenants: tenants,
+      totalTenants: totalTenantsCount,
+      activeTenants: activeIds.length,
       totalHouses: houses,
       totalTerritories: territories,
       totalUsers: users,
+      activeTenantsList: activeTenants.map(t => ({
+        ...t,
+        lastActivity: t.round[0]?.updateDate || null
+      })),
       activeSignatures,
       globalBalance: financial._sum.value || 0,
     };
