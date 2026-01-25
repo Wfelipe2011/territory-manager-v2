@@ -107,4 +107,12 @@ export class DashboardController {
   async territoryDetails(@Request() req: RequestUser) {
     return this.dashBoardService.territoryDetails(req.user.tenantId);
   }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Busca todas as casas marcadas' })
+  @Get('marked-houses')
+  @Roles(Role.ADMIN)
+  async findAll(@Request() req: RequestUser) {
+    return this.dashBoardService.findMarkedHouses(req.user.tenantId);
+  }
 }
