@@ -7,6 +7,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { TerritoryModule } from './modules/territory/territory.module';
 import { AuthGuard } from './modules/auth/guard/auth.guard';
 import { RolesGuard } from './modules/auth/guard/roles.guard';
+import { ApiKeyGuard } from './decorators/api-key.guard';
 import { SignatureModule } from './modules/signature/signature.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RoundModule } from './modules/round/round.module';
@@ -72,6 +73,10 @@ import { join } from 'path';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ApiKeyGuard,
     },
     {
       provide: APP_INTERCEPTOR,
