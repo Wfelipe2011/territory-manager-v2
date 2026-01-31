@@ -127,7 +127,7 @@ export class TransactionsController {
                     timezone: 'UTC',
                     currency: 'BRL',
                     total: t.value,
-                    transactionId: t.externalId || `FIN-${t.id}`,
+                    transactionId: `FIN-${t.id}`,
                     donor: t.donorName ? t.donorName.slice(0, 3).toUpperCase() : 'N/A',
                 })),
         };
