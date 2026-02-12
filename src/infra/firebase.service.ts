@@ -52,10 +52,10 @@ export class FirebaseService implements OnModuleInit {
     return file
       .delete()
       .then(() => {
-        console.log(`Arquivo ${filePath} deletado com sucesso.`);
+        this.logger.log(`Arquivo ${filePath} deletado com sucesso.`);
       })
       .catch(error => {
-        console.error(`Erro ao deletar o arquivo ${filePath}:`, error);
+        this.logger.error(`Erro ao deletar o arquivo ${filePath}:`, error);
         throw new Error('Erro ao deletar o arquivo');
       });
   }

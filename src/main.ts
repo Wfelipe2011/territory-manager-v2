@@ -11,6 +11,7 @@ import { uuid } from './shared';
 import hbs from 'hbs';
 import cookieParser from 'cookie-parser';
 import { AllExceptionsFilter } from './middleware/all-exceptions.filter';
+import { TraceService } from './infra/trace/trace.service';
 process.env.INSTANCE_ID = `pod-${uuid()}`;
 process.env.TZ = 'America/Sao_Paulo';
 
@@ -23,7 +24,11 @@ async function bootstrap() {
   });
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   app.use(cookieParser());
-  app.useGlobalFilters(new AllExceptionsFilter());
+
+  // Injetar TraceService no AllExceptionsFilter
+  const traceService = app.get(TraceService);
+  app.useGlobalFilters(new AllExceptionsFilter(traceService));
+
   app.enableCors();
   app.enableVersioning({
     type: VersioningType.URI,

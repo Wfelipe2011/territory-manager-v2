@@ -1,6 +1,7 @@
 import {
     Controller,
     Get,
+    Logger,
     Post,
     Query,
     UploadedFile,
@@ -19,6 +20,7 @@ dayjs.extend(customParseFormat);
 
 @Controller('transactions')
 export class TransactionsController {
+    private readonly logger = new Logger(TransactionsController.name);
     constructor(private readonly transactionsService: TransactionsService, private readonly prisma: PrismaService) { }
 
     @Post('upload')
@@ -44,7 +46,7 @@ export class TransactionsController {
                 const parsedDate = dayjs(row['Data'].trim(), 'YYYY-MM-DD', true); // Valida a data
 
                 if (!parsedDate.isValid()) {
-                    console.warn(`❌ Data inválida encontrada: ${row['Data']}`);
+                    this.logger.warn(`Data inválida encontrada: ${row['Data']}`);
                     return null; // Ignora transações com data inválida
                 }
 

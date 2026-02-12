@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
 
 @Injectable()
 export class DashboardService {
+  private readonly logger = new Logger(DashboardService.name);
   constructor(readonly prisma: PrismaService) { }
 
   async findMarkedHouses(tenantId: number) {
@@ -40,7 +41,7 @@ export class DashboardService {
       ORDER BY
           date;
 `).catch((err) => {
-      console.log(err);
+      this.logger.error('Erro ao buscar casas marcadas', err);
       return [];
     })
     return data;
@@ -70,7 +71,7 @@ export class DashboardService {
     WHERE
       h.tenant_id = ${tenantId}
     `).catch((err) => {
-      console.log(err);
+      this.logger.error('Erro ao buscar detalhes do território', err);
       return [{
         "Residencial": 0,
         "total": 0

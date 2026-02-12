@@ -7,12 +7,16 @@ import {
     Logger,
     UnauthorizedException,
     ForbiddenException,
+    Inject,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
+import { TraceService } from '../infra/trace/trace.service';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
     private readonly logger = new Logger(AllExceptionsFilter.name);
+
+    constructor(@Inject(TraceService) private readonly traceService: TraceService) { }
 
     catch(exception: any, host: ArgumentsHost) {
         const ctx = host.switchToHttp();
@@ -27,9 +31,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
             ? exception.message
             : 'Erro interno no servidor';
 
-        // Log de erros graves (500)
+        // Log de erros graves (500) com traceId
         if (status >= 500) {
-            this.logger.error(`[${request.method}] ${request.url} - Error: ${exception.stack || exception}`);
+            const traceId = this.traceService.getTraceId() || 'no-trace';
+            this.logger.error(
+                `[${traceId}] [${request.method}] ${request.url} - Status: ${status} - Error: ${exception.message || exception}`,
+                exception.stack
+            );
         }
 
         // Se for uma requisição GET que espera HTML

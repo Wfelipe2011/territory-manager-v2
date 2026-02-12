@@ -19,6 +19,7 @@ export interface Row {
 
 @Injectable()
 export class UploadTerritoryUseCase {
+  private readonly logger = new Logger(UploadTerritoryUseCase.name);
   private eventEmitter: EventEmitter;
   constructor(
     readonly prisma: PrismaService,
@@ -328,7 +329,7 @@ export class UploadTerritoryUseCase {
 
     for (const house of distinctHouses) {
       await this.prisma.$transaction(async (tsx) => {
-        console.log(`Processing house: ${house.territoryId} - ${house.blockId} - ${house.addressId} - ${house.tenantId}`);
+        this.logger.debug(`Processando casa: territory=${house.territoryId} block=${house.blockId} address=${house.addressId}`);
         const territoryBlock = await tsx.territory_block.findUnique({
           where: {
             territoryId_blockId: {
@@ -360,16 +361,16 @@ export class UploadTerritoryUseCase {
             territoryBlockAddressId: territoryAddress.id
           }
         });
-        console.log(`Territory address created: ${territoryAddress.id}`);
+        this.logger.debug(`Territory address criado: ${territoryAddress.id}`);
         return true;
       }, {
         maxWait: 1000 * 60 * 10, // 10 minutes,
         timeout: 1000 * 60 * 10 // 10 minutes
       }).catch((err) => {
-        console.error(err);
+        this.logger.error('Erro ao processar territory address', err);
       });
-      console.log('Territory addresses populated');
     }
+    this.logger.log('Endereços de território populados com sucesso');
   }
 
   // vamos limpar o tenantId

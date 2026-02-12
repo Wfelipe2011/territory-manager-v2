@@ -27,6 +27,9 @@ import { ParametersModule } from './modules/parameters/parameters.module';
 import { PrismaModule } from './infra/prisma/prisma.module';
 import { PrismaConnectionMiddleware } from './infra/prisma/prisma-connection.middleware';
 import { BlockModule } from './modules/block/block.module';
+import { TraceModule } from './infra/trace/trace.module';
+import { TraceMiddleware } from './infra/trace/trace.middleware';
+import { globalTraceService } from './infra/trace/trace.service';
 import { RecordsModule } from './modules/records/records.module';
 import { FinancialModule } from './modules/financial/financial.module';
 import { HttpModule } from '@nestjs/axios';
@@ -37,16 +40,33 @@ import { FirebaseModule } from './infra/firebase.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
+// Usar instância global singleton do TraceService
 const winstonTransports: winston.transport[] = [
   new winston.transports.Console({
-    level: 'debug',
+    level: envs.LOG_LEVEL,
     format: winston.format.combine(
       winston.format.timestamp(),
       winston.format.ms(),
+      winston.format((info) => {
+        const context = globalTraceService.getContext();
+        if (context) {
+          info.traceId = context.traceId;
+          info.sessionId = context.sessionId;
+          info.userId = context.userId;
+          info.method = context.method;
+          info.url = context.url;
+        }
+        return info;
+      })(),
       winston.format.colorize({ all: true }),
       winston.format.printf(
-        ({ timestamp, level, message, context, ms }) =>
-          `[${timestamp}] ${level} [${context || 'App'}] ${message} ${ms}`,
+        ({ timestamp, level, message, context, ms, traceId, sessionId, userId, method, url }) => {
+          const trace = traceId ? `[${traceId}]` : '[no-trace]';
+          const session = sessionId ? `[${sessionId}]` : '';
+          const user = userId ? ` User:${userId}` : '';
+          const reqInfo = method && url ? ` ${method} ${url}` : '';
+          return `[${timestamp}] ${trace}${session} ${level} [${context || 'App'}] ${message}${user}${reqInfo} ${ms}`;
+        },
       ),
     ),
   }),
@@ -59,6 +79,20 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
       logStreamName: `instance-${process.env.HOSTNAME || process.env.INSTANCE_ID || 'local'}`,
       awsRegion: envs.AWS_REGION,
       jsonMessage: true,
+      messageFormatter: (logObject) => {
+        const context = globalTraceService.getContext();
+        return JSON.stringify({
+          ...logObject,
+          traceId: context?.traceId,
+          sessionId: context?.sessionId,
+          userId: context?.userId,
+          userName: context?.userName,
+          method: context?.method,
+          url: context?.url,
+          ip: context?.ip,
+          userAgent: context?.userAgent,
+        });
+      },
       awsOptions: {
         credentials: {
           accessKeyId: envs.AWS_ACCESS_KEY_ID,
@@ -71,6 +105,7 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
 
 @Module({
   imports: [
+    TraceModule,
     WinstonModule.forRoot({
       transports: winstonTransports,
     }),
@@ -131,6 +166,8 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
+    // TraceMiddleware deve vir ANTES para garantir contexto em todos os middlewares
+    consumer.apply(TraceMiddleware).forRoutes('*');
     consumer.apply(PrismaConnectionMiddleware).forRoutes('*');
   }
 }
