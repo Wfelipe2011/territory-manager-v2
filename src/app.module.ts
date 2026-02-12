@@ -47,15 +47,6 @@ const winstonTransports: winston.transport[] = [
     format: winston.format.combine(
       winston.format.timestamp(),
       winston.format.ms(),
-      winston.format((info) => {
-        const context = globalTraceService.getContext();
-        if (context) {
-          info.sessionId = context.sessionId;
-          info.method = context.method;
-          info.url = context.url;
-        }
-        return info;
-      })(),
       winston.format.colorize({ all: true }),
       winston.format.printf(
         ({ timestamp, level, message, context, ms, sessionId, method, url }) => {
@@ -76,12 +67,8 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
       awsRegion: envs.AWS_REGION,
       jsonMessage: true,
       messageFormatter: (logObject) => {
-        const context = globalTraceService.getContext();
         return JSON.stringify({
           ...logObject,
-          sessionId: context?.sessionId,
-          method: context?.method,
-          url: context?.url,
         });
       },
       awsOptions: {
@@ -98,6 +85,17 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
   imports: [
     TraceModule,
     WinstonModule.forRoot({
+      format: winston.format.combine(
+        winston.format((info) => {
+          const context = globalTraceService.getContext();
+          if (context) {
+            info.sessionId = context.sessionId;
+            info.method = context.method;
+            info.url = context.url;
+          }
+          return info;
+        })(),
+      ),
       transports: winstonTransports,
     }),
     HttpModule,
