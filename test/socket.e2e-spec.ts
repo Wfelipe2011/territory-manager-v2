@@ -232,7 +232,7 @@ describe('WebSocket Integration (e2e)', () => {
 
         it('should log when no sockets are disconnected in handleCron', async () => {
             const eventsGateway = app.get(EventsGateway);
-            const loggerSpy = jest.spyOn((eventsGateway as any).logger, 'log');
+            const loggerSpy = jest.spyOn((eventsGateway as any).logger, 'debug');
 
             await prisma.socket.deleteMany();
             await eventsGateway.handleCron();

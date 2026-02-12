@@ -102,7 +102,7 @@ export class EventsGateway implements OnGatewayInit {
   }
 
   async emitRoom(roomName: string, data: any) {
-    this.logger.log(`Emitindo evento ${data.type} para a sala ${roomName}`);
+    this.logger.debug(`Emitindo evento ${data.type} para a sala ${roomName}`);
     const entity = await this.prisma.socket.findFirst({
       where: {
         room: roomName,
@@ -125,7 +125,7 @@ export class EventsGateway implements OnGatewayInit {
 
     const disconnectedSockets = socketIds.filter(socketId => !connectedSockets.includes(socketId));
     if (disconnectedSockets.length === 0) {
-      this.logger.log('Nenhum socket desconectado');
+      this.logger.debug('Nenhum socket desconectado');
       return;
     }
     this.logger.log('Sockets desconectados: ' + disconnectedSockets);

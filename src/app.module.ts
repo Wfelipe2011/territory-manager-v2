@@ -3,6 +3,10 @@ import { AppController } from './app.controller';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 
 import { ConfigModule } from '@nestjs/config';
+import { WinstonModule } from 'nest-winston';
+import * as winston from 'winston';
+import WinstonCloudWatch from 'winston-cloudwatch';
+import { envs } from './infra/envs';
 import { AuthModule } from './modules/auth/auth.module';
 import { TerritoryModule } from './modules/territory/territory.module';
 import { AuthGuard } from './modules/auth/guard/auth.guard';
@@ -33,8 +37,43 @@ import { FirebaseModule } from './infra/firebase.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
+const winstonTransports: winston.transport[] = [
+  new winston.transports.Console({
+    level: 'debug',
+    format: winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.ms(),
+      winston.format.colorize({ all: true }),
+      winston.format.printf(
+        ({ timestamp, level, message, context, ms }) =>
+          `[${timestamp}] ${level} [${context || 'App'}] ${message} ${ms}`,
+      ),
+    ),
+  }),
+];
+
+if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
+  winstonTransports.push(
+    new WinstonCloudWatch({
+      logGroupName: envs.CLOUDWATCH_LOG_GROUP,
+      logStreamName: `instance-${process.env.HOSTNAME || process.env.INSTANCE_ID || 'local'}`,
+      awsRegion: envs.AWS_REGION,
+      jsonMessage: true,
+      awsOptions: {
+        credentials: {
+          accessKeyId: envs.AWS_ACCESS_KEY_ID,
+          secretAccessKey: envs.AWS_SECRET_ACCESS_KEY,
+        },
+      },
+    }),
+  );
+}
+
 @Module({
   imports: [
+    WinstonModule.forRoot({
+      transports: winstonTransports,
+    }),
     HttpModule,
     PrismaModule,
     FirebaseModule,

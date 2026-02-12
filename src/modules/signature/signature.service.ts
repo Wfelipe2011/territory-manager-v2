@@ -208,7 +208,7 @@ export class SignatureService {
 
   @Cron(CronExpression.EVERY_10_MINUTES)
   async deleteSignatureExpired() {
-    this.logger.log('Deletando assinaturas expiradas');
+    this.logger.debug('Verificando assinaturas expiradas');
     const { count } = await this.prisma.signature.deleteMany({
       where: {
         expirationDate: {
@@ -216,7 +216,9 @@ export class SignatureService {
         },
       },
     });
-    this.logger.log(`Assinaturas deletadas: ${count}`);
+    if (count > 0) {
+      this.logger.log(`Limpeza CRON: ${count} assinaturas expiradas removidas`);
+    }
   }
 
   private async createSignature(uniqueId: string, expirationDate: Date, token: string, tenantId: number) {

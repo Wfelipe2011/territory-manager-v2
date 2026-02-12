@@ -5,6 +5,7 @@ import { join } from 'path';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger, VersioningType } from '@nestjs/common';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import fs from 'fs';
 import { uuid } from './shared';
 import hbs from 'hbs';
@@ -17,7 +18,10 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
   logger.debug('Iniciando a aplicação...');
   const { version, description, title } = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true,
+  });
+  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   app.use(cookieParser());
   app.useGlobalFilters(new AllExceptionsFilter());
   app.enableCors();

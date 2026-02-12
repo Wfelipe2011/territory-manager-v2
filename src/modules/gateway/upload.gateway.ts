@@ -21,9 +21,9 @@ export class UploadGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         const token = client.handshake.auth.token.replace('Bearer ', '');
         const decode = jwt.verify(token, envs.JWT_SECRET) as any;
         this.clients.push({ userId: decode.userId, socketId: client.id });
-        this.logger.log(`Client connected: ${decode.userName}-${decode.userId}-${client.id}`);
+        this.logger.debug(`Client connected: ${decode.userName}-${decode.userId}-${client.id}`);
       }
-      this.logger.log(`Client connected: ${client.id}`);
+      this.logger.debug(`Client connected: ${client.id}`);
     } catch (error) {
       this.logger.error(`Error on connection: ${error.message}`);
       client.disconnect();
@@ -31,19 +31,19 @@ export class UploadGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   handleDisconnect(client: Socket) {
-    this.logger.log(`Client disconnected: ${client.id}`);
+    this.logger.debug(`Client disconnected: ${client.id}`);
     this.clients = this.clients.filter(c => c.socketId !== client.id);
   }
 
   sendProgress(userId: number, progress: number) {
-    this.logger.log(`Tentando enviar progresso ${progress} para o usuário ${userId}`);
+    this.logger.debug(`Tentando enviar progresso ${progress} para o usuário ${userId}`);
     const client = this.clients.find(client => client.userId === userId);
     if (!client) {
       this.logger.error(`Client not found for user ${userId}`);
-      this.logger.log(`Clients: ${this.clients.map(c => c.userId).join(', ')}`);
+      this.logger.debug(`Clients: ${this.clients.map(c => c.userId).join(', ')}`);
       return;
     }
-    this.logger.log(`Sending progress ${progress} to client ${client.socketId}`);
+    this.logger.debug(`Sending progress ${progress} to client ${client.socketId}`);
     this.server.to(String(client.socketId)).emit('uploadProgress', { progress });
   }
 }
