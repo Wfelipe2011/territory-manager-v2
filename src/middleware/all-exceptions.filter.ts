@@ -31,11 +31,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
             ? exception.message
             : 'Erro interno no servidor';
 
-        // Log de erros graves (500) com traceId
+        // Log de erros graves (500) com sessionId
         if (status >= 500) {
-            const traceId = this.traceService.getTraceId() || 'no-trace';
+            const sessionId = this.traceService.getSessionId() || 'no-session';
             this.logger.error(
-                `[${traceId}] [${request.method}] ${request.url} - Status: ${status} - Error: ${exception.message || exception}`,
+                `[${sessionId}] [${request.method}] ${request.url} - Status: ${status} - Error: ${exception.message || exception}`,
                 exception.stack
             );
         }

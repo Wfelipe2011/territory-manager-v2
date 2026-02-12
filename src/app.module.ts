@@ -50,9 +50,7 @@ const winstonTransports: winston.transport[] = [
       winston.format((info) => {
         const context = globalTraceService.getContext();
         if (context) {
-          info.traceId = context.traceId;
           info.sessionId = context.sessionId;
-          info.userId = context.userId;
           info.method = context.method;
           info.url = context.url;
         }
@@ -60,12 +58,10 @@ const winstonTransports: winston.transport[] = [
       })(),
       winston.format.colorize({ all: true }),
       winston.format.printf(
-        ({ timestamp, level, message, context, ms, traceId, sessionId, userId, method, url }) => {
-          const trace = traceId ? `[${traceId}]` : '[no-trace]';
+        ({ timestamp, level, message, context, ms, sessionId, method, url }) => {
           const session = sessionId ? `[${sessionId}]` : '';
-          const user = userId ? ` User:${userId}` : '';
           const reqInfo = method && url ? ` ${method} ${url}` : '';
-          return `[${timestamp}] ${trace}${session} ${level} [${context || 'App'}] ${message}${user}${reqInfo} ${ms}`;
+          return `[${timestamp}] ${session} ${level} [${context || 'App'}] ${message}${reqInfo} ${ms}`;
         },
       ),
     ),
@@ -83,14 +79,9 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
         const context = globalTraceService.getContext();
         return JSON.stringify({
           ...logObject,
-          traceId: context?.traceId,
           sessionId: context?.sessionId,
-          userId: context?.userId,
-          userName: context?.userName,
           method: context?.method,
           url: context?.url,
-          ip: context?.ip,
-          userAgent: context?.userAgent,
         });
       },
       awsOptions: {
