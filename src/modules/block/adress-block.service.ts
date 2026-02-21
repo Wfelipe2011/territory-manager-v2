@@ -185,24 +185,28 @@ export class AddressBlockService {
     // Método para criar uma casa fantasma e seus rounds
     async createGhostHouse(addressId: number, territoryBlock: { blockId: number; territoryId: number }, territoryBlockAddressId: number, tenantId: number, prisma: PrismaTransaction) {
         this.logger.log(`Criando casa fantasma para endereço com ID: ${addressId}`);
-        const house = await prisma.house.create({
-            data: {
-                addressId,
-                blockId: territoryBlock.blockId,
-                tenantId,
-                territoryId: territoryBlock.territoryId,
-                territoryBlockAddressId,
-                number: 'ghost',
-            }
-        });
-        this.logger.log(`Casa fantasma criada: ${JSON.stringify(house)}`);
 
-        let rounds = await prisma.round.findMany({
-            where: { tenantId, endDate: null, },
-            select: { roundNumber: true },
-            distinct: 'roundNumber'
-        });
+        // house.create e round.findMany são independentes — rodar em paralelo
+        const [house, fetchedRounds] = await Promise.all([
+            prisma.house.create({
+                data: {
+                    addressId,
+                    blockId: territoryBlock.blockId,
+                    tenantId,
+                    territoryId: territoryBlock.territoryId,
+                    territoryBlockAddressId,
+                    number: 'ghost',
+                }
+            }),
+            prisma.round.findMany({
+                where: { tenantId, endDate: null },
+                select: { roundNumber: true },
+                distinct: 'roundNumber',
+            }),
+        ]);
+        this.logger.log(`Casa fantasma criada: ${house.id}`);
 
+        let rounds = fetchedRounds;
         if (!rounds.length) {
             await prisma.round_info.create({
                 data: {
@@ -218,69 +222,71 @@ export class AddressBlockService {
             rounds = [{ roundNumber: 1 }];
         }
 
-        for (const round of rounds) {
-            await prisma.round.create({
+        await Promise.all(rounds.map(round =>
+            prisma.round.create({
                 data: {
-                    blockId: territoryBlock?.blockId!,
+                    blockId: territoryBlock.blockId,
                     tenantId,
-                    territoryId: territoryBlock?.territoryId!,
+                    territoryId: territoryBlock.territoryId,
                     houseId: house.id,
                     roundNumber: round.roundNumber,
-                    completed: true
+                    completed: true,
                 }
-            });
-            this.logger.log(`Round criado para casa fantasma: ${house.id}, round: ${round.roundNumber}`);
-        }
+            })
+        ));
+        this.logger.log(`${rounds.length} round(s) criado(s) para casa fantasma: ${house.id}`);
     }
 
     async syncGhostHouses(territoryId: number, blockId: number, tenantId: number, prisma: PrismaTransaction = this.prisma) {
         this.logger.log(`Sincronizando casas fantasmas para o território ${territoryId} e quadra ${blockId}`);
 
-        // 1. Criar casas fantasmas para endereços que não têm nenhuma casa
-        const missingGhostHouses = await prisma.territory_block_address.findMany({
-            where: {
-                tenantId,
-                territoryBlock: {
-                    territoryId,
-                    blockId
-                },
-                house: {
-                    none: {},
-                },
-            },
-            include: {
-                territoryBlock: true,
-            },
-        });
-
-        for (const tba of missingGhostHouses) {
-            await this.createGhostHouse(tba.addressId, tba.territoryBlock, tba.id, tenantId, prisma);
-        }
-
-        // 2. Remover casas fantasmas que agora têm casas reais
-        const ghostHousesToCleanup = await prisma.house.findMany({
-            where: {
-                number: 'ghost',
-                territoryId,
-                blockId,
-                tenantId
-            },
-        });
-
-        for (const ghostHouse of ghostHousesToCleanup) {
-            const allHouses = await prisma.house.findMany({
+        // Phase 1 e Phase 2 são SELECTs independentes — buscar em paralelo
+        const [missingGhostHouses, ghostHousesToCleanup] = await Promise.all([
+            prisma.territory_block_address.findMany({
                 where: {
-                    territoryBlockAddressId: ghostHouse.territoryBlockAddressId,
-                    tenantId
+                    tenantId,
+                    territoryBlock: { territoryId, blockId },
+                    house: { none: {} },
                 },
+                include: { territoryBlock: true },
+            }),
+            prisma.house.findMany({
+                where: { number: 'ghost', territoryId, blockId, tenantId },
+            }),
+        ]);
+
+        // Phase 1: criar ghost houses em paralelo (cada TBA é independente)
+        await Promise.all(
+            missingGhostHouses.map(tba =>
+                this.createGhostHouse(tba.addressId, tba.territoryBlock, tba.id, tenantId, prisma)
+            )
+        );
+
+        // Phase 2: remover ghost houses que agora têm casas reais
+        const tbAddressIds = [...new Set(
+            ghostHousesToCleanup.map(g => g.territoryBlockAddressId).filter((id): id is number => id != null)
+        )];
+
+        if (tbAddressIds.length > 0) {
+            const allHousesInAddresses = await prisma.house.findMany({
+                where: { territoryBlockAddressId: { in: tbAddressIds }, tenantId },
+                select: { id: true, number: true, territoryBlockAddressId: true },
             });
 
-            const realHousesCount = allHouses.filter(h => h.number !== 'ghost').length;
+            const orphanGhostIds = ghostHousesToCleanup
+                .filter(ghostHouse => {
+                    if (!ghostHouse.territoryBlockAddressId) return false;
+                    const siblings = allHousesInAddresses.filter(
+                        h => h.territoryBlockAddressId === ghostHouse.territoryBlockAddressId
+                    );
+                    return siblings.some(h => h.number !== 'ghost');
+                })
+                .map(g => g.id);
 
-            if (realHousesCount > 0) {
-                this.logger.log(`Removendo casa fantasma órfã ID ${ghostHouse.id} pois já existem casas reais.`);
-                await prisma.round.deleteMany({ where: { houseId: ghostHouse.id, tenantId } });
-                await prisma.house.delete({ where: { id: ghostHouse.id, tenantId } });
+            if (orphanGhostIds.length > 0) {
+                this.logger.log(`Removendo ${orphanGhostIds.length} casas fantasmas órfãs pois já existem casas reais: ${orphanGhostIds}`);
+                await prisma.round.deleteMany({ where: { houseId: { in: orphanGhostIds }, tenantId } });
+                await prisma.house.deleteMany({ where: { id: { in: orphanGhostIds }, tenantId } });
             }
         }
     }

@@ -107,9 +107,11 @@ export class HouseService {
   }
 
   async updateHouse(houseId: number, body: { status: boolean }, isAdmin: boolean, roundNumber: number) {
-    const [round] = await this.prisma.$queryRaw<Round[]>`SELECT * FROM round WHERE house_id = ${houseId} AND round_number = ${roundNumber}`;
+    const [[round], house] = await Promise.all([
+      this.prisma.$queryRaw<Round[]>`SELECT * FROM round WHERE house_id = ${houseId} AND round_number = ${roundNumber}`,
+      this.prisma.house.findUnique({ where: { id: houseId }, include: { territory: true, block: true } }),
+    ]);
     if (!round) throw new BadRequestException('Casa não encontrada');
-    const house = await this.prisma.house.findUnique({ where: { id: houseId }, include: { territory: true, block: true } });
     if (!house) throw new NotFoundException('Casa não encontrada');
     this.logger.log(`Verificando se a casa [${house?.territory.name}-${house?.block.name}-${house?.number}] pode ser atualizada`);
 

@@ -74,6 +74,10 @@ model house {
   multitenancy          multitenancy             @relation(fields: [tenantId], references: [id])
   tenantId              Int                      @map("tenant_id")
   territoryBlockAddress territory_block_address? @relation(fields: [territoryBlockAddressId], references: [id])
+
+  @@index([tenantId])
+  @@index([territoryId, blockId, addressId])
+  @@index([territoryBlockAddressId])
 }
 
 model firebase {
@@ -147,6 +151,7 @@ model territory_block {
   territory_block_address territory_block_address[]
 
   @@unique([territoryId, blockId]) // Adicionando a anotação para criar a chave composta
+  @@index([tenantId])
 }
 
 model territory_block_address {
@@ -160,6 +165,7 @@ model territory_block_address {
   house            house[]
 
   @@unique([territoryBlockId, addressId]) // Adicionando a anotação para criar a chave composta
+  @@index([tenantId])
 }
 
 model territory_overseer {
@@ -218,6 +224,8 @@ model round {
   leaveLetter  Boolean      @default(false) @map("leave_letter")
 
   @@unique([houseId, territoryId, blockId, tenantId, roundNumber]) // Adicionando a anotação para criar a chave composta
+  @@index([houseId, roundNumber])
+  @@index([tenantId])
 }
 
 enum ThemeMode {

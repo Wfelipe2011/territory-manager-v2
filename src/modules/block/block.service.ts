@@ -40,9 +40,8 @@ export class BlockService {
     }
 
     async getTerritoryBlockDetails(blockId: number, territoryId: number, tenantId: number) {
-        const territoryBlock = await this.prisma.territory_block.findFirst({ where: { blockId, territoryId, tenantId } })
         const rawData = await this.prisma.territory_block.findFirst({
-            where: { id: territoryBlock?.id },
+            where: { blockId, territoryId, tenantId },
             include: {
                 block: true,
                 territory_block_address: { include: { address: true } },
