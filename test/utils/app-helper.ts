@@ -3,6 +3,7 @@ import { INestApplication, VersioningType } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
 import { FirebaseService } from '../../src/infra/firebase.service';
 import { EventsGateway } from '../../src/modules/gateway/event.gateway';
+import cookieParser from 'cookie-parser';
 
 export async function createTestApp(): Promise<INestApplication> {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -27,6 +28,7 @@ export async function createTestApp(): Promise<INestApplication> {
         logger: false,
     });
 
+    app.use(cookieParser());
     app.enableVersioning({
         type: VersioningType.URI,
     });

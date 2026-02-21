@@ -3,6 +3,7 @@ import { INestApplication, VersioningType } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
 import { FirebaseService } from '../../src/infra/firebase.service';
 import { PrismaService } from '../../src/infra/prisma/prisma.service';
+import cookieParser from 'cookie-parser';
 
 export async function createSocketTestApp(): Promise<INestApplication> {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -23,6 +24,7 @@ export async function createSocketTestApp(): Promise<INestApplication> {
         logger: false,
     });
 
+    app.use(cookieParser());
     app.enableVersioning({
         type: VersioningType.URI,
     });
