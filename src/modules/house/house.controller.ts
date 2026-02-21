@@ -1,5 +1,6 @@
 import { EventsGateway } from './../gateway/event.gateway';
 import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, Logger, NotFoundException, Param, Patch, Post, Put, Query, Request, UsePipes, ValidationPipe } from '@nestjs/common';
+import { NameResolverService } from 'src/infra/name-resolver/name-resolver.service';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enum/role.enum';
@@ -23,7 +24,8 @@ export class HouseController {
 
   constructor(
     private houseService: HouseService,
-    private eventsGateway: EventsGateway
+    private eventsGateway: EventsGateway,
+    private nameResolver: NameResolverService,
   ) {
     this.signatureIsValid = new SignatureIsValid(houseService.prisma);
   }
@@ -39,7 +41,7 @@ export class HouseController {
     @Request() req: RequestSignature
   ): Promise<AddressPerTerritoryAndBlockOutput> {
     try {
-      this.logger.log(`Usuário ${JSON.stringify(req.user, null, 2)} está buscando os endereços do território ${territoryId} e bloco ${blockId}`);
+      this.logger.log(`Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está buscando os endereços do território ${this.nameResolver.resolveTerritory(territoryId)} e bloco ${this.nameResolver.resolveBlock(blockId)}`);
       if (!territoryId) throw new BadRequestException('Território são obrigatório');
       if (!blockId) throw new BadRequestException('Bloco são obrigatório');
       if (isNaN(+territoryId)) throw new BadRequestException('Território inválido');
@@ -70,7 +72,7 @@ export class HouseController {
   ) {
     try {
       this.logger.log(
-        `Usuário ${JSON.stringify(req.user, null, 2)} está buscando os endereços do território ${territoryId} e bloco ${blockId} e endereço ${addressId}`
+        `Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está buscando os endereços do território ${this.nameResolver.resolveTerritory(territoryId)}, bloco ${this.nameResolver.resolveBlock(blockId)} e endereço ${this.nameResolver.resolveAddress(addressId)}`
       );
       if (!territoryId) throw new BadRequestException('Território são obrigatório');
       if (!blockId) throw new BadRequestException('Bloco são obrigatório');
@@ -102,11 +104,7 @@ export class HouseController {
   ) {
     try {
       this.logger.log(
-        `Usuário ${JSON.stringify(
-          req.user,
-          null,
-          2
-        )} está buscando os endereços do território ${territoryId} e bloco ${blockId} e endereço ${addressId} e casa ${houseId}`
+        `Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está atualizando a casa ${houseId} no território ${this.nameResolver.resolveTerritory(territoryId)}, bloco ${this.nameResolver.resolveBlock(blockId)}, endereço ${this.nameResolver.resolveAddress(addressId)}`
       );
       if (!houseId) throw new BadRequestException('Casa são obrigatório');
       if (!territoryId) throw new BadRequestException('Território são obrigatório');

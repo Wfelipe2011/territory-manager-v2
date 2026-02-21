@@ -29,6 +29,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadTerritoryUseCase } from './upload-territory.usecase';
 import { Loggable } from 'src/infra/loggable.decorate';
 import { CreateTerritoryParams, UpdateTerritoryParams } from './contracts/UpsertTerritoryParams';
+import { NameResolverService } from 'src/infra/name-resolver/name-resolver.service';
 
 const logger = new Logger('TerritoryController');
 
@@ -42,7 +43,8 @@ export class TerritoryController {
   private signatureIsValid: SignatureIsValid;
   constructor(
     readonly territoryService: TerritoryService,
-    readonly uploadTerritoryUseCase: UploadTerritoryUseCase
+    readonly uploadTerritoryUseCase: UploadTerritoryUseCase,
+    private readonly nameResolver: NameResolverService,
   ) {
     this.signatureIsValid = new SignatureIsValid(territoryService.prisma);
   }
@@ -72,7 +74,7 @@ export class TerritoryController {
     })
   )
   async createTerritory(@Request() req: RequestUser, @Body() body: CreateTerritoryParams) {
-    logger.log(`Usuário ${JSON.stringify(req.user, null, 2)} está cadastrando um território`);
+    logger.log(`Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está cadastrando um território`);
     return this.territoryService.create(body, req.user.tenantId)
   }
 
@@ -108,7 +110,7 @@ export class TerritoryController {
   @Roles(Role.ADMIN)
   async getTerritoryTypes(@Request() req: RequestUser): Promise<TerritoryTypesOutput[]> {
     try {
-      logger.log(`Usuário ${JSON.stringify(req.user, null, 2)} está buscando os tipos de territórios`);
+      logger.log(`Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está buscando os tipos de territórios`);
       return await this.territoryService.findTerritoryTypes(req.user.tenantId);
     } catch (error) {
       logger.error(error);
@@ -148,7 +150,7 @@ export class TerritoryController {
     @Request() req: RequestSignature
   ): Promise<any> {
     try {
-      logger.log(`Usuário ${JSON.stringify(req.user, null, 2)} está buscando para edição o território ${territorySerialize}`);
+      logger.log(`Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está buscando para edição o território ${this.nameResolver.resolveTerritory(+territorySerialize)}`);
       if (!territorySerialize) throw new BadRequestException('Território são obrigatório');
       if (!query.blockId) throw new BadRequestException('Quadra é obrigatório');
       if (!query.page) throw new BadRequestException('Página é obrigatório');
@@ -189,7 +191,7 @@ export class TerritoryController {
     @Request() req: RequestSignature
   ): Promise<TerritoryOneOutput> {
     try {
-      logger.log(`Usuário ${JSON.stringify(req.user, null, 2)} está buscando o território ${territorySerialize}`);
+      logger.log(`Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está buscando o território ${this.nameResolver.resolveTerritory(+territorySerialize)}`);
       if (!territorySerialize) throw new BadRequestException('Território são obrigatório');
       const id = Number(territorySerialize);
       if (isNaN(id)) throw new BadRequestException('Território inválido');
@@ -240,7 +242,7 @@ export class TerritoryController {
     @Loggable() logger: Logger
   ): Promise<ImportReport> {
     try {
-      logger.log(`Usuário ${req.user.userId} do tenant ${req.user.tenantId} está iniciando importação em massa`);
+      logger.log(`Usuário ${req.user.userId} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está iniciando importação em massa`);
 
       if (body.rows.length > 1000) {
         throw new BadRequestException('Limite de 1000 registros por requisição excedido');
