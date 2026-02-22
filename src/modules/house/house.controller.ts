@@ -120,6 +120,7 @@ export class HouseController {
       const isAdmin = req.user.roles.includes(Role.ADMIN);
 
       const result = await this.houseService.updateHouse(+houseId, body, isAdmin, +body.round);
+      await this.houseService.invalidateHousesCache(+territoryId, +blockId, +addressId, +body.round);
       this.eventsGateway.emitRoom(`${territoryId}-${blockId}-${addressId}-${body.round}`, {
         type: 'update_house',
         data: {

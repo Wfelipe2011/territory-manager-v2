@@ -1,5 +1,7 @@
 import { PrismaService } from '../../infra/prisma/prisma.service';
-import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { BlockSignatureDTO } from './dtos/BlockSignatureDTO';
 import { BlockSignature } from './dtos/BlockSignature';
 import { RawHouse } from './dtos/RawHouse';
@@ -9,6 +11,9 @@ import dayjs from 'dayjs';
 import { UpdateHouseOrder } from './contracts/UpdateHouseOrder';
 import { ParametersService } from '../parameters/parameters.service';
 import { AddressBlockService } from '../block/adress-block.service';
+
+const TTL_ADDRESSES = 300_000; // 5 minutos
+const TTL_HOUSES = 30_000;  // 30 segundos
 
 export type CreateHouseInput = {
   streetId: number;
@@ -25,10 +30,18 @@ export class HouseService {
   constructor(
     readonly prisma: PrismaService,
     private readonly parametersService: ParametersService,
-    private readonly addressBlockService: AddressBlockService
+    private readonly addressBlockService: AddressBlockService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) { }
 
   async getAddressPerTerritoryByIdAndBlockById(blockId: number, territoryId: number) {
+    const cacheKey = `addresses:${territoryId}:${blockId}`;
+    const cached = await this.cacheManager.get<BlockSignatureDTO>(cacheKey);
+    if (cached) {
+      this.logger.log(`[CACHE HIT] ${cacheKey}`);
+      return cached;
+    }
+
     const territoryBlock = await this.prisma.territory_block.findUnique({
       where: {
         territoryId_blockId: {
@@ -54,10 +67,18 @@ export class HouseService {
     const result = await this.getBlockDetails(blockId, territoryId);
     if (!result) throw new NotFoundException('Não foi possível encontrar os dados da quadra');
     const data = BlockSignatureDTO.mapper(result);
+    await this.cacheManager.set(cacheKey, data, TTL_ADDRESSES);
     return data;
   }
 
   async getHousesPerTerritoryByIdAndBlockByIdAndAddressById(blockId: number, territoryId: number, streetId: number, round: number) {
+    const cacheKey = `houses:${territoryId}:${blockId}:${streetId}:${round}`;
+    const cached = await this.cacheManager.get(cacheKey);
+    if (cached) {
+      this.logger.log(`[CACHE HIT] ${cacheKey}`);
+      return cached;
+    }
+
     const houses = await this.prisma.$queryRaw<RawHouse[]>`
         SELECT
           h.id as house_id,
@@ -103,7 +124,14 @@ export class HouseService {
       })),
     };
 
+    await this.cacheManager.set(cacheKey, output, TTL_HOUSES);
     return output;
+  }
+
+  async invalidateHousesCache(territoryId: number, blockId: number, addressId: number, round: number) {
+    const cacheKey = `houses:${territoryId}:${blockId}:${addressId}:${round}`;
+    await this.cacheManager.del(cacheKey);
+    this.logger.log(`[CACHE INVALIDATE] ${cacheKey}`);
   }
 
   async updateHouse(houseId: number, body: { status: boolean }, isAdmin: boolean, roundNumber: number) {
@@ -238,6 +266,9 @@ export class HouseService {
 
     this.logger.log(`Rodadas criadas com sucesso para a casa ${number}`);
 
+    await this.addressBlockService.invalidateSyncGhostCache(territory.tenantId, +territoryId, +blockId);
+    await this.cacheManager.del(`addresses:${territoryId}:${blockId}`);
+
     return house;
   }
 
@@ -292,6 +323,9 @@ export class HouseService {
     this.logger.log(`Rodadas deletadas com sucesso da casa ${id}`);
     await this.prisma.house.delete({ where: { id } });
     this.logger.log(`Casa ${id} deletada com sucesso`);
+
+    await this.addressBlockService.invalidateSyncGhostCache(house.tenantId, house.territoryId, house.blockId);
+    await this.cacheManager.del(`addresses:${house.territoryId}:${house.blockId}`);
   }
 
   async updateOrder(inputs: UpdateHouseOrder): Promise<void> {

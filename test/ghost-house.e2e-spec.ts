@@ -5,14 +5,21 @@ import { PrismaService } from '../src/infra/prisma/prisma.service';
 import { cleanDatabase } from './utils/db-cleaner';
 import { createTestToken } from './utils/auth-helper';
 import { Role } from '../src/enum/role.enum';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { AddressBlockService } from '../src/modules/block/adress-block.service';
 
 describe('Ghost House Flow (e2e)', () => {
     let app: INestApplication;
     let prisma: PrismaService;
+    let cacheManager: Cache;
+    let addressBlockService: AddressBlockService;
 
     beforeAll(async () => {
         app = await createTestApp();
         prisma = app.get(PrismaService);
+        cacheManager = app.get(CACHE_MANAGER);
+        addressBlockService = app.get(AddressBlockService);
         await prisma.$executeRawUnsafe('CREATE EXTENSION IF NOT EXISTS pg_trgm;');
     });
 
@@ -207,6 +214,10 @@ describe('Ghost House Flow (e2e)', () => {
                 territoryBlockAddressId: tba.id
             }
         });
+
+        // Invalidate caches to ensure sync runs on next access
+        await cacheManager.del(`addresses:${territory.id}:${block.id}`);
+        await addressBlockService.invalidateSyncGhostCache(tenant.id, territory.id, block.id);
 
         // Act: Access again - using cacheBuster to bypass global CacheInterceptor and trigger another sync
         const response2 = await request(app.getHttpServer())

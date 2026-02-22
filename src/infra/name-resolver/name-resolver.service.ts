@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
-const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutos
+const REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 horas
 
 @Injectable()
 export class NameResolverService implements OnModuleInit, OnModuleDestroy {

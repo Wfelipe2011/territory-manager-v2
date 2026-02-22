@@ -1,8 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { PrismaTransaction } from 'src/infra/prisma';
 import { ThemeMode } from '@prisma/client';
 import { themeColors } from 'src/constants/themeColors';
+
+const TTL_SYNC_GHOST = 86_400_000; // 24 horas
 
 interface AddressDto {
     id?: number;
@@ -14,7 +18,10 @@ interface AddressDto {
 export class AddressBlockService {
     private readonly logger = new Logger(AddressBlockService.name);
 
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    ) { }
 
     async manageAddresses(territoryBlockId: number, addresses: AddressDto[] = [], tenantId: number, prisma: PrismaTransaction = this.prisma) {
         this.logger.log('Gerenciando endereços associados');
@@ -238,6 +245,12 @@ export class AddressBlockService {
     }
 
     async syncGhostHouses(territoryId: number, blockId: number, tenantId: number, prisma: PrismaTransaction = this.prisma) {
+        const syncCacheKey = `sync:ghost:${tenantId}:${territoryId}:${blockId}`;
+        const alreadySynced = await this.cacheManager.get(syncCacheKey);
+        if (alreadySynced) {
+            this.logger.log(`[CACHE HIT] syncGhostHouses ${syncCacheKey} — skip`);
+            return;
+        }
         this.logger.log(`Sincronizando casas fantasmas para o território ${territoryId} e quadra ${blockId}`);
 
         // Phase 1 e Phase 2 são SELECTs independentes — buscar em paralelo
@@ -267,13 +280,14 @@ export class AddressBlockService {
             ghostHousesToCleanup.map(g => g.territoryBlockAddressId).filter((id): id is number => id != null)
         )];
 
+        let orphanGhostIds: number[] = [];
         if (tbAddressIds.length > 0) {
             const allHousesInAddresses = await prisma.house.findMany({
                 where: { territoryBlockAddressId: { in: tbAddressIds }, tenantId },
                 select: { id: true, number: true, territoryBlockAddressId: true },
             });
 
-            const orphanGhostIds = ghostHousesToCleanup
+            orphanGhostIds = ghostHousesToCleanup
                 .filter(ghostHouse => {
                     if (!ghostHouse.territoryBlockAddressId) return false;
                     const siblings = allHousesInAddresses.filter(
@@ -289,5 +303,21 @@ export class AddressBlockService {
                 await prisma.house.deleteMany({ where: { id: { in: orphanGhostIds }, tenantId } });
             }
         }
+
+        // Só cacheia se o bloco está estável (nenhuma criação ou remoção de ghost houses)
+        // Se houve trabalho, o próximo request roda sync de novo até estabilizar
+        const didWork = missingGhostHouses.length > 0 || orphanGhostIds.length > 0;
+        if (!didWork) {
+            await this.cacheManager.set(syncCacheKey, true, TTL_SYNC_GHOST);
+            this.logger.log(`[CACHE SET] syncGhostHouses ${syncCacheKey} — bloco estável, cache 24h`);
+        } else {
+            this.logger.log(`syncGhostHouses ${syncCacheKey} — trabalho realizado, sem cache`);
+        }
+    }
+
+    async invalidateSyncGhostCache(tenantId: number, territoryId: number, blockId: number) {
+        const syncCacheKey = `sync:ghost:${tenantId}:${territoryId}:${blockId}`;
+        await this.cacheManager.del(syncCacheKey);
+        this.logger.log(`[CACHE INVALIDATE] syncGhostHouses ${syncCacheKey}`);
     }
 }

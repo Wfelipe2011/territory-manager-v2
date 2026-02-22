@@ -114,7 +114,7 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
     ScheduleModule.forRoot(),
     CacheModule.register({
       ttl: 60, // seconds
-      max: 100, // maximum number of items in cache
+      max: 1000, // maximum number of items in cache
       isGlobal: true,
     }),
     ThrottlerModule.forRoot({
