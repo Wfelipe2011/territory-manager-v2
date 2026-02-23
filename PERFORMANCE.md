@@ -162,3 +162,59 @@ Cada entrada representa uma rodada de teste com k6.
 **Otimizações ativas:** mesmas do teste anterior (cache + índices)
 
 **Observações:** Esta rodada confirma o "sweet spot" de estabilidade do sistema. Com 250 VUs, a taxa de erro caiu para **0.73%**, voltando a ficar dentro do threshold de segurança (<1%). Curiosamente, os tempos de resposta p(95) foram ligeiramente melhores que nos testes anteriores de 200 VUs (2.8s vs 3.2s), sugerindo uma maior estabilidade do ambiente ou eficiência dos caches após o aquecimento. No entanto, os tempos de latência para leitura de endereços e casas ainda excedem os limites desejados, indicando que a otimização de consultas complexas no Prisma ainda é necessária.
+
+---
+
+### 2026-02-22 — Após dobrar recursos de CPU (250 VUs)
+- **SIGNATURE_KEY:** *não informada no log*
+- **VUs:** 250 | **Duração:** 1m30s
+
+| Endpoint | avg | p(90) | p(95) | Threshold | Status |
+|---|---|---|---|---|---|
+| getAddresses | 592ms | 915ms | **1.03s** | p(95)<1000ms | ✗ |
+| getHouses | 601ms | 983ms | **1.12s** | p(95)<1500ms | ✓ |
+| getSignature | 228ms | 228ms | **228ms** | p(95)<500ms | ✓ |
+| getTerritoryBlocks | 224ms | 224ms | **224ms** | p(95)<1000ms | ✓ |
+| toggleHouse | 642ms | 988ms | **1.11s** | p(95)<1500ms | ✓ |
+| http_req_failed | — | — | **0.48%** | rate<0.01 | ✓ |
+
+**Estatísticas gerais:**
+- `http_req_duration` avg=630ms | med=633ms | max=2.58s | p(95)=1.1s
+- Total requests: 6.553 | Taxa: 72 req/s
+- Iterações completas: 849 | Interrompidas: 5
+- WS sessions: 822 | msgs recebidas: 3.954
+- Checks com falha: 0.33% (32/9514) — `getAddresses` 96% OK
+
+**Otimizações ativas:**
+- Recursos de CPU dobrados  
+- Todas as otimizações anteriores (índices + cache)
+
+**Observações:** Salto massivo de performance. O aumento de CPU reduziu a latência p(95) em mais de **60%** (de ~2.8s para ~1.1s). Quase todos os thresholds foram atingidos. O endpoint `getAddresses` está no limite (1.03s vs <1.0s), falhando por uma margem mínima. A taxa de erro caiu para **0.48%**, indicando que a contenção anterior era majoritariamente falta de processamento para lidar com o volume de requests e parsing de JSON. O sistema agora é capaz de sustentar 250 VUs com excelente qualidade de serviço.
+
+---
+
+### 2026-02-22 — Teste de Carga Máxima (500 VUs) — CPU Dobrada
+- **SIGNATURE_KEY:** *não informada no log*
+- **VUs:** 500 | **Duração:** 1m31s
+
+| Endpoint | avg | p(90) | p(95) | Threshold | Status |
+|---|---|---|---|---|---|
+| getAddresses | 316ms | 712ms | **795ms** | p(95)<1000ms | ✓ |
+| getHouses | 453ms | 752ms | **836ms** | p(95)<1500ms | ✓ |
+| getSignature | 213ms | 213ms | **213ms** | p(95)<500ms | ✓ |
+| getTerritoryBlocks | 215ms | 215ms | **215ms** | p(95)<1000ms | ✓ |
+| toggleHouse | 395ms | 752ms | **864ms** | p(95)<1500ms | ✓ |
+| http_req_failed | — | — | **5.42%** | rate<0.01 | ✗ |
+
+**Estatísticas gerais:**
+- `http_req_duration` avg=388ms | med=284ms | max=1.62s | p(95)=836ms
+- Total requests: 7.533 | Taxa: 82 req/s
+- Iterações completas: 1349 | Interrompidas: 8
+- WS sessions: 947 | msgs recebidas: 4.636
+- Checks com falha: 4.26% (473/11085) — `getAddresses` 69% OK, WS Conexão 93% OK
+
+**Otimizações ativas:**
+- Recursos de CPU dobrados
+- Todas as otimizações anteriores (índices + cache)
+
+**Observações:** Os tempos de resposta (latência) são excelentes e estão **todos dentro dos thresholds**, mesmo com 500 VUs. No entanto, o sistema apresenta uma taxa de erro de **5.42%**, concentrada majoritariamente no `getAddresses` (31% de falha) e falhas de conexão WebSocket (7% de falha). O fato da latência estar baixa mas os erros persistirem sugere que o gargalo mudou de **CPU** para **Limite de Conexões** (provavelmente no banco de dados ou portas do SO). O sistema processa rápido, mas nega serviço para alguns usuários.

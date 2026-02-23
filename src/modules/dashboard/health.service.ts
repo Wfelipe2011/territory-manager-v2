@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../infra/prisma/prisma.service';
+import { EventsGateway } from '../gateway/event.gateway';
 import * as os from 'os';
 import si from 'systeminformation';
 
@@ -7,13 +8,18 @@ import si from 'systeminformation';
 export class HealthService {
     private readonly logger = new Logger(HealthService.name);
 
-    constructor(private readonly prismaService: PrismaService) { }
+    constructor(
+        private readonly prismaService: PrismaService,
+        private readonly eventsGateway: EventsGateway,
+    ) { }
 
     async getHealthData() {
-        const [databaseInfo, currentLoad, lastChanges] = await Promise.all([
+        const [databaseInfo, currentLoad, lastChanges, sessionsGeneral, sessionsByTenant] = await Promise.all([
             this.getDatabaseInfo(),
             si.currentLoad(),
             this.getLastChanges(),
+            this.getGeneralSessions(),
+            this.getTenantSessions(),
         ]);
 
         const {
@@ -50,6 +56,8 @@ export class HealthService {
                 },
             },
             last_changes: lastChanges,
+            sessionsGeneral,
+            sessionsByTenant,
         };
     }
 
@@ -68,7 +76,7 @@ export class HealthService {
             this.prismaService.$queryRaw`show max_connections` as Promise<{ max_connections: string }[]>,
             this.prismaService.$queryRaw`select count(1) from pg_stat_activity where state = 'active' and datname = ${process.env.POSTGRES_DB}` as Promise<{ count: BigInt }[]>,
             this.prismaService.$queryRaw`select count(1) from pg_stat_activity where state = 'idle' and datname = ${process.env.POSTGRES_DB}` as Promise<{ count: BigInt }[]>,
-            this.prismaService.socket.count(),
+            Promise.resolve(this.eventsGateway.getConnectedSocketCount()),
             this.prismaService.signature.count({
                 where: {
                     expirationDate: {
@@ -110,5 +118,69 @@ export class HealthService {
       ORDER BY 
         last_change_utc_minus3 DESC;
       ` as any[];
+    }
+
+    private async getGeneralSessions(): Promise<{ slot: string; started: number; active: number }[]> {
+        const rows: { slot: Date; started: number; active: number }[] = await this.prismaService.$queryRaw`
+            WITH slots AS (
+                SELECT DISTINCT
+                    date_trunc('hour', created_at)
+                    + (FLOOR(EXTRACT(MINUTE FROM created_at) / 30) * INTERVAL '30 min') AS slot
+                FROM socket
+                WHERE created_at >= NOW() - INTERVAL '24 hours'
+            )
+            SELECT
+                sl.slot,
+                COUNT(CASE WHEN sk.created_at >= sl.slot AND sk.created_at < sl.slot + INTERVAL '30 min' THEN 1 END)::int AS started,
+                COUNT(CASE WHEN sk.created_at < sl.slot + INTERVAL '30 min'
+                               AND (sk.disconnected_at > sl.slot OR sk.disconnected_at IS NULL)
+                           THEN 1 END)::int AS active
+            FROM slots sl
+            JOIN socket sk ON sk.created_at >= NOW() - INTERVAL '24 hours'
+            GROUP BY sl.slot
+            HAVING COUNT(CASE WHEN sk.created_at < sl.slot + INTERVAL '30 min'
+                                   AND (sk.disconnected_at > sl.slot OR sk.disconnected_at IS NULL)
+                               THEN 1 END) > 0
+            ORDER BY sl.slot DESC
+        `;
+        return rows.map(r => ({
+            slot: r.slot.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }),
+            started: r.started,
+            active: r.active,
+        }));
+    }
+
+    private async getTenantSessions(): Promise<{ slot: string; tenant_name: string; started: number; active: number }[]> {
+        const rows: { slot: Date; tenant_name: string; started: number; active: number }[] = await this.prismaService.$queryRaw`
+            WITH slots AS (
+                SELECT DISTINCT
+                    date_trunc('hour', s.created_at)
+                    + (FLOOR(EXTRACT(MINUTE FROM s.created_at) / 30) * INTERVAL '30 min') AS slot,
+                    s.tenant_id
+                FROM socket s
+                WHERE s.created_at >= NOW() - INTERVAL '24 hours'
+            )
+            SELECT
+                sl.slot,
+                m.name AS tenant_name,
+                COUNT(CASE WHEN sk.created_at >= sl.slot AND sk.created_at < sl.slot + INTERVAL '30 min' THEN 1 END)::int AS started,
+                COUNT(CASE WHEN sk.created_at < sl.slot + INTERVAL '30 min'
+                               AND (sk.disconnected_at > sl.slot OR sk.disconnected_at IS NULL)
+                           THEN 1 END)::int AS active
+            FROM slots sl
+            JOIN socket sk ON sk.tenant_id = sl.tenant_id AND sk.created_at >= NOW() - INTERVAL '24 hours'
+            JOIN multi_tenancy m ON m.id = sl.tenant_id
+            GROUP BY sl.slot, m.name
+            HAVING COUNT(CASE WHEN sk.created_at < sl.slot + INTERVAL '30 min'
+                                   AND (sk.disconnected_at > sl.slot OR sk.disconnected_at IS NULL)
+                               THEN 1 END) > 0
+            ORDER BY sl.slot DESC, m.name
+        `;
+        return rows.map(r => ({
+            slot: r.slot.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }),
+            tenant_name: r.tenant_name,
+            started: r.started,
+            active: r.active,
+        }));
     }
 }

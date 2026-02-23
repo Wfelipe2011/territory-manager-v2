@@ -12,8 +12,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SIGNATURE_KEY="${1:-${SIGNATURE_KEY:-}}"
 VUS="${2:-${VUS:-}}"
 DURATION="${3:-${DURATION:-}}"
-API_URL="${API_URL:-https://api.territory-manager.com.br}"
-WS_URL="${WS_URL:-wss://api.territory-manager.com.br}"
+API_URL="${API_URL:-http://localhost:3000}"
+WS_URL="${WS_URL:-ws://localhost:3000}"
 USERNAME="${USERNAME:-k6-load-tester}"
 
 # --- Validação ---------------------------------------------------------------

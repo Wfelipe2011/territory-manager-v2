@@ -183,27 +183,16 @@ describe('WebSocket Integration (e2e)', () => {
             socket1.disconnect();
             await leftPromise;
 
-            // Verify DB
-            const count = await prisma.socket.count({ where: { room: roomName } });
-            expect(count).toBe(1);
-
             socket2.disconnect();
         });
 
         it('should handle cron cleanup of disconnected sockets', async () => {
             const eventsGateway = app.get(EventsGateway);
-            const roomName = 'cron-room';
+            const deadRoom = 'cron-room';
             const liveRoom = 'live-room';
+            const deadSocketId = 'dead-socket-id';
 
-            // Manually insert a "dead" socket in DB
-            await prisma.socket.create({
-                data: {
-                    socketId: 'dead-socket-id',
-                    room: roomName,
-                }
-            });
-
-            // Insert a "live" socket in DB and make it actually live in the server
+            // Conectar um socket real e entrar em liveRoom
             const token = createTestToken({ roles: [Role.ADMIN], tenantId: 1 });
             const socket = createSocket(token);
             await new Promise<void>((resolve) => {
@@ -215,17 +204,22 @@ describe('WebSocket Integration (e2e)', () => {
                 });
             });
 
-            const initialCount = await prisma.socket.count();
-            // 1 dead + 1 live = 2
-            expect(initialCount).toBeGreaterThanOrEqual(2);
+            // Injetar manualmente um socket fantasma nos Maps
+            const activeRooms: Map<string, Set<string>> = (eventsGateway as any).activeRooms;
+            const socketToRoom: Map<string, string> = (eventsGateway as any).socketToRoom;
+            activeRooms.set(deadRoom, new Set([deadSocketId]));
+            socketToRoom.set(deadSocketId, deadRoom);
 
-            await eventsGateway.handleCron();
+            // Antes do cron: fantasma + vivo presentes
+            expect(socketToRoom.has(deadSocketId)).toBe(true);
+            expect(socketToRoom.has(socket.id)).toBe(true);
 
-            const deadCount = await prisma.socket.count({ where: { socketId: 'dead-socket-id' } });
-            expect(deadCount).toBe(0);
+            eventsGateway.handleCron();
 
-            const liveCount = await prisma.socket.count({ where: { room: liveRoom } });
-            expect(liveCount).toBe(1);
+            // Após o cron: fantasma removido, vivo preservado
+            expect(socketToRoom.has(deadSocketId)).toBe(false);
+            expect(activeRooms.has(deadRoom)).toBe(false);
+            expect(socketToRoom.has(socket.id)).toBe(true);
 
             socket.disconnect();
         });
@@ -234,16 +228,47 @@ describe('WebSocket Integration (e2e)', () => {
             const eventsGateway = app.get(EventsGateway);
             const loggerSpy = jest.spyOn((eventsGateway as any).logger, 'debug');
 
-            await prisma.socket.deleteMany();
-            await eventsGateway.handleCron();
+            // Garantir Maps vazios (nenhum socket registrado)
+            (eventsGateway as any).activeRooms.clear();
+            (eventsGateway as any).socketToRoom.clear();
 
-            expect(loggerSpy).toHaveBeenCalledWith('Nenhum socket desconectado');
+            eventsGateway.handleCron();
+
+            expect(loggerSpy).toHaveBeenCalledWith('Nenhum socket obsoleto encontrado');
         });
 
         it('should return early in emitRoom if no entity is found', async () => {
             const eventsGateway = app.get(EventsGateway);
             const result = await eventsGateway.emitRoom('non-existent-room', { type: 'test' });
             expect(result).toBeUndefined();
+        });
+
+        it('should registrar sessão no banco ao conectar e fechar ao desconectar', async () => {
+            const tenant = await prisma.multitenancy.create({ data: { name: 'Tenant Log Test' } });
+            const token = createTestToken({ roles: [Role.ADMIN], tenantId: tenant.id });
+            const socket = createSocket(token);
+            const roomName = 'session-log-room';
+
+            await new Promise<void>((resolve) => {
+                socket.on('connect', () => socket.emit('join', { roomName, username: 'log-user' }));
+                socket.on(roomName, (data) => { if (data.type === 'user_joined') resolve(); });
+            });
+
+            // Aguarda o setImmediate do create completar
+            await new Promise(r => setTimeout(r, 100));
+
+            const record = await prisma.socket.findFirst({ where: { socketId: socket.id } });
+            expect(record).not.toBeNull();
+            expect(record!.tenantId).toBe(tenant.id);
+            expect(record!.disconnectedAt).toBeNull();
+
+            socket.disconnect();
+
+            // Aguarda o setImmediate do updateMany completar
+            await new Promise(r => setTimeout(r, 100));
+
+            const updated = await prisma.socket.findFirst({ where: { socketId: socket.id } });
+            expect(updated!.disconnectedAt).not.toBeNull();
         });
     });
 

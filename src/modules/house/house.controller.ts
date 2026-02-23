@@ -121,13 +121,13 @@ export class HouseController {
 
       const result = await this.houseService.updateHouse(+houseId, body, isAdmin, +body.round);
       await this.houseService.invalidateHousesCache(+territoryId, +blockId, +addressId, +body.round);
-      this.eventsGateway.emitRoom(`${territoryId}-${blockId}-${addressId}-${body.round}`, {
+      setImmediate(() => this.eventsGateway.emitRoom(`${territoryId}-${blockId}-${addressId}-${body.round}`, {
         type: 'update_house',
         data: {
           houseId: houseId,
           completed: body.status,
         },
-      });
+      }));
       return result;
     } catch (error) {
       this.logger.error(error);

@@ -186,9 +186,101 @@
                 </div>
             </div>
         </div>
+
+        <!-- Sessões WebSocket — Últimas 24h -->
+        <div class="card mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <p class="text-gray-400 text-sm uppercase font-semibold">Sessões WebSocket — Últimas 24h (faixas de 30min)</p>
+                <i class="fas fa-network-wired text-green-500 opacity-50"></i>
+            </div>
+            <!-- Abas -->
+            <div class="flex gap-2 mb-4">
+                <button id="tab-geral" onclick="switchTab('geral')"
+                    class="px-4 py-1.5 rounded-lg text-sm font-semibold bg-green-600 text-white transition-colors">
+                    Geral
+                </button>
+                <button id="tab-tenant" onclick="switchTab('tenant')"
+                    class="px-4 py-1.5 rounded-lg text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors">
+                    Por Congregação
+                </button>
+            </div>
+            <!-- Tabela Geral -->
+            <div id="sessions-geral">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-gray-400 text-left border-b border-gray-700">
+                            <th class="pb-2">Horário</th>
+                            <th class="pb-2 text-right">Iniciadas</th>
+                            <th class="pb-2 text-right">Ativas no período</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sessions-geral-body">
+                        {{#if health.sessionsGeneral.length}}
+                            {{#each health.sessionsGeneral}}
+                            <tr class="table-row">
+                                <td class="py-1.5 text-gray-300">{{slot}}</td>
+                                <td class="py-1.5 text-right text-gray-400">{{started}}</td>
+                                <td class="py-1.5 text-right font-bold text-white">{{active}}</td>
+                            </tr>
+                            {{/each}}
+                        {{else}}
+                            <tr><td colspan="3" class="py-4 text-center text-gray-500">Nenhuma sessão registrada</td></tr>
+                        {{/if}}
+                    </tbody>
+                </table>
+            </div>
+            <!-- Tabela Por Congregação -->
+            <div id="sessions-tenant" class="hidden">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-gray-400 text-left border-b border-gray-700">
+                            <th class="pb-2">Horário</th>
+                            <th class="pb-2">Congregação</th>
+                            <th class="pb-2 text-right">Iniciadas</th>
+                            <th class="pb-2 text-right">Ativas no período</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sessions-tenant-body">
+                        {{#if health.sessionsByTenant.length}}
+                            {{#each health.sessionsByTenant}}
+                            <tr class="table-row">
+                                <td class="py-1.5 text-gray-300">{{slot}}</td>
+                                <td class="py-1.5 text-gray-300">{{tenant_name}}</td>
+                                <td class="py-1.5 text-right text-gray-400">{{started}}</td>
+                                <td class="py-1.5 text-right font-bold text-white">{{active}}</td>
+                            </tr>
+                            {{/each}}
+                        {{else}}
+                            <tr><td colspan="4" class="py-4 text-center text-gray-500">Nenhuma sessão registrada</td></tr>
+                        {{/if}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </main>
 
     <script>
+        function switchTab(tab) {
+            const isGeral = tab === 'geral';
+            document.getElementById('sessions-geral').classList.toggle('hidden', !isGeral);
+            document.getElementById('sessions-tenant').classList.toggle('hidden', isGeral);
+            document.getElementById('tab-geral').className = isGeral
+                ? 'px-4 py-1.5 rounded-lg text-sm font-semibold bg-green-600 text-white transition-colors'
+                : 'px-4 py-1.5 rounded-lg text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors';
+            document.getElementById('tab-tenant').className = isGeral
+                ? 'px-4 py-1.5 rounded-lg text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors'
+                : 'px-4 py-1.5 rounded-lg text-sm font-semibold bg-green-600 text-white transition-colors';
+        }
+
+        function renderSessionRows(sessions, cols) {
+            if (!sessions || sessions.length === 0) {
+                return `<tr><td colspan="${cols}" class="py-4 text-center text-gray-500">Nenhuma sessão registrada</td></tr>`;
+            }
+            return sessions.map(s => {
+                if (cols === 3) return `<tr class="table-row"><td class="py-1.5 text-gray-300">${s.slot}</td><td class="py-1.5 text-right text-gray-400">${s.started}</td><td class="py-1.5 text-right font-bold text-white">${s.active}</td></tr>`;
+                return `<tr class="table-row"><td class="py-1.5 text-gray-300">${s.slot}</td><td class="py-1.5 text-gray-300">${s.tenant_name}</td><td class="py-1.5 text-right text-gray-400">${s.started}</td><td class="py-1.5 text-right font-bold text-white">${s.active}</td></tr>`;
+            }).join('');
+        }
         async function refreshData() {
             const btn = document.querySelector('button');
             const icon = document.getElementById('refresh-icon');
@@ -235,6 +327,9 @@
                 document.getElementById('load-1').innerText = data.system_info.load_average['1_min'];
                 document.getElementById('load-5').innerText = data.system_info.load_average['5_min'];
                 document.getElementById('load-15').innerText = data.system_info.load_average['15_min'];
+
+                document.getElementById('sessions-geral-body').innerHTML = renderSessionRows(data.sessionsGeneral, 3);
+                document.getElementById('sessions-tenant-body').innerHTML = renderSessionRows(data.sessionsByTenant, 4);
 
             } catch (error) {
                 console.error('Falha ao atualizar dados:', error);
