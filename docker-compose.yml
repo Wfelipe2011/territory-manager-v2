@@ -1,6 +1,23 @@
 version: '3.5'
 
 services:
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: pgbouncer_territory_manager_prod
+    restart: unless-stopped
+    environment:
+      - DB_HOST=$POSTGRES_HOST
+      - DB_PORT=${POSTGRES_PORT:-5432}
+      - DB_USER=$POSTGRES_USER
+      - DB_PASSWORD=$POSTGRES_PASSWORD
+      - DB_NAME=$POSTGRES_DB
+      - POOL_MODE=transaction
+      - MAX_CLIENT_CONN=2000
+      - DEFAULT_POOL_SIZE=80
+      - IGNORE_STARTUP_PARAMETERS=extra_float_digits
+    networks:
+      - npm_public
+
   app-prod:
     image: wfelipe2011/territorio-digital-prod:master
     restart: unless-stopped
@@ -12,7 +29,10 @@ services:
           memory: 1G
     environment:
       - PORT=$PORT
-      - DATABASE_URL=$DATABASE_URL
+      # DATABASE_URL aponta para PgBouncer (transaction pooling)
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:5432/${POSTGRES_DB}?pgbouncer=true&connection_limit=10
+      # DIRECT_URL aponta direto ao Postgres — usado pelo Prisma para migrations
+      - DIRECT_URL=$DATABASE_URL
       - JWT_SECRET=$JWT_SECRET
       - TZ=$TZ
       - LOGTAIL_API_KEY=$LOGTAIL_API_KEY
@@ -24,6 +44,8 @@ services:
       - AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
       - CLOUDWATCH_LOG_GROUP=$CLOUDWATCH_LOG_GROUP
+    depends_on:
+      - pgbouncer
     networks:
       - npm_public
 
