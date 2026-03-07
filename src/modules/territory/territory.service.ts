@@ -63,6 +63,7 @@ export class TerritoryService {
           SELECT COUNT(so.id)
           FROM socket so
           WHERE so.room ~ ('\\y' || t.id::text || '-' || b.id::text || '\\y')
+            AND so.disconnected_at IS NULL
         ) as connections
       FROM territory t
       LEFT JOIN territory_block tb ON tb.territory_id = t.id
