@@ -21,6 +21,7 @@ export async function createTestApp(): Promise<INestApplication> {
         .overrideProvider(EventsGateway)
         .useValue({
             emitRoom: jest.fn(),
+            getConnectedSocketCount: jest.fn().mockReturnValue(0),
         })
         .compile();
 

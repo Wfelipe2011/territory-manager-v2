@@ -146,6 +146,7 @@ describe('Territory Query (findById) e2e', () => {
                     data: {
                         socketId: `socket-${i}-${Date.now()}`,
                         room: `prefix-${roomId}-suffix`, // Testing LIKE
+                        tenantId,
                     },
                 });
             }
@@ -496,7 +497,8 @@ describe('Territory Query (findById) e2e', () => {
         await prisma.socket.create({
             data: {
                 socketId: 'sock-11',
-                room: `prefix-${territory.id}-${block11.id}-suffix`
+                room: `prefix-${territory.id}-${block11.id}-suffix`,
+                tenantId: tenant.id,
             }
         });
 
