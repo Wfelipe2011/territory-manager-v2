@@ -138,9 +138,7 @@ export class HealthService {
             FROM slots sl
             JOIN socket sk ON sk.created_at >= NOW() - INTERVAL '24 hours'
             GROUP BY sl.slot
-            HAVING COUNT(CASE WHEN sk.created_at < sl.slot + INTERVAL '30 min'
-                                   AND sk.disconnected_at IS NULL
-                               THEN 1 END) > 0
+            HAVING COUNT(CASE WHEN sk.created_at >= sl.slot AND sk.created_at < sl.slot + INTERVAL '30 min' THEN 1 END) > 0
             ORDER BY sl.slot DESC
         `;
         return rows.map(r => ({
@@ -171,9 +169,7 @@ export class HealthService {
             JOIN socket sk ON sk.tenant_id = sl.tenant_id AND sk.created_at >= NOW() - INTERVAL '24 hours'
             JOIN multi_tenancy m ON m.id = sl.tenant_id
             GROUP BY sl.slot, m.name
-            HAVING COUNT(CASE WHEN sk.created_at < sl.slot + INTERVAL '30 min'
-                                   AND sk.disconnected_at IS NULL
-                               THEN 1 END) > 0
+            HAVING COUNT(CASE WHEN sk.created_at >= sl.slot AND sk.created_at < sl.slot + INTERVAL '30 min' THEN 1 END) > 0
             ORDER BY sl.slot DESC, m.name
         `;
         return rows.map(r => ({
