@@ -16,10 +16,12 @@ interface User {
 export class EventsGateway implements OnGatewayInit {
   @WebSocketServer() server: Server;
   private logger = new Logger(EventsGateway.name);
-  /** sala → conjunto de socketIds ativos */
+  /** sala → conjunto de usernames (UUID do front) ativos */
   private readonly activeRooms = new Map<string, Set<string>>();
-  /** socketId → sala (lookup reverso para O(1) no disconnect) */
+  /** client.id → sala (lookup reverso para O(1) no disconnect) */
   private readonly socketToRoom = new Map<string, string>();
+  /** client.id → username (UUID do front, para uso em disconnect/cron) */
+  private readonly socketToUsername = new Map<string, string>();
 
   constructor(private readonly prisma: PrismaService) { }
 
@@ -43,8 +45,9 @@ export class EventsGateway implements OnGatewayInit {
       if (!this.activeRooms.has(roomName)) {
         this.activeRooms.set(roomName, new Set());
       }
-      this.activeRooms.get(roomName)!.add(client.id);
+      this.activeRooms.get(roomName)!.add(username);
       this.socketToRoom.set(client.id, roomName);
+      this.socketToUsername.set(client.id, username);
 
       const roomCount = this.activeRooms.get(roomName)!.size;
 
@@ -54,8 +57,11 @@ export class EventsGateway implements OnGatewayInit {
       const tenantId = client.user?.tenantId;
       if (tenantId) {
         setImmediate(() =>
-          this.prisma.socket.create({ data: { socketId: client.id, room: roomName, tenantId } })
-            .catch(e => this.logger.warn(`Erro ao registrar sessão: ${e.message}`))
+          this.prisma.socket.upsert({
+            where: { socketId: username },
+            create: { socketId: username, room: roomName, tenantId },
+            update: { room: roomName, disconnectedAt: null, createdAt: new Date() },
+          }).catch(e => this.logger.warn(`Erro ao registrar sessão: ${e.message}`))
         );
       }
 
@@ -73,19 +79,21 @@ export class EventsGateway implements OnGatewayInit {
   handleDisconnect(@ConnectedSocket() client: Socket) {
     this.logger.log(`Usuário desconectado ${client.id}`);
     const room = this.socketToRoom.get(client.id);
+    const username = this.socketToUsername.get(client.id);
     if (!room) return;
 
     this.removeSocketFromRoom(client.id, room);
     const roomCount = this.activeRooms.get(room)?.size ?? 0;
 
-    this.logger.log(`Usuário saiu da sala ${room} - ${client.id} (${roomCount} usuários restantes)`);
+    this.logger.log(`Usuário saiu da sala ${room} - ${username ?? client.id} (${roomCount} usuários restantes)`);
 
     // Log assíncrono — fechar intervalo da sessão
-    const socketId = client.id;
-    setImmediate(() =>
-      this.prisma.socket.updateMany({ where: { socketId, disconnectedAt: null }, data: { disconnectedAt: new Date() } })
-        .catch(e => this.logger.warn(`Erro ao fechar sessão: ${e.message}`))
-    );
+    if (username) {
+      setImmediate(() =>
+        this.prisma.socket.updateMany({ where: { socketId: username, disconnectedAt: null }, data: { disconnectedAt: new Date() } })
+          .catch(e => this.logger.warn(`Erro ao fechar sessão: ${e.message}`))
+      );
+    }
 
     this.server.to(room).emit(`${room}`, {
       type: 'user_left',
@@ -94,7 +102,7 @@ export class EventsGateway implements OnGatewayInit {
   }
 
   getConnectedSocketCount(): number {
-    return this.socketToRoom.size;
+    return new Set(this.socketToUsername.values()).size;
   }
 
   emitRoom(roomName: string, data: any) {
@@ -124,10 +132,16 @@ export class EventsGateway implements OnGatewayInit {
     this.logger.log(`Removendo ${staleIds.length} socket(s) obsoleto(s): ${staleIds}`);
 
     // Log assíncrono — fechar intervalos das sessões fantasma
-    setImmediate(() =>
-      this.prisma.socket.updateMany({ where: { socketId: { in: staleIds }, disconnectedAt: null }, data: { disconnectedAt: new Date() } })
-        .catch(e => this.logger.warn(`Erro ao fechar sessões obsoletas: ${e.message}`))
-    );
+    const staleUsernames = staleIds
+      .map(id => this.socketToUsername.get(id))
+      .filter((u): u is string => !!u);
+
+    if (staleUsernames.length > 0) {
+      setImmediate(() =>
+        this.prisma.socket.updateMany({ where: { socketId: { in: staleUsernames }, disconnectedAt: null }, data: { disconnectedAt: new Date() } })
+          .catch(e => this.logger.warn(`Erro ao fechar sessões obsoletas: ${e.message}`))
+      );
+    }
 
     const affectedRooms = new Set<string>();
     for (const staleId of staleIds) {
@@ -151,11 +165,22 @@ export class EventsGateway implements OnGatewayInit {
   }
 
   private removeSocketFromRoom(socketId: string, room: string) {
+    const username = this.socketToUsername.get(socketId);
     this.socketToRoom.delete(socketId);
-    const roomSockets = this.activeRooms.get(room);
-    if (roomSockets) {
-      roomSockets.delete(socketId);
-      if (roomSockets.size === 0) this.activeRooms.delete(room);
+    this.socketToUsername.delete(socketId);
+
+    if (username) {
+      // Só remove o username da sala se nenhuma outra aba/conexão do mesmo usuário ainda estiver nela
+      const hasOtherTab = [...this.socketToRoom.entries()]
+        .some(([sid, r]) => r === room && this.socketToUsername.get(sid) === username);
+
+      if (!hasOtherTab) {
+        const roomSockets = this.activeRooms.get(room);
+        if (roomSockets) {
+          roomSockets.delete(username);
+          if (roomSockets.size === 0) this.activeRooms.delete(room);
+        }
+      }
     }
   }
 }

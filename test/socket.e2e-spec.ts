@@ -207,8 +207,10 @@ describe('WebSocket Integration (e2e)', () => {
             // Injetar manualmente um socket fantasma nos Maps
             const activeRooms: Map<string, Set<string>> = (eventsGateway as any).activeRooms;
             const socketToRoom: Map<string, string> = (eventsGateway as any).socketToRoom;
-            activeRooms.set(deadRoom, new Set([deadSocketId]));
+            const socketToUsername: Map<string, string> = (eventsGateway as any).socketToUsername;
+            activeRooms.set(deadRoom, new Set(['dead-user']));
             socketToRoom.set(deadSocketId, deadRoom);
+            socketToUsername.set(deadSocketId, 'dead-user');
 
             // Antes do cron: fantasma + vivo presentes
             expect(socketToRoom.has(deadSocketId)).toBe(true);
@@ -254,10 +256,10 @@ describe('WebSocket Integration (e2e)', () => {
                 socket.on(roomName, (data) => { if (data.type === 'user_joined') resolve(); });
             });
 
-            // Aguarda o setImmediate do create completar
+            // Aguarda o setImmediate do upsert completar
             await new Promise(r => setTimeout(r, 100));
 
-            const record = await prisma.socket.findFirst({ where: { socketId: socket.id } });
+            const record = await prisma.socket.findFirst({ where: { socketId: 'log-user' } });
             expect(record).not.toBeNull();
             expect(record!.tenantId).toBe(tenant.id);
             expect(record!.disconnectedAt).toBeNull();
@@ -267,7 +269,7 @@ describe('WebSocket Integration (e2e)', () => {
             // Aguarda o setImmediate do updateMany completar
             await new Promise(r => setTimeout(r, 100));
 
-            const updated = await prisma.socket.findFirst({ where: { socketId: socket.id } });
+            const updated = await prisma.socket.findFirst({ where: { socketId: 'log-user' } });
             expect(updated!.disconnectedAt).not.toBeNull();
         });
     });
