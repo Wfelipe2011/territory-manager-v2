@@ -50,10 +50,11 @@ const winstonTransports: winston.transport[] = [
       winston.format.ms(),
       winston.format.colorize({ all: true }),
       winston.format.printf(
-        ({ timestamp, level, message, context, ms, sessionId, method, url }) => {
+        ({ timestamp, level, message, context, ms, sessionId, clientSessionId, method, url }) => {
           const session = sessionId ? `[${sessionId}]` : '';
+          const clientSession = clientSessionId ? `[${clientSessionId}]` : '';
           const reqInfo = method && url ? ` ${method} ${url}` : '';
-          return `[${timestamp}] ${session} ${level} [${context || 'App'}] ${message}${reqInfo} ${ms}`;
+          return `[${timestamp}] ${session}${clientSession} ${level} [${context || 'App'}] ${message}${reqInfo} ${ms}`;
         },
       ),
     ),
@@ -93,6 +94,7 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
             info.sessionId = context.sessionId;
             info.method = context.method;
             info.url = context.url;
+            info.clientSessionId = context.clientSessionId;
           }
           return info;
         })(),

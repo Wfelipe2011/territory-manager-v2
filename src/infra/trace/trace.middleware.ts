@@ -24,6 +24,8 @@ export class TraceMiddleware implements NestMiddleware {
             maxAge: 1000 * 60 * 60 * 24, // 24 horas
         });
 
+        const clientSessionId = req.headers['session-id'] as string | undefined;
+
         // Cria um contexto isolado para esta requisição
         this.traceService.run(sessionId, () => {
 
@@ -32,6 +34,7 @@ export class TraceMiddleware implements NestMiddleware {
                 sessionId,
                 method: req.method,
                 url: req.url,
+                clientSessionId,
             });
 
             // Continua a execução da requisição dentro do contexto

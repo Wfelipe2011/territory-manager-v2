@@ -5,6 +5,7 @@ export interface TraceContext {
     sessionId: string;
     method?: string;
     url?: string;
+    clientSessionId?: string;
 }
 
 @Injectable()
@@ -51,6 +52,7 @@ export class TraceService {
             sessionId: store.get('sessionId'),
             method: store.get('method'),
             url: store.get('url'),
+            clientSessionId: store.get('clientSessionId'),
         };
     }
 
