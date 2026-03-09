@@ -198,12 +198,11 @@ describe('Block Flow (e2e)', () => {
             .set('Authorization', `Bearer ${token}`)
             .send({
                 name: 'Block 3',
-                addresses: [{ street: 'Av. Paulista' }] // Should be similar enough
+                addresses: [{ street: 'Av. Paulista' }] // Not similar enough (threshold > 0.9)
             });
 
-        // Depending on similarity threshold, it might or might not find it.
-        // In the code it is > 0.5. "Avenida Paulista" vs "Av. Paulista" should be > 0.5.
-        expect(response3.body.addresses[0].id).toBe(addressId);
+        // "Avenida Paulista" vs "Av. Paulista" has similarity < 0.9, so a new address is created.
+        expect(response3.body.addresses[0].id).not.toBe(addressId);
     });
 
     it('should return 404 when deleting non-existent block', async () => {

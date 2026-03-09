@@ -111,38 +111,36 @@ export class AddressBlockService {
         const upsertedAddresses = await Promise.all(
             addresses.map(async (address) => {
                 if (address.id) {
-                    this.logger.log(`Atualizando endereço com ID: ${address.id}`);
-                    // Se o ID já foi informado, apenas atualiza o endereço
-                    const updatedAddress = await prisma.address.update({
+                    this.logger.log(`Retornando endereço com ID: ${address.id}`);
+                    // Se o ID já foi informado, apenas retorna o endereço sem atualizar
+                    const existingAddress = await prisma.address.findUnique({
                         where: { id: address.id },
-                        data: { name: address.street, zipCode: address.zipCode, tenantId },
                     });
-                    this.logger.log(`Endereço atualizado: ${JSON.stringify(updatedAddress)}`);
-                    return updatedAddress;
+                    this.logger.log(`Endereço encontrado: ${JSON.stringify(existingAddress)}`);
+                    return existingAddress;
                 }
 
                 this.logger.log(`Buscando endereço similar para: ${address.street}`);
-                // Se não houver ID, busca um endereço similar com mais de 60% de similaridade
+                // Se não houver ID, busca um endereço similar com mais de 90% de similaridade
                 const similarAddress = await prisma.$queryRaw<
                     { id: number; name: string }[]
                 >`
                     SELECT id, name
                     FROM "address"
-                    WHERE similarity(name, ${address.street}) > 0.6
+                    WHERE similarity(name, ${address.street}) > 0.9
                       AND tenant_id = ${tenantId}
                     ORDER BY similarity(name, ${address.street}) DESC
                     LIMIT 1
                 `;
                 this.logger.debug(`Endereços similares encontrados: ${JSON.stringify(similarAddress)}`);
                 if (similarAddress.length > 0) {
-                    this.logger.debug(`Endereço similar encontrado: ${JSON.stringify(similarAddress[0])}`);
-                    // Atualiza o endereço encontrado com nome similar
-                    const updatedSimilarAddress = await prisma.address.update({
+                    this.logger.debug(`Endereço similar encontrado, reutilizando sem atualizar: ${JSON.stringify(similarAddress[0])}`);
+                    // Reutiliza o endereço similar sem modificá-lo
+                    const foundAddress = await prisma.address.findUnique({
                         where: { id: similarAddress[0].id },
-                        data: { name: address.street, zipCode: address.zipCode, tenantId },
                     });
-                    this.logger.debug(`Endereço similar atualizado: ${JSON.stringify(updatedSimilarAddress)}`);
-                    return updatedSimilarAddress;
+                    this.logger.debug(`Endereço similar reutilizado: ${JSON.stringify(foundAddress)}`);
+                    return foundAddress;
                 } else {
                     this.logger.log(`Criando novo endereço para: ${address.street}`);
                     // Cria um novo endereço
@@ -155,8 +153,13 @@ export class AddressBlockService {
             })
         );
 
-        this.logger.log(`Endereços processados: ${JSON.stringify(upsertedAddresses)}`);
-        return upsertedAddresses;
+        const resolvedAddresses = upsertedAddresses.filter((a) => {
+            if (!a) this.logger.warn('Endereço não encontrado, ignorando.');
+            return a !== null;
+        }) as NonNullable<(typeof upsertedAddresses)[number]>[];
+
+        this.logger.log(`Endereços processados: ${JSON.stringify(resolvedAddresses)}`);
+        return resolvedAddresses;
     }
 
     // Método para deletar casas e rounds associados
