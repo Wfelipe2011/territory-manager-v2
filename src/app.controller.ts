@@ -1,5 +1,5 @@
 import { PrismaService } from './infra/prisma/prisma.service';
-import { Controller, ForbiddenException, Get, Logger, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Controller, ForbiddenException, Get, Logger, Param, Post, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from './decorators/public.decorator';
 import { VERSION } from './enum/version.enum';
@@ -25,6 +25,31 @@ export class AppController {
   @Get('/health-check')
   async healthCheck() {
     return this.healthService.getHealthData();
+  }
+
+  @Public()
+  @Get('/sessions')
+  async getSessions(
+    @Query('period') period?: string,
+    @Query('groupBy') groupBy?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    const VALID_GROUPBY = ['10min', '30min', '1h', '1d'];
+    const VALID_PERIOD = ['1d', '3d', '7d'];
+    if (groupBy && !VALID_GROUPBY.includes(groupBy)) {
+      throw new BadRequestException(`groupBy inválido. Use: ${VALID_GROUPBY.join(', ')}`);
+    }
+    if (period && !VALID_PERIOD.includes(period) && !from) {
+      throw new BadRequestException(`period inválido. Use: ${VALID_PERIOD.join(', ')}`);
+    }
+    if (from && isNaN(new Date(from).getTime())) {
+      throw new BadRequestException('from inválido. Use formato ISO 8601');
+    }
+    if (to && isNaN(new Date(to).getTime())) {
+      throw new BadRequestException('to inválido. Use formato ISO 8601');
+    }
+    return this.healthService.getSessionsData({ period, groupBy, from, to });
   }
 
   @Public()

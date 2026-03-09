@@ -187,14 +187,103 @@
             </div>
         </div>
 
-        <!-- Sessões WebSocket — Últimas 24h -->
+        <!-- Sessões WebSocket -->
         <div class="card mb-8">
             <div class="flex justify-between items-center mb-4">
-                <p class="text-gray-400 text-sm uppercase font-semibold">Sessões WebSocket — Últimas 24h (faixas de 30min)</p>
+                <p class="text-gray-400 text-sm uppercase font-semibold">Sessões WebSocket</p>
                 <i class="fas fa-network-wired text-green-500 opacity-50"></i>
             </div>
+
+            <!-- Filter Bar -->
+            <div class="space-y-3 mb-4">
+                <!-- Quick Filters Row -->
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <!-- Period chips -->
+                    <div class="flex items-center gap-1">
+                        <span class="text-xs text-gray-500 mr-1 whitespace-nowrap">Período:</span>
+                        <button data-period="1d" onclick="setPeriod('1d')" class="px-3 py-1 rounded-md text-xs font-semibold bg-green-700 text-white border border-green-600 transition-colors">1d</button>
+                        <button data-period="3d" onclick="setPeriod('3d')" class="px-3 py-1 rounded-md text-xs font-semibold bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-500 hover:text-white transition-colors">3d</button>
+                        <button data-period="7d" onclick="setPeriod('7d')" class="px-3 py-1 rounded-md text-xs font-semibold bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-500 hover:text-white transition-colors">7d</button>
+                        <button data-period="custom" onclick="setPeriod('custom')" class="px-3 py-1 rounded-md text-xs font-semibold bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-500 hover:text-white transition-colors">Personalizado</button>
+                    </div>
+                    <!-- Divider -->
+                    <div class="hidden md:block w-px h-5 bg-gray-700"></div>
+                    <!-- GroupBy chips -->
+                    <div class="flex items-center gap-1">
+                        <span class="text-xs text-gray-500 mr-1 whitespace-nowrap">Agrupar:</span>
+                        <button data-groupby="10min" onclick="setGroupBy('10min')" class="px-3 py-1 rounded-md text-xs font-semibold bg-green-700 text-white border border-green-600 transition-colors">10min</button>
+                        <button data-groupby="30min" onclick="setGroupBy('30min')" class="px-3 py-1 rounded-md text-xs font-semibold bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-500 hover:text-white transition-colors">30min</button>
+                        <button data-groupby="1h" onclick="setGroupBy('1h')" class="px-3 py-1 rounded-md text-xs font-semibold bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-500 hover:text-white transition-colors">1h</button>
+                        <button data-groupby="1d" onclick="setGroupBy('1d')" class="px-3 py-1 rounded-md text-xs font-semibold bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-500 hover:text-white transition-colors">1d</button>
+                    </div>
+                    <!-- Divider -->
+                    <div class="hidden md:block w-px h-5 bg-gray-700"></div>
+                    <!-- Only Active toggle -->
+                    <label class="flex items-center gap-2 cursor-pointer text-xs text-gray-400 hover:text-white transition-colors">
+                        <input type="checkbox" id="toggle-only-active" onchange="toggleOnlyActive(this.checked)" class="rounded bg-gray-700 border-gray-600 text-green-600 focus:ring-green-600">
+                        <span>Apenas com atividade</span>
+                    </label>
+                    <!-- Advanced toggle -->
+                    <button onclick="toggleAdvanced()" class="md:ml-auto flex items-center gap-2 text-xs text-gray-400 hover:text-white px-3 py-1.5 rounded-lg hover:bg-gray-700 transition-colors">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>Filtros avançados</span>
+                        <i class="fas fa-chevron-down text-[10px] transition-transform duration-200" id="advanced-arrow"></i>
+                    </button>
+                </div>
+
+                <!-- Date range (hidden by default) -->
+                <div id="date-range-section" class="hidden flex flex-wrap items-center gap-2 border border-gray-700 rounded-lg px-3 py-2 bg-gray-900">
+                    <span class="text-xs text-gray-500">De:</span>
+                    <input type="datetime-local" id="input-from" class="bg-gray-800 text-white text-xs rounded px-2 py-1 border border-gray-600 focus:outline-none focus:border-green-500">
+                    <span class="text-xs text-gray-500">Até:</span>
+                    <input type="datetime-local" id="input-to" class="bg-gray-800 text-white text-xs rounded px-2 py-1 border border-gray-600 focus:outline-none focus:border-green-500">
+                    <button onclick="applyDateRange()" class="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-1 rounded transition-colors">Aplicar</button>
+                    <button onclick="clearDateRange()" class="text-gray-400 hover:text-white text-xs px-2 py-1 transition-colors">Cancelar</button>
+                </div>
+
+                <!-- Advanced Panel (hidden by default) -->
+                <div id="advanced-panel" class="hidden border border-gray-700 rounded-lg p-4 bg-gray-900">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="text-xs text-gray-500 block mb-1.5">Mín. sessões ativas</label>
+                            <input type="number" id="min-active" min="0" value="0" onchange="setMinActive(this.value)"
+                                class="w-full bg-gray-800 text-white text-sm rounded px-2 py-1.5 border border-gray-600 focus:outline-none focus:border-green-500">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500 block mb-1.5">Mín. sessões iniciadas</label>
+                            <input type="number" id="min-started" min="0" value="0" onchange="setMinStarted(this.value)"
+                                class="w-full bg-gray-800 text-white text-sm rounded px-2 py-1.5 border border-gray-600 focus:outline-none focus:border-green-500">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500 block mb-1.5">Ordenar por</label>
+                            <select id="sort-by" onchange="setSortBy(this.value)"
+                                class="w-full bg-gray-800 text-white text-sm rounded px-2 py-1.5 border border-gray-600 focus:outline-none focus:border-green-500">
+                                <option value="slot">Horário</option>
+                                <option value="active">Mais ativas</option>
+                                <option value="started">Mais iniciadas</option>
+                            </select>
+                        </div>
+                        <div id="tenant-filter-wrap" class="hidden">
+                            <label class="text-xs text-gray-500 block mb-1.5">Congregação</label>
+                            <select id="tenant-select" onchange="setTenant(this.value)"
+                                class="w-full bg-gray-800 text-white text-sm rounded px-2 py-1.5 border border-gray-600 focus:outline-none focus:border-green-500">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex justify-end mt-3 pt-3 border-t border-gray-700">
+                        <button onclick="clearFilters()" class="text-xs text-gray-400 hover:text-white px-3 py-1.5 rounded hover:bg-gray-700 transition-colors flex items-center gap-1.5">
+                            <i class="fas fa-times"></i> Limpar filtros
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Active Filter Chips -->
+                <div id="active-chips" class="flex flex-wrap gap-2"></div>
+            </div>
+
             <!-- Abas -->
-            <div class="flex gap-2 mb-4">
+            <div class="flex gap-2 mb-4 border-t border-gray-700 pt-4">
                 <button id="tab-geral" onclick="switchTab('geral')"
                     class="px-4 py-1.5 rounded-lg text-sm font-semibold bg-green-600 text-white transition-colors">
                     Geral
@@ -204,6 +293,7 @@
                     Por Congregação
                 </button>
             </div>
+
             <!-- Tabela Geral -->
             <div id="sessions-geral">
                 <table class="w-full text-sm">
@@ -260,18 +350,209 @@
     </main>
 
     <script>
+        // ===== STATE =====
+        let allSessionsGeneral = {{{sessionsGeneralJson}}};
+        let allSessionsByTenant = {{{sessionsByTenantJson}}};
+        let filters = {
+            period: '1d', groupBy: '10min', from: '', to: '',
+            onlyActive: false, minActive: 0, minStarted: 0, sortBy: 'slot', tenant: '',
+        };
+        let isAdvancedOpen = false;
+        let currentTab = 'geral';
+
+        // ===== CHIP CSS =====
+        const CHIP_ACTIVE   = 'px-3 py-1 rounded-md text-xs font-semibold bg-green-700 text-white border border-green-600 transition-colors';
+        const CHIP_INACTIVE = 'px-3 py-1 rounded-md text-xs font-semibold bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-500 hover:text-white transition-colors';
+        const CHIP_ACTIVE_FILTER = 'inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-gray-700 text-gray-200 border border-gray-600';
+
+        // ===== TAB =====
         function switchTab(tab) {
+            currentTab = tab;
             const isGeral = tab === 'geral';
             document.getElementById('sessions-geral').classList.toggle('hidden', !isGeral);
             document.getElementById('sessions-tenant').classList.toggle('hidden', isGeral);
-            document.getElementById('tab-geral').className = isGeral
-                ? 'px-4 py-1.5 rounded-lg text-sm font-semibold bg-green-600 text-white transition-colors'
-                : 'px-4 py-1.5 rounded-lg text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors';
-            document.getElementById('tab-tenant').className = isGeral
-                ? 'px-4 py-1.5 rounded-lg text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors'
-                : 'px-4 py-1.5 rounded-lg text-sm font-semibold bg-green-600 text-white transition-colors';
+            document.getElementById('tab-geral').className  = isGeral ? 'px-4 py-1.5 rounded-lg text-sm font-semibold bg-green-600 text-white transition-colors' : 'px-4 py-1.5 rounded-lg text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors';
+            document.getElementById('tab-tenant').className = isGeral ? 'px-4 py-1.5 rounded-lg text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors' : 'px-4 py-1.5 rounded-lg text-sm font-semibold bg-green-600 text-white transition-colors';
+            document.getElementById('tenant-filter-wrap').classList.toggle('hidden', isGeral);
+            applyFilters();
         }
 
+        // ===== PERIOD =====
+        function setPeriod(p) {
+            if (p === 'custom') {
+                document.getElementById('date-range-section').classList.remove('hidden');
+                document.querySelectorAll('[data-period]').forEach(btn => {
+                    btn.className = btn.dataset.period === 'custom' ? CHIP_ACTIVE : CHIP_INACTIVE;
+                });
+                return;
+            }
+            filters.period = p;
+            filters.from = '';
+            filters.to = '';
+            document.getElementById('date-range-section').classList.add('hidden');
+            syncPeriodChips();
+            fetchSessions();
+        }
+
+        function syncPeriodChips() {
+            document.querySelectorAll('[data-period]').forEach(btn => {
+                const isActive = btn.dataset.period !== 'custom' && btn.dataset.period === filters.period && !filters.from;
+                btn.className = isActive ? CHIP_ACTIVE : CHIP_INACTIVE;
+            });
+        }
+
+        // ===== GROUPBY =====
+        function setGroupBy(g) {
+            filters.groupBy = g;
+            document.querySelectorAll('[data-groupby]').forEach(btn => {
+                btn.className = btn.dataset.groupby === g ? CHIP_ACTIVE : CHIP_INACTIVE;
+            });
+            fetchSessions();
+        }
+
+        // ===== DATE RANGE =====
+        function applyDateRange() {
+            const from = document.getElementById('input-from').value;
+            const to   = document.getElementById('input-to').value;
+            if (!from || !to) { alert('Preencha as datas de início e fim.'); return; }
+            if (new Date(from) >= new Date(to)) { alert('A data de início deve ser anterior à data de fim.'); return; }
+            filters.from   = new Date(from).toISOString();
+            filters.to     = new Date(to).toISOString();
+            filters.period = '';
+            syncPeriodChips();
+            fetchSessions();
+        }
+
+        function clearDateRange() {
+            filters.from = '';
+            filters.to   = '';
+            filters.period = '1d';
+            document.getElementById('date-range-section').classList.add('hidden');
+            document.getElementById('input-from').value = '';
+            document.getElementById('input-to').value   = '';
+            syncPeriodChips();
+            fetchSessions();
+        }
+
+        // ===== ADVANCED PANEL =====
+        function toggleAdvanced() {
+            isAdvancedOpen = !isAdvancedOpen;
+            document.getElementById('advanced-panel').classList.toggle('hidden', !isAdvancedOpen);
+            document.getElementById('advanced-arrow').style.transform = isAdvancedOpen ? 'rotate(180deg)' : '';
+        }
+
+        // ===== QUICK TOGGLES =====
+        function toggleOnlyActive(v) { filters.onlyActive = v; applyFilters(); }
+        function setMinActive(v)   { filters.minActive  = Math.max(0, parseInt(v) || 0); applyFilters(); }
+        function setMinStarted(v)  { filters.minStarted = Math.max(0, parseInt(v) || 0); applyFilters(); }
+        function setSortBy(v)      { filters.sortBy = v; applyFilters(); }
+        function setTenant(v)      { filters.tenant = v; applyFilters(); }
+
+        // ===== CLEAR ALL =====
+        function clearFilters() {
+            filters = { period: '1d', groupBy: '10min', from: '', to: '', onlyActive: false, minActive: 0, minStarted: 0, sortBy: 'slot', tenant: '' };
+            document.getElementById('date-range-section').classList.add('hidden');
+            document.getElementById('input-from').value = '';
+            document.getElementById('input-to').value   = '';
+            document.getElementById('toggle-only-active').checked = false;
+            document.getElementById('min-active').value  = 0;
+            document.getElementById('min-started').value = 0;
+            document.getElementById('sort-by').value     = 'slot';
+            document.getElementById('tenant-select').value = '';
+            syncPeriodChips();
+            document.querySelectorAll('[data-groupby]').forEach(btn => {
+                btn.className = btn.dataset.groupby === '10min' ? CHIP_ACTIVE : CHIP_INACTIVE;
+            });
+            fetchSessions();
+        }
+
+        // ===== REMOVE CHIP =====
+        function removeChip(key) {
+            const defaults = { period: '1d', groupBy: '10min', from: '', to: '', onlyActive: false, minActive: 0, minStarted: 0, sortBy: 'slot', tenant: '' };
+            if (key === 'daterange') { clearDateRange(); return; }
+            filters[key] = defaults[key];
+            if (key === 'onlyActive') document.getElementById('toggle-only-active').checked = false;
+            if (key === 'minActive')  document.getElementById('min-active').value  = 0;
+            if (key === 'minStarted') document.getElementById('min-started').value = 0;
+            if (key === 'sortBy')     document.getElementById('sort-by').value     = 'slot';
+            if (key === 'tenant')     document.getElementById('tenant-select').value = '';
+            applyFilters();
+        }
+
+        // ===== FETCH FROM API =====
+        async function fetchSessions() {
+            const params = new URLSearchParams({ groupBy: filters.groupBy });
+            if (filters.from && filters.to) {
+                params.set('from', filters.from);
+                params.set('to',   filters.to);
+            } else if (filters.period) {
+                params.set('period', filters.period);
+            }
+            try {
+                const res = await fetch(`/v1/sessions?${params}`);
+                if (!res.ok) throw new Error('Falha ao buscar sessões');
+                const data = await res.json();
+                allSessionsGeneral  = data.sessionsGeneral;
+                allSessionsByTenant = data.sessionsByTenant;
+                populateTenantSelect();
+                applyFilters();
+            } catch (e) {
+                console.error('Erro ao buscar sessões:', e);
+            }
+        }
+
+        // ===== TENANT SELECT =====
+        function populateTenantSelect() {
+            const unique = [...new Set(allSessionsByTenant.map(s => s.tenant_name))].sort();
+            const select  = document.getElementById('tenant-select');
+            const current = filters.tenant;
+            select.innerHTML = '<option value="">Todas</option>' +
+                unique.map(t => `<option value="${t.replace(/"/g, '&quot;')}"${t === current ? ' selected' : ''}>${t}</option>`).join('');
+        }
+
+        // ===== APPLY CLIENT-SIDE FILTERS =====
+        function applyFilters() {
+            const { onlyActive, minActive, minStarted, sortBy, tenant } = filters;
+
+            const filter = s => {
+                if (onlyActive && s.active === 0) return false;
+                if (s.active   < minActive)        return false;
+                if (s.started  < minStarted)       return false;
+                return true;
+            };
+            const sort = arr => {
+                if (sortBy === 'active')  arr.sort((a, b) => b.active  - a.active);
+                if (sortBy === 'started') arr.sort((a, b) => b.started - a.started);
+                return arr;
+            };
+
+            const general  = sort(allSessionsGeneral.filter(filter));
+            const byTenant = sort(allSessionsByTenant.filter(s => filter(s) && (!tenant || s.tenant_name === tenant)));
+
+            document.getElementById('sessions-geral-body').innerHTML  = renderSessionRows(general, 3);
+            document.getElementById('sessions-tenant-body').innerHTML = renderSessionRows(byTenant, 4);
+            renderActiveChips();
+        }
+
+        // ===== RENDER ACTIVE CHIPS =====
+        function renderActiveChips() {
+            const chips = [];
+            if (filters.from && filters.to) {
+                const fmt = iso => new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+                chips.push({ label: `${fmt(filters.from)} → ${fmt(filters.to)}`, key: 'daterange' });
+            }
+            if (filters.onlyActive)      chips.push({ label: 'Apenas com atividade', key: 'onlyActive' });
+            if (filters.minActive > 0)   chips.push({ label: `Mín. ativas ≥ ${filters.minActive}`, key: 'minActive' });
+            if (filters.minStarted > 0)  chips.push({ label: `Mín. iniciadas ≥ ${filters.minStarted}`, key: 'minStarted' });
+            if (filters.sortBy !== 'slot') chips.push({ label: `Ordenar: ${filters.sortBy === 'active' ? 'Mais ativas' : 'Mais iniciadas'}`, key: 'sortBy' });
+            if (filters.tenant)          chips.push({ label: `Congregação: ${filters.tenant}`, key: 'tenant' });
+
+            document.getElementById('active-chips').innerHTML = chips.map(c =>
+                `<span class="${CHIP_ACTIVE_FILTER}">${c.label}<button onclick="removeChip('${c.key}')" class="ml-1 hover:text-green-400 font-bold">×</button></span>`
+            ).join('');
+        }
+
+        // ===== RENDER TABLE ROWS =====
         function renderSessionRows(sessions, cols) {
             if (!sessions || sessions.length === 0) {
                 return `<tr><td colspan="${cols}" class="py-4 text-center text-gray-500">Nenhuma sessão registrada</td></tr>`;
@@ -281,65 +562,56 @@
                 return `<tr class="table-row"><td class="py-1.5 text-gray-300">${s.slot}</td><td class="py-1.5 text-gray-300">${s.tenant_name}</td><td class="py-1.5 text-right text-gray-400">${s.started}</td><td class="py-1.5 text-right font-bold text-white">${s.active}</td></tr>`;
             }).join('');
         }
+
+        // ===== REFRESH ALL =====
         async function refreshData() {
-            const btn = document.querySelector('button');
+            const btn  = document.querySelector('button[onclick="refreshData()"]') || document.querySelector('button');
             const icon = document.getElementById('refresh-icon');
-            
-            // Start Loading
             btn.disabled = true;
-            icon.classList.add('animate-spin');
-            
+            if (icon) icon.classList.add('animate-spin');
             try {
-                const response = await fetch('/v1/health-check');
-                const data = await response.json();
-                
-                // Update text elements
-                document.getElementById('last-update-time').innerText = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-                document.getElementById('server-message').innerText = data.message;
-                document.getElementById('signatures-count').innerText = data.signatures;
-                document.getElementById('sockets-count').innerText = data.sockets;
-                
-                document.getElementById('db-active').innerText = data.database_info.active;
-                document.getElementById('db-idle').innerText = data.database_info.idle;
-                document.getElementById('db-max').innerText = data.database_info.max_connections;
-                
+                const [healthRes] = await Promise.all([fetch('/v1/health-check'), fetchSessions()]);
+                const data = await healthRes.json();
+
+                if (document.getElementById('last-update-time')) {
+                    document.getElementById('last-update-time').innerText = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+                }
+                document.getElementById('server-message').innerText    = data.message;
+                document.getElementById('signatures-count').innerText  = data.signatures;
+                document.getElementById('sockets-count').innerText     = data.sockets;
+                document.getElementById('db-active').innerText         = data.database_info.active;
+                document.getElementById('db-idle').innerText           = data.database_info.idle;
+                document.getElementById('db-max').innerText            = data.database_info.max_connections;
                 const dbPercent = ((data.database_info.active / data.database_info.max_connections) * 100).toFixed(1);
-                document.getElementById('db-percent-text').innerText = dbPercent + '%';
-                document.getElementById('db-progress').style.width = dbPercent + '%';
-                
-                document.getElementById('mem-percent-text').innerText = data.system_info.memory_usage_percent + '%';
-                document.getElementById('mem-progress').style.width = data.system_info.memory_usage_percent + '%';
-                document.getElementById('mem-total').innerText = data.system_info.total_memory_mb + ' MB';
-                document.getElementById('mem-used').innerText = data.system_info.used_memory_mb + ' MB';
-                document.getElementById('mem-free').innerText = data.system_info.free_memory_mb + ' MB';
-                
-                document.getElementById('cpu-percent').innerText = data.system_info.cpu_usage_percent + '%';
-                document.getElementById('cpu-progress').style.width = data.system_info.cpu_usage_percent + '%';
-                
-                // Format Uptime (Simple client side version)
+                document.getElementById('db-percent-text').innerText   = dbPercent + '%';
+                document.getElementById('db-progress').style.width     = dbPercent + '%';
+                document.getElementById('mem-percent-text').innerText  = data.system_info.memory_usage_percent + '%';
+                document.getElementById('mem-progress').style.width    = data.system_info.memory_usage_percent + '%';
+                document.getElementById('mem-total').innerText         = data.system_info.total_memory_mb + ' MB';
+                document.getElementById('mem-used').innerText          = data.system_info.used_memory_mb  + ' MB';
+                document.getElementById('mem-free').innerText          = data.system_info.free_memory_mb  + ' MB';
+                document.getElementById('cpu-percent').innerText       = data.system_info.cpu_usage_percent + '%';
+                document.getElementById('cpu-progress').style.width   = data.system_info.cpu_usage_percent + '%';
                 const uptime = data.system_info.uptime_seconds;
-                const d = Math.floor(uptime / (3600*24));
-                const h = Math.floor(uptime % (3600*24) / 3600);
-                const m = Math.floor(uptime % 3600 / 60);
-                const s = Math.floor(uptime % 60);
-                document.getElementById('uptime-text').innerText = `${d}d ${h}h ${m}m ${s}s`;
-                
-                document.getElementById('load-1').innerText = data.system_info.load_average['1_min'];
-                document.getElementById('load-5').innerText = data.system_info.load_average['5_min'];
+                const ud = Math.floor(uptime / (3600 * 24));
+                const uh = Math.floor(uptime % (3600 * 24) / 3600);
+                const um = Math.floor(uptime % 3600 / 60);
+                const us = Math.floor(uptime % 60);
+                document.getElementById('uptime-text').innerText       = `${ud}d ${uh}h ${um}m ${us}s`;
+                document.getElementById('load-1').innerText  = data.system_info.load_average['1_min'];
+                document.getElementById('load-5').innerText  = data.system_info.load_average['5_min'];
                 document.getElementById('load-15').innerText = data.system_info.load_average['15_min'];
-
-                document.getElementById('sessions-geral-body').innerHTML = renderSessionRows(data.sessionsGeneral, 3);
-                document.getElementById('sessions-tenant-body').innerHTML = renderSessionRows(data.sessionsByTenant, 4);
-
             } catch (error) {
                 console.error('Falha ao atualizar dados:', error);
                 alert('Ocorreu um erro ao atualizar os dados de saúde.');
             } finally {
-                // End Loading
                 btn.disabled = false;
-                icon.classList.remove('animate-spin');
+                if (icon) icon.classList.remove('animate-spin');
             }
         }
+
+        // ===== INIT =====
+        populateTenantSelect();
     </script>
 </body>
 </html>

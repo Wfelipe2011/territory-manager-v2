@@ -3,6 +3,7 @@ import { PrismaService } from '../../infra/prisma/prisma.service';
 import { EventsGateway } from '../gateway/event.gateway';
 import * as os from 'os';
 import si from 'systeminformation';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class HealthService {
@@ -146,6 +147,122 @@ export class HealthService {
             started: r.started,
             active: r.active,
         }));
+    }
+
+    async getSessionsData(params: {
+        period?: string;
+        groupBy?: string;
+        from?: string;
+        to?: string;
+    }): Promise<{ sessionsGeneral: { slot: string; started: number; active: number }[]; sessionsByTenant: { slot: string; tenant_name: string; started: number; active: number }[] }> {
+        const validGroupBy = ['10min', '30min', '1h', '1d'];
+        const validPeriod = ['1d', '3d', '7d'];
+        const groupBy: string = (params.groupBy && validGroupBy.includes(params.groupBy)) ? params.groupBy : '10min';
+        const period: string = (params.period && validPeriod.includes(params.period)) ? params.period : '1d';
+
+        const SLOT_EXPRS: Record<string, { noAlias: string; withAlias: string; interval: string }> = {
+            '10min': {
+                noAlias: `date_trunc('hour', created_at) + (FLOOR(EXTRACT(MINUTE FROM created_at) / 10) * INTERVAL '10 min')`,
+                withAlias: `date_trunc('hour', s.created_at) + (FLOOR(EXTRACT(MINUTE FROM s.created_at) / 10) * INTERVAL '10 min')`,
+                interval: `INTERVAL '10 min'`,
+            },
+            '30min': {
+                noAlias: `date_trunc('hour', created_at) + (FLOOR(EXTRACT(MINUTE FROM created_at) / 30) * INTERVAL '30 min')`,
+                withAlias: `date_trunc('hour', s.created_at) + (FLOOR(EXTRACT(MINUTE FROM s.created_at) / 30) * INTERVAL '30 min')`,
+                interval: `INTERVAL '30 min'`,
+            },
+            '1h': {
+                noAlias: `date_trunc('hour', created_at)`,
+                withAlias: `date_trunc('hour', s.created_at)`,
+                interval: `INTERVAL '1 hour'`,
+            },
+            '1d': {
+                noAlias: `date_trunc('day', created_at)`,
+                withAlias: `date_trunc('day', s.created_at)`,
+                interval: `INTERVAL '1 day'`,
+            },
+        };
+
+        const PERIOD_DAYS: Record<string, number> = { '1d': 1, '3d': 3, '7d': 7 };
+        const expr = SLOT_EXPRS[groupBy];
+        const slotNoAlias = Prisma.raw(expr.noAlias);
+        const slotWithAlias = Prisma.raw(expr.withAlias);
+        const intervalRaw = Prisma.raw(expr.interval);
+
+        let whereCTE: Prisma.Sql;
+        let whereCTE_s: Prisma.Sql;
+        let whereJoin: Prisma.Sql;
+
+        if (params.from && params.to) {
+            const fromDate = new Date(params.from);
+            const toDate = new Date(params.to);
+            whereCTE = Prisma.sql`created_at BETWEEN ${fromDate} AND ${toDate}`;
+            whereCTE_s = Prisma.sql`s.created_at BETWEEN ${fromDate} AND ${toDate}`;
+            whereJoin = Prisma.sql`sk.created_at BETWEEN ${fromDate} AND ${toDate}`;
+        } else {
+            const days = PERIOD_DAYS[period];
+            const intervalDays = Prisma.raw(`INTERVAL '${days} days'`);
+            whereCTE = Prisma.sql`created_at >= NOW() - ${intervalDays}`;
+            whereCTE_s = Prisma.sql`s.created_at >= NOW() - ${intervalDays}`;
+            whereJoin = Prisma.sql`sk.created_at >= NOW() - ${intervalDays}`;
+        }
+
+        const [generalRows, tenantRows] = await Promise.all([
+            this.prismaService.$queryRaw<{ slot: Date; started: number; active: number }[]>(Prisma.sql`
+                WITH slots AS (
+                    SELECT DISTINCT ${slotNoAlias} AS slot
+                    FROM socket
+                    WHERE ${whereCTE}
+                )
+                SELECT
+                    sl.slot,
+                    COUNT(CASE WHEN sk.created_at >= sl.slot AND sk.created_at < sl.slot + ${intervalRaw} THEN 1 END)::int AS started,
+                    COUNT(CASE WHEN sk.created_at < sl.slot + ${intervalRaw} AND sk.disconnected_at IS NULL THEN 1 END)::int AS active
+                FROM slots sl
+                JOIN socket sk ON ${whereJoin}
+                GROUP BY sl.slot
+                HAVING COUNT(CASE WHEN sk.created_at >= sl.slot AND sk.created_at < sl.slot + ${intervalRaw} THEN 1 END) > 0
+                ORDER BY sl.slot DESC
+            `),
+            this.prismaService.$queryRaw<{ slot: Date; tenant_name: string; started: number; active: number }[]>(Prisma.sql`
+                WITH slots AS (
+                    SELECT DISTINCT
+                        ${slotWithAlias} AS slot,
+                        s.tenant_id
+                    FROM socket s
+                    WHERE ${whereCTE_s}
+                )
+                SELECT
+                    sl.slot,
+                    m.name AS tenant_name,
+                    COUNT(CASE WHEN sk.created_at >= sl.slot AND sk.created_at < sl.slot + ${intervalRaw} THEN 1 END)::int AS started,
+                    COUNT(CASE WHEN sk.created_at < sl.slot + ${intervalRaw} AND sk.disconnected_at IS NULL THEN 1 END)::int AS active
+                FROM slots sl
+                JOIN socket sk ON sk.tenant_id = sl.tenant_id AND ${whereJoin}
+                JOIN multi_tenancy m ON m.id = sl.tenant_id
+                GROUP BY sl.slot, m.name
+                HAVING COUNT(CASE WHEN sk.created_at >= sl.slot AND sk.created_at < sl.slot + ${intervalRaw} THEN 1 END) > 0
+                ORDER BY sl.slot DESC, m.name
+            `),
+        ]);
+
+        const slotFormat: Intl.DateTimeFormatOptions = groupBy === '1d'
+            ? { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric' }
+            : { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' };
+
+        return {
+            sessionsGeneral: generalRows.map(r => ({
+                slot: r.slot.toLocaleString('pt-BR', slotFormat),
+                started: r.started,
+                active: r.active,
+            })),
+            sessionsByTenant: tenantRows.map(r => ({
+                slot: r.slot.toLocaleString('pt-BR', slotFormat),
+                tenant_name: r.tenant_name,
+                started: r.started,
+                active: r.active,
+            })),
+        };
     }
 
     private async getTenantSessions(): Promise<{ slot: string; tenant_name: string; started: number; active: number }[]> {

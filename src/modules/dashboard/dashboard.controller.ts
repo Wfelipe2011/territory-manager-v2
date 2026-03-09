@@ -97,6 +97,8 @@ export class DashboardController {
       lastUpdateTime: new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
       dbPercent: ((health.database_info.active / health.database_info.max_connections) * 100).toFixed(1),
       uptimeFormatted: `${d}d ${h}h ${m}m ${s}s`,
+      sessionsGeneralJson: JSON.stringify(health.sessionsGeneral).replace(/</g, '\\u003c'),
+      sessionsByTenantJson: JSON.stringify(health.sessionsByTenant).replace(/</g, '\\u003c'),
     };
   }
 
