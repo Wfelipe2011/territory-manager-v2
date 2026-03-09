@@ -10,6 +10,9 @@ sleep 2
 # Roda as migrações
 npm run test:db:migrate
 
+# Gera os clientes do Prisma
+npx prisma generate
+
 # Executa os testes e captura o exit code
 npm run test:e2e:cov
 TEST_EXIT_CODE=$?
