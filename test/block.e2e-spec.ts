@@ -158,7 +158,7 @@ describe('Block Flow (e2e)', () => {
         expect(removeResponse.body.addresses).toHaveLength(0);
     });
 
-    it('should find similar addresses when no ID is provided', async () => {
+    it('should reuse identical addresses, create new ones for different names, and support case-insensitive and trim normalization', async () => {
         const tenant = await prisma.multitenancy.create({ data: { name: 'Test Tenant' } });
         const type = await prisma.type.create({ data: { name: 'Type 1', tenantId: tenant.id } });
         const territory = await prisma.territory.create({
@@ -170,7 +170,7 @@ describe('Block Flow (e2e)', () => {
         });
         const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
 
-        // 1. Create block with an address
+        // 1. Create first block with an exact address
         const response1 = await request(app.getHttpServer())
             .post(`/v2/territories/${territory.id}/blocks`)
             .set('Authorization', `Bearer ${token}`)
@@ -179,30 +179,62 @@ describe('Block Flow (e2e)', () => {
                 addresses: [{ street: 'Avenida Paulista' }]
             });
 
-        const addressId = response1.body.addresses[0].id;
+        const paulistaAddressId = response1.body.addresses[0].id;
 
-        // 2. Create another block with a very similar address name
+        // 2. Reuse the exact same address name
         const response2 = await request(app.getHttpServer())
             .post(`/v2/territories/${territory.id}/blocks`)
             .set('Authorization', `Bearer ${token}`)
             .send({
                 name: 'Block 2',
-                addresses: [{ street: 'Avenida Paulista' }] // Exact same name, should find it
+                addresses: [{ street: 'Avenida Paulista' }]
             });
 
-        expect(response2.body.addresses[0].id).toBe(addressId);
+        expect(response2.body.addresses[0].id).toBe(paulistaAddressId);
 
-        // 3. Create another block with a slightly different name
+        // 3. Use a different address name and expect a new address to be created
         const response3 = await request(app.getHttpServer())
             .post(`/v2/territories/${territory.id}/blocks`)
             .set('Authorization', `Bearer ${token}`)
             .send({
                 name: 'Block 3',
-                addresses: [{ street: 'Av. Paulista' }] // Not similar enough (threshold > 0.9)
+                addresses: [{ street: 'Av. Paulista' }]
             });
 
-        // "Avenida Paulista" vs "Av. Paulista" has similarity < 0.9, so a new address is created.
-        expect(response3.body.addresses[0].id).not.toBe(addressId);
+        expect(response3.body.addresses[0].id).not.toBe(paulistaAddressId);
+
+        // 4. Create a new block with a case-insensitive variant of a previously created street
+        const response4 = await request(app.getHttpServer())
+            .post(`/v2/territories/${territory.id}/blocks`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                name: 'Block 4',
+                addresses: [{ street: 'rua das flores' }]
+            });
+
+        const ruaDasFloresAddressId = response4.body.addresses[0].id;
+        expect(ruaDasFloresAddressId).toBeDefined();
+
+        const response5 = await request(app.getHttpServer())
+            .post(`/v2/territories/${territory.id}/blocks`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                name: 'Block 5',
+                addresses: [{ street: 'Rua das Flores' }]
+            });
+
+        expect(response5.body.addresses[0].id).toBe(ruaDasFloresAddressId);
+
+        // 5. Normalize input with trim and reuse the same address
+        const response6 = await request(app.getHttpServer())
+            .post(`/v2/territories/${territory.id}/blocks`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                name: 'Block 6',
+                addresses: [{ street: '  Rua das Flores  ' }]
+            });
+
+        expect(response6.body.addresses[0].id).toBe(ruaDasFloresAddressId);
     });
 
     it('should return 404 when deleting non-existent block', async () => {

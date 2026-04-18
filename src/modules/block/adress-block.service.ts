@@ -120,36 +120,29 @@ export class AddressBlockService {
                     return existingAddress;
                 }
 
-                this.logger.log(`Buscando endereço similar para: ${address.street}`);
-                // Se não houver ID, busca um endereço similar com mais de 90% de similaridade
-                const similarAddress = await prisma.$queryRaw<
-                    { id: number; name: string }[]
-                >`
-                    SELECT id, name
-                    FROM "address"
-                    WHERE similarity(name, ${address.street}) > 0.9
-                      AND tenant_id = ${tenantId}
-                    ORDER BY similarity(name, ${address.street}) DESC
-                    LIMIT 1
-                `;
-                this.logger.debug(`Endereços similares encontrados: ${JSON.stringify(similarAddress)}`);
-                if (similarAddress.length > 0) {
-                    this.logger.debug(`Endereço similar encontrado, reutilizando sem atualizar: ${JSON.stringify(similarAddress[0])}`);
-                    // Reutiliza o endereço similar sem modificá-lo
-                    const foundAddress = await prisma.address.findUnique({
-                        where: { id: similarAddress[0].id },
-                    });
-                    this.logger.debug(`Endereço similar reutilizado: ${JSON.stringify(foundAddress)}`);
-                    return foundAddress;
-                } else {
-                    this.logger.log(`Criando novo endereço para: ${address.street}`);
-                    // Cria um novo endereço
-                    const newAddress = await prisma.address.create({
-                        data: { name: address.street, zipCode: address.zipCode, tenantId },
-                    });
-                    this.logger.log(`Novo endereço criado: ${JSON.stringify(newAddress)}`);
-                    return newAddress;
+                const street = address.street.trim();
+                this.logger.log(`Buscando endereço exato case-insensitive para: ${street}`);
+                const existingAddress = await prisma.address.findFirst({
+                    where: {
+                        name: {
+                            equals: street,
+                            mode: 'insensitive',
+                        },
+                        tenantId,
+                    },
+                });
+
+                if (existingAddress) {
+                    this.logger.debug(`Endereço exato encontrado, reutilizando: ${JSON.stringify(existingAddress)}`);
+                    return existingAddress;
                 }
+
+                this.logger.log(`Criando novo endereço para: ${street}`);
+                const newAddress = await prisma.address.create({
+                    data: { name: street, zipCode: address.zipCode, tenantId },
+                });
+                this.logger.log(`Novo endereço criado: ${JSON.stringify(newAddress)}`);
+                return newAddress;
             })
         );
 
