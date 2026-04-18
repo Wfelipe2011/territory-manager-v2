@@ -110,16 +110,6 @@ export class AddressBlockService {
         this.logger.log(`Iniciando upsert de endereços: ${JSON.stringify(addresses)}`);
         const upsertedAddresses = await Promise.all(
             addresses.map(async (address) => {
-                if (address.id) {
-                    this.logger.log(`Retornando endereço com ID: ${address.id}`);
-                    // Se o ID já foi informado, apenas retorna o endereço sem atualizar
-                    const existingAddress = await prisma.address.findUnique({
-                        where: { id: address.id },
-                    });
-                    this.logger.log(`Endereço encontrado: ${JSON.stringify(existingAddress)}`);
-                    return existingAddress;
-                }
-
                 const street = address.street.trim();
                 this.logger.log(`Buscando endereço exato case-insensitive para: ${street}`);
                 const existingAddress = await prisma.address.findFirst({
