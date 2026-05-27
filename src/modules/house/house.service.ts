@@ -16,6 +16,7 @@ const TTL_ADDRESSES = 300_000; // 5 minutos
 const TTL_HOUSES = 30_000;  // 30 segundos
 
 export type CreateHouseInput = {
+  territoryBlockAddressId: number;
   streetId: number;
   number: string;
   legend: string;
@@ -207,6 +208,8 @@ export class HouseService {
     const territory = await this.prisma.territory.findUnique({ where: { id: +territoryId } });
     if (!territory) throw new NotFoundException('Território não encontrado');
 
+    const resolvedTbaId = await this.addressBlockService.resolveTerritoryBlockAddressId(+territoryId, +blockId, +streetId, territory.tenantId);
+
     this.logger.log(`Verificando se a casa ${number} já existe`);
 
     const house = await this.prisma.house.create({
@@ -232,6 +235,11 @@ export class HouseService {
         multitenancy: {
           connect: {
             id: territory.tenantId,
+          },
+        },
+        territoryBlockAddress: {
+          connect: {
+            id: resolvedTbaId,
           },
         },
       },
@@ -275,7 +283,7 @@ export class HouseService {
   async update(id: number, input: CreateHouseInput) {
     const house = await this.prisma.house.findUnique({ where: { id } });
     if (!house) throw new NotFoundException('Casa não encontrada');
-    const { streetId, number, legend, dontVisit, territoryId, blockId } = input;
+    const { streetId, number, legend, dontVisit, territoryId, blockId, territoryBlockAddressId } = input;
     const address = await this.prisma.address.findUnique({ where: { id: +streetId } });
     if (!address) throw new NotFoundException('Rua não encontrada');
     const block = await this.prisma.block.findUnique({ where: { id: +blockId } });
@@ -309,6 +317,11 @@ export class HouseService {
         multitenancy: {
           connect: {
             id: territory.tenantId,
+          },
+        },
+        territoryBlockAddress: {
+          connect: {
+            id: territoryBlockAddressId,
           },
         },
       },

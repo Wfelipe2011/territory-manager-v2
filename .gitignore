@@ -33,6 +33,9 @@ lerna-debug.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+openspec
+openspec-kanban
+.github
 
 # banco
 docker/postgres
@@ -40,3 +43,4 @@ docker/grafana
 cache
 .postgres
 *.env*
+

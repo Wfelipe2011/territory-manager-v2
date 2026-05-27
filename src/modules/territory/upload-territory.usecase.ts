@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
+import { AddressBlockService } from '../block/adress-block.service';
 import xlsx from 'node-xlsx';
 import EventEmitter from 'events';
 import { UploadGateway } from '../gateway/upload.gateway';
@@ -23,7 +24,8 @@ export class UploadTerritoryUseCase {
   private eventEmitter: EventEmitter;
   constructor(
     readonly prisma: PrismaService,
-    private readonly uploadGateway: UploadGateway
+    private readonly uploadGateway: UploadGateway,
+    private readonly addressBlockService: AddressBlockService,
   ) {
     this.eventEmitter = new EventEmitter();
   }
@@ -175,6 +177,13 @@ export class UploadTerritoryUseCase {
     address: { id: number; name: string; tenantId: number },
     block: { id: number; name: string; tenantId: number }
   ) {
+    const territoryBlockAddressId = await this.addressBlockService.resolveTerritoryBlockAddressId(
+      territory.id,
+      block.id,
+      address.id,
+      territory.tenantId,
+    );
+
     return await this.prisma.house.create({
       data: {
         number: String(row.Numero),
@@ -200,6 +209,11 @@ export class UploadTerritoryUseCase {
         multitenancy: {
           connect: {
             id: territory.tenantId,
+          },
+        },
+        territoryBlockAddress: {
+          connect: {
+            id: territoryBlockAddressId,
           },
         },
       },

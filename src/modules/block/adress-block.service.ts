@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
@@ -33,70 +33,120 @@ export class AddressBlockService {
         }
         this.logger.log(`Territory Block encontrado: ${JSON.stringify(territoryBlock)}`);
 
+        const existingTerritoryBlockAddresses = await prisma.territory_block_address.findMany({
+            where: { territoryBlockId, tenantId },
+            include: { address: true },
+        });
+
         // Se não há endereços, remove tudo (endereços, casas e rounds)
         if (!addresses.length) {
             this.logger.log('Nenhum endereço fornecido. Removendo todas as associações.');
 
-            const existingAddresses = await prisma.territory_block_address.findMany({ where: { territoryBlockId, tenantId } });
-            const existingAddressIds = existingAddresses.map((a) => a.id);
+            const existingAddressIds = existingTerritoryBlockAddresses.map((a) => a.id);
 
-            await this.deleteHousesAndRounds(existingAddressIds, territoryBlockId, tenantId, prisma);
+            await this.deleteHousesAndRounds(existingAddressIds, territoryBlock, tenantId, prisma);
             await prisma.territory_block_address.deleteMany({ where: { territoryBlockId, tenantId } });
             this.logger.log('Todas as associações foram removidas.');
             return;
         }
 
-        // Upsert de endereços
-        const upsertedAddresses = await this.upsertAddress(addresses, tenantId, prisma);
+        const existingAddressById = new Map(existingTerritoryBlockAddresses.map((tba) => [tba.addressId, tba]));
+        const renameInputs = addresses.filter((address) => {
+            if (!address.id) return false;
+            const linkedAddress = existingAddressById.get(address.id);
+            if (!linkedAddress) return false;
+            return this.normalizeStreet(linkedAddress.address.name) !== this.normalizeStreet(address.street);
+        });
 
-        const addressIds = upsertedAddresses.map((a) => a.id);
+        const renamedAddressIds = new Set<number>();
+        for (const address of renameInputs) {
+            const linkedAddress = existingAddressById.get(address.id!);
+            if (!linkedAddress) continue;
+
+            const migratedAddressId = await this.migrateAddressInPlace(
+                linkedAddress.id,
+                linkedAddress.addressId,
+                address.street,
+                territoryBlock,
+                tenantId,
+                prisma
+            );
+
+            renamedAddressIds.add(migratedAddressId);
+        }
+
+        if (renameInputs.length) {
+            await this.cacheManager.del(`addresses:${territoryBlock.territoryId}:${territoryBlock.blockId}`);
+            await this.invalidateSyncGhostCache(tenantId, territoryBlock.territoryId, territoryBlock.blockId);
+        }
+
+        const addressesWithoutRename = addresses.filter((address) => !renameInputs.includes(address));
+
+        // Upsert de endereços
+        const upsertedAddresses = await this.upsertAddress(addressesWithoutRename, tenantId, prisma);
+
+        const desiredAddressIds = new Set<number>([
+            ...upsertedAddresses.map((a) => a.id),
+            ...Array.from(renamedAddressIds),
+        ]);
 
         // Busca endereços existentes associados ao bloco
-        const existingAddresses = await prisma.territory_block_address.findMany({
+        const currentTerritoryBlockAddresses = await prisma.territory_block_address.findMany({
             where: { territoryBlockId, tenantId },
         });
-        this.logger.log(`Endereços existentes: ${JSON.stringify(existingAddresses)}`);
+        this.logger.log(`Endereços existentes: ${JSON.stringify(currentTerritoryBlockAddresses)}`);
 
-        const existingAddressIds = existingAddresses.map((a) => a.addressId);
+        const existingAddressIds = currentTerritoryBlockAddresses.map((a) => a.addressId);
 
         // Deleta endereços que não estão mais na lista
-        const addressesToDelete = existingAddressIds.filter((id) => !addressIds.includes(id));
+        const addressesToDelete = existingAddressIds.filter((id) => !desiredAddressIds.has(id));
         if (addressesToDelete.length) {
             this.logger.log(`Removendo os endereços: ${addressesToDelete}`);
-            const territoryBlockAddress = await prisma.territory_block_address.findMany({
-                where: {
-                    territoryBlockId,
-                    tenantId,
-                    addressId: { in: addressesToDelete }
-                },
-                select: {
-                    id: true
-                }
-            })
-            const territoryBlockAddressIds = territoryBlockAddress.map(tba => tba.id)
-            await this.deleteHousesAndRounds(territoryBlockAddressIds, territoryBlockId, tenantId, prisma);
+            const territoryBlockAddressIds = currentTerritoryBlockAddresses
+                .filter((tba) => addressesToDelete.includes(tba.addressId))
+                .map((tba) => tba.id);
+
+            await this.deleteHousesAndRounds(territoryBlockAddressIds, territoryBlock, tenantId, prisma);
             await prisma.territory_block_address.deleteMany({
                 where: { id: { in: territoryBlockAddressIds }, tenantId },
             });
             this.logger.log(`Endereços removidos: ${addressesToDelete}`);
         }
 
+        const remainingTerritoryBlockAddresses = await prisma.territory_block_address.findMany({
+            where: { territoryBlockId, tenantId },
+        });
+        const remainingAddressIds = new Set(remainingTerritoryBlockAddresses.map((a) => a.addressId));
+
         // Adiciona novos endereços e cria casas fantasmas
-        const newAddresses = addressIds.filter((id) => !existingAddressIds.includes(id));
+        const newAddresses = Array.from(desiredAddressIds).filter((id) => !remainingAddressIds.has(id));
         for (const addressId of newAddresses) {
             const territoryBlockAddress = await prisma.territory_block_address.create({
                 data: { addressId, territoryBlockId, tenantId },
             });
             this.logger.log(`Adicionado endereço com ID: ${addressId}`);
 
+            await prisma.house.updateMany({
+                where: {
+                    addressId,
+                    blockId: territoryBlock.blockId,
+                    territoryId: territoryBlock.territoryId,
+                    tenantId,
+                    territoryBlockAddressId: null,
+                },
+                data: {
+                    territoryBlockAddressId: territoryBlockAddress.id,
+                },
+            });
+
             // Criação de casa fantasma, se necessário
             const house = await prisma.house.findFirst({
                 where: {
                     addressId,
-                    blockId: territoryBlock?.blockId,
+                    blockId: territoryBlock.blockId,
                     tenantId,
-                    territoryId: territoryBlock?.territoryId,
-                    territoryBlockAddressId: territoryBlockAddress.id
+                    territoryId: territoryBlock.territoryId,
+                    territoryBlockAddressId: territoryBlockAddress.id,
                 }
             });
 
@@ -145,33 +195,139 @@ export class AddressBlockService {
         return resolvedAddresses;
     }
 
+    private normalizeStreet(street: string) {
+        return street.trim().toLocaleLowerCase();
+    }
+
+    private async migrateAddressInPlace(
+        territoryBlockAddressId: number,
+        oldAddressId: number,
+        newStreet: string,
+        territoryBlock: { id: number; blockId: number; territoryId: number },
+        tenantId: number,
+        prisma: PrismaTransaction
+    ): Promise<number> {
+        const [newAddress] = await this.upsertAddress([{ street: newStreet }], tenantId, prisma);
+
+        if (!newAddress || newAddress.id === oldAddressId) {
+            return oldAddressId;
+        }
+
+        const existingTargetTba = await prisma.territory_block_address.findFirst({
+            where: {
+                territoryBlockId: territoryBlock.id,
+                tenantId,
+                addressId: newAddress.id,
+            },
+            select: { id: true },
+        });
+
+        const targetTerritoryBlockAddressId = existingTargetTba?.id ?? territoryBlockAddressId;
+
+        if (!existingTargetTba) {
+            await prisma.territory_block_address.update({
+                where: { id: territoryBlockAddressId, tenantId },
+                data: { addressId: newAddress.id },
+            });
+        }
+
+        await prisma.house.updateMany({
+            where: {
+                tenantId,
+                blockId: territoryBlock.blockId,
+                territoryId: territoryBlock.territoryId,
+                territoryBlockAddressId,
+            },
+            data: {
+                addressId: newAddress.id,
+                territoryBlockAddressId: targetTerritoryBlockAddressId,
+            },
+        });
+
+        await prisma.house.updateMany({
+            where: {
+                tenantId,
+                blockId: territoryBlock.blockId,
+                territoryId: territoryBlock.territoryId,
+                addressId: oldAddressId,
+                territoryBlockAddressId: null,
+            },
+            data: {
+                addressId: newAddress.id,
+                territoryBlockAddressId: targetTerritoryBlockAddressId,
+            },
+        });
+
+        if (existingTargetTba && existingTargetTba.id !== territoryBlockAddressId) {
+            await prisma.territory_block_address.delete({
+                where: { id: territoryBlockAddressId, tenantId },
+            });
+        }
+
+        return newAddress.id;
+    }
+
     // Método para deletar casas e rounds associados
-    private async deleteHousesAndRounds(territoryBlockAddressIds: number[], territoryBlockId: number, tenantId: number, prisma: PrismaTransaction) {
+    private async deleteHousesAndRounds(
+        territoryBlockAddressIds: number[],
+        territoryBlock: { id: number; blockId: number; territoryId: number },
+        tenantId: number,
+        prisma: PrismaTransaction
+    ) {
         this.logger.log(`Iniciando remoção de casas e rounds associados aos endereços: ${territoryBlockAddressIds}`);
+
+        if (!territoryBlockAddressIds.length) {
+            return;
+        }
+
+        const linkedAddresses = await prisma.territory_block_address.findMany({
+            where: {
+                id: { in: territoryBlockAddressIds },
+                territoryBlockId: territoryBlock.id,
+                tenantId,
+            },
+            select: {
+                addressId: true,
+            },
+        });
+
+        const addressIds = linkedAddresses.map((tba) => tba.addressId);
 
         // Busca casas associadas aos endereços
         const houses = await prisma.house.findMany({
             where: {
-                territoryBlockAddressId: { in: territoryBlockAddressIds },
-                blockId: (await prisma.territory_block.findUnique({ where: { id: territoryBlockId } }))?.blockId,
+                blockId: territoryBlock.blockId,
+                territoryId: territoryBlock.territoryId,
                 tenantId,
+                OR: addressIds.length
+                    ? [
+                        { territoryBlockAddressId: { in: territoryBlockAddressIds } },
+                        { territoryBlockAddressId: null, addressId: { in: addressIds } },
+                    ]
+                    : [{ territoryBlockAddressId: { in: territoryBlockAddressIds } }],
             },
-            select: { id: true }
+            select: { id: true },
         });
-        const houseIds = houses.map(h => h.id);
+        const houseIds = houses.map((h) => h.id);
 
         if (houseIds.length) {
             // Remove rounds associados às casas
             await prisma.round.deleteMany({
-                where: { houseId: { in: houseIds } }
+                where: {
+                    houseId: { in: houseIds },
+                    tenantId,
+                },
             });
             this.logger.log(`Rounds associados removidos para casas: ${houseIds}`);
 
             // Remove as casas associadas
             await prisma.house.deleteMany({
-                where: { id: { in: houseIds } }
+                where: {
+                    id: { in: houseIds },
+                    tenantId,
+                },
             });
-            this.logger.log(`Casas fantasmas removidas: ${houseIds}`);
+            this.logger.log(`Casas removidas: ${houseIds}`);
         }
     }
 
@@ -305,5 +461,33 @@ export class AddressBlockService {
         const syncCacheKey = `sync:ghost:${tenantId}:${territoryId}:${blockId}`;
         await this.cacheManager.del(syncCacheKey);
         this.logger.log(`[CACHE INVALIDATE] syncGhostHouses ${syncCacheKey}`);
+    }
+
+    async resolveTerritoryBlockAddressId(territoryId: number, blockId: number, addressId: number, tenantId: number): Promise<number> {
+        const results = await this.prisma.territory_block_address.findMany({
+            where: {
+                tenantId,
+                addressId,
+                territoryBlock: {
+                    territoryId,
+                    blockId,
+                },
+            },
+            select: { id: true },
+        });
+
+        if (results.length === 0) {
+            throw new BadRequestException(
+                `Nenhum mapeamento territory_block_address encontrado para territoryId=${territoryId}, blockId=${blockId}, addressId=${addressId}`
+            );
+        }
+
+        if (results.length > 1) {
+            throw new BadRequestException(
+                `Mapeamento ambíguo: ${results.length} registros territory_block_address encontrados para territoryId=${territoryId}, blockId=${blockId}, addressId=${addressId}`
+            );
+        }
+
+        return results[0].id;
     }
 }

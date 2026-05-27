@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsEnum, IsString, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsEnum, IsString, IsNumber, IsInt } from 'class-validator';
 
 enum ReportType {
   add = 'add',
@@ -24,7 +24,7 @@ export class CreateReportDto {
   addressId!: number;
 
   @IsOptional()
-  @IsNumber({}, { message: 'O campo "territoryBlockAddressId" deve ser um número.' })
+  @IsInt({ message: 'O campo "territoryBlockAddressId" deve ser um número inteiro.' })
   territoryBlockAddressId?: number;
 
   @IsNotEmpty({ message: 'O campo "observations" é obrigatório.' })

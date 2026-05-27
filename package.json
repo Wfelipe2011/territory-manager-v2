@@ -35,6 +35,7 @@
     "test:db:migrate": "dotenv -e .env.test -- npx prisma migrate deploy",
     "test:integration": "./scripts/test-integration.sh",
     "migrate:parameters": "npx tsx scripts/migrateParameters.ts",
+    "db:precondition-check": "npx tsx scripts/db-precondition-checks.ts",
     "prepare": "husky || true"
   },
   "dependencies": {

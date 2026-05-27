@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Logger, Param, ParseIntPipe, Post, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Get, Logger, NotFoundException, Param, ParseIntPipe, Post, UsePipes, ValidationPipe } from '@nestjs/common';
 import { VERSION } from 'src/enum/version.enum';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { Role } from 'src/enum/role.enum';
@@ -56,6 +56,28 @@ export class ReportController {
   @UsePipes(new ValidationPipe({ transform: true }))
   async createReport(@CurrentUser() user: UserToken, @Body() body: CreateReportDto) {
     this.logger.log(`Usuário ID:${user.userId} criando relatório para casa ID:${body.id}`);
+
+    let resolvedTbaId: number;
+    if (body.territoryBlockAddressId !== undefined) {
+      const tba = await this.prismaService.territory_block_address.findFirst({
+        where: { id: body.territoryBlockAddressId, tenantId: user.tenantId },
+      });
+      if (!tba) throw new NotFoundException('Mapeamento territory_block_address não encontrado ou não pertence ao tenant');
+      resolvedTbaId = tba.id;
+    } else {
+      const tb = await this.prismaService.territory_block.upsert({
+        where: { territoryId_blockId: { territoryId: body.territoryId, blockId: body.blockId } },
+        create: { territoryId: body.territoryId, blockId: body.blockId, tenantId: user.tenantId },
+        update: {},
+      });
+      const tba = await this.prismaService.territory_block_address.upsert({
+        where: { territoryBlockId_addressId: { territoryBlockId: tb.id, addressId: body.addressId } },
+        create: { territoryBlockId: tb.id, addressId: body.addressId, tenantId: user.tenantId },
+        update: {},
+      });
+      resolvedTbaId = tba.id;
+    }
+
     return this.prismaService.$transaction(async tsx => {
       let backupHouse = null;
       if (body?.id) {
@@ -70,10 +92,12 @@ export class ReportController {
         where: { id: body.id ?? 0 },
         create: {
           ...body,
+          territoryBlockAddressId: resolvedTbaId,
           tenantId: user.tenantId,
         },
         update: {
           ...body,
+          territoryBlockAddressId: resolvedTbaId,
           backupData: backupHouse!,
         },
       });

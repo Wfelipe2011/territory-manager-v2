@@ -19,6 +19,7 @@ services:
       - POSTGRES_DB=$POSTGRES_DB
       - NODEMAILER_USER=$NODEMAILER_USER
       - NODEMAILER_APP_PASS=$NODEMAILER_APP_PASS
+      - SUPER_ADMIN_ID=$SUPER_ADMIN_ID
     networks:
       - npm_public
 
