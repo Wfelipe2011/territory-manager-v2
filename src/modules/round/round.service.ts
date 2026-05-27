@@ -224,7 +224,7 @@ export class RoundService {
 
       await txt.round.createMany({
         data: houses.map(house => {
-          const leaveLetter = house.rounds.every(r => !r.completed) && body.theme === ThemeMode.default;
+          const leaveLetter = house.rounds.length > 0 && house.rounds.every(r => !r.completed) && body.theme === ThemeMode.default;
           return {
             houseId: house.id,
             blockId: house.blockId,
