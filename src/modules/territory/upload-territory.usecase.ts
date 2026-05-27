@@ -379,16 +379,13 @@ export class UploadTerritoryUseCase {
           },
         });
 
-        let territoryAddress = existingTba;
-        if (!existingTba) {
-          territoryAddress = await tsx.territory_block_address.create({
-            data: {
-              addressId: house.addressId,
-              tenantId: house.tenantId,
-              territoryBlockId: territoryBlock.id
-            }
-          });
-        }
+        const territoryAddress = existingTba ?? await tsx.territory_block_address.create({
+          data: {
+            addressId: house.addressId,
+            tenantId: house.tenantId,
+            territoryBlockId: territoryBlock.id
+          }
+        });
         await tsx.house.updateMany({
           where: {
             territoryId: house.territoryId,
