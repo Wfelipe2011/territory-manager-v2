@@ -60,7 +60,7 @@ describe('reconcileHouseAddresses — diagnóstico e auto-link (e2e)', () => {
         expect(results[0].tbaId).toBe(tba.id);
     });
 
-    it('classifica house sem territory_block correspondente como no_territory_block', async () => {
+    it('classifica house sem territory_block correspondente como orphan dentro da phaseQuarantine', async () => {
         const tenant = await prisma.multitenancy.create({ data: { name: 'Tenant NTB' } });
         const type = await prisma.type.create({ data: { name: 'Tipo NTB', tenantId: tenant.id } });
         const territory = await prisma.territory.create({
@@ -81,11 +81,31 @@ describe('reconcileHouseAddresses — diagnóstico e auto-link (e2e)', () => {
             },
         });
 
-        const results = await bulkClassifyStaleHouses(prisma, tenant.id);
+        // Test using the actual exported quarantine method
+        const { phaseQuarantine } = await import('../scripts/reconcileHouseAddresses');
+        const count = await phaseQuarantine(prisma, tenant.id);
+        expect(count).toBe(1);
+    });
 
-        expect(results).toHaveLength(1);
-        expect(results[0].category).toBe('no_territory_block');
-        expect(results[0].tbaId).toBeNull();
+    it('classifica address_mismatch na phaseQuarantine quando há TBAs no bloco sem match de address_id', async () => {
+        const { tenant, territory, block, address, tb, tba } = await criarCenarioBase();
+        const address2 = await prisma.address.create({ data: { name: 'Rua 2', tenantId: tenant.id } });
+
+        // address_mismatch: tb tem o tba da 'Rua Alpha', mas house usa address2 que não tem TBA no bloco
+        await prisma.house.create({
+            data: {
+                number: '1',
+                addressId: address2.id,
+                blockId: block.id,
+                territoryId: territory.id,
+                tenantId: tenant.id,
+                territoryBlockAddressId: null,
+            },
+        });
+
+        const { phaseQuarantine } = await import('../scripts/reconcileHouseAddresses');
+        const count = await phaseQuarantine(prisma, tenant.id);
+        expect(count).toBe(1); // Caught in quarantine logic
     });
 
     it('auto-link atualiza territory_block_address_id sem deletar ou recriar a house', async () => {

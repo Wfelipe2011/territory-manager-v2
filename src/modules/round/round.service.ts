@@ -178,7 +178,8 @@ export class RoundService {
           tenantId,
           territory: {
             typeId: body.typeId
-          }
+          },
+          territoryBlockAddressId: { not: null },
         },
         include: {
           address: true,

@@ -23,21 +23,28 @@ describe('Porta 1 — Criação de House: territoryBlockAddressId obrigatório (
         await cleanDatabase(prisma);
     });
 
-    it('5.2 — POST /houses sem territoryBlockAddressId deve retornar 400', async () => {
+    it('5.2 — POST /houses sem mapeamento territory_block_address deve retornar 400', async () => {
         const tenant = await prisma.multitenancy.create({ data: { name: 'Tenant 1' } });
+        const type = await prisma.type.create({ data: { name: 'Residencial', tenantId: tenant.id } });
+        const territory = await prisma.territory.create({
+            data: { name: 'Território A', tenantId: tenant.id, typeId: type.id },
+        });
+        const block = await prisma.block.create({ data: { name: 'Quadra 1', tenantId: tenant.id } });
+        const address = await prisma.address.create({ data: { name: 'Rua Sem TBA', tenantId: tenant.id } });
+        // territory_block_address intencionalmente ausente
+
         const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
 
         const response = await request(app.getHttpServer())
             .post('/v1/houses')
             .set('Authorization', `Bearer ${token}`)
             .send({
-                streetId: 1,
+                streetId: address.id,
                 number: '100',
                 legend: '',
                 dontVisit: false,
-                territoryId: 1,
-                blockId: 1,
-                // territoryBlockAddressId ausente propositalmente
+                territoryId: territory.id,
+                blockId: block.id,
             });
 
         expect(response.status).toBe(400);

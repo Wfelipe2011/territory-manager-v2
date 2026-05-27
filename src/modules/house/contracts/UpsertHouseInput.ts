@@ -32,8 +32,5 @@ export class UpsertHouseInput {
     @IsInt({ message: 'O ID da quadra deve ser um número' })
     blockId: number;
 
-    @ApiProperty({ required: true, description: 'ID do mapeamento territory-block-address', type: Number, example: 1 })
-    @IsNotEmpty({ message: 'O ID do territory block address é obrigatório' })
-    @IsInt({ message: 'O ID do territory block address deve ser um número inteiro' })
-    territoryBlockAddressId: number;
+
 }

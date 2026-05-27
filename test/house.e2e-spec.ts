@@ -45,12 +45,20 @@ describe('House Flow (e2e)', () => {
             },
         });
 
-        await prisma.territory_block.create({
+        const territoryBlock = await prisma.territory_block.create({
             data: {
                 territoryId: territory.id,
                 blockId: block.id,
                 tenantId: tenant.id,
                 signatureId: signature.id,
+            },
+        });
+
+        const tba = await prisma.territory_block_address.create({
+            data: {
+                territoryBlockId: territoryBlock.id,
+                addressId: address.id,
+                tenantId: tenant.id,
             },
         });
 
@@ -61,6 +69,7 @@ describe('House Flow (e2e)', () => {
                 addressId: address.id,
                 territoryId: territory.id,
                 tenantId: tenant.id,
+                territoryBlockAddressId: tba.id,
             },
         });
         const round = await prisma.round.create({
@@ -136,6 +145,14 @@ describe('House Flow (e2e)', () => {
         const block = await prisma.block.create({ data: { name: 'Block 1', tenantId: tenant.id } });
         const address = await prisma.address.create({ data: { name: 'Street 1', tenantId: tenant.id } });
         const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
+
+        // Setup TBA para que create/update possam resolver o vínculo
+        const territoryBlock = await prisma.territory_block.create({
+            data: { territoryId: territory.id, blockId: block.id, tenantId: tenant.id },
+        });
+        await prisma.territory_block_address.create({
+            data: { territoryBlockId: territoryBlock.id, addressId: address.id, tenantId: tenant.id },
+        });
 
         // 1. Create
         const createResponse = await request(app.getHttpServer())
@@ -292,6 +309,66 @@ describe('House Flow (e2e)', () => {
             .set('Authorization', `Bearer ${token}`);
 
         expect(response.status).toBe(200);
+    });
+
+    it('getBlockDetails não exibe house stale (sem TBA) no retorno de endereços', async () => {
+        const tenant = await prisma.multitenancy.create({ data: { name: 'Tenant Block Stale' } });
+        const type = await prisma.type.create({ data: { name: 'Tipo Block Stale', tenantId: tenant.id } });
+        const territory = await prisma.territory.create({
+            data: { name: 'Território Block Stale', tenantId: tenant.id, typeId: type.id },
+        });
+        const block = await prisma.block.create({ data: { name: 'Quadra Block Stale', tenantId: tenant.id } });
+        const addressAtiva = await prisma.address.create({ data: { name: 'Rua Ativa', tenantId: tenant.id } });
+        const addressStale = await prisma.address.create({ data: { name: 'Rua Antiga Stale', tenantId: tenant.id } });
+
+        const signature = await prisma.signature.create({
+            data: { key: 'key-block-stale', token: 'token-block-stale', tenantId: tenant.id },
+        });
+        const tb = await prisma.territory_block.create({
+            data: { territoryId: territory.id, blockId: block.id, tenantId: tenant.id, signatureId: signature.id },
+        });
+        const tba = await prisma.territory_block_address.create({
+            data: { territoryBlockId: tb.id, addressId: addressAtiva.id, tenantId: tenant.id },
+        });
+
+        // Casa vinculada ao TBA — deve aparecer no retorno
+        await prisma.house.create({
+            data: {
+                number: '10',
+                blockId: block.id,
+                addressId: addressAtiva.id,
+                territoryId: territory.id,
+                tenantId: tenant.id,
+                territoryBlockAddressId: tba.id,
+            },
+        });
+
+        // Casa stale — NÃO deve aparecer no retorno
+        await prisma.house.create({
+            data: {
+                number: '99',
+                blockId: block.id,
+                addressId: addressStale.id,
+                territoryId: territory.id,
+                tenantId: tenant.id,
+                territoryBlockAddressId: null,
+            },
+        });
+
+        const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
+
+        const response = await request(app.getHttpServer())
+            .get(`/v1/territories/${territory.id}/blocks/${block.id}?round=1`)
+            .set('Authorization', `Bearer ${token}`);
+
+        expect(response.status).toBe(200);
+        const addresses: { id: number; name: string; houses: string[] }[] = response.body.addresses;
+        const allHouseNumbers = addresses.flatMap(a => a.houses);
+        expect(allHouseNumbers).toContain('10');
+        expect(allHouseNumbers).not.toContain('99');
+
+        const staleAddress = addresses.find(a => a.name === 'Rua Antiga Stale');
+        expect(staleAddress).toBeUndefined();
     });
 
     describe('Validation and Permissions', () => {

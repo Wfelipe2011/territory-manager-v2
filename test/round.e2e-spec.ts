@@ -44,7 +44,15 @@ describe('Round Lifecycle (e2e)', () => {
             data: { name: 'Street 1', tenantId: tenant.id },
         });
 
-        // Create House (Required for round creation)
+        // Create TBA (cadastro oficial do bloco)
+        const tb = await prisma.territory_block.create({
+            data: { blockId: block.id, territoryId: territory.id, tenantId: tenant.id },
+        });
+        const tba = await prisma.territory_block_address.create({
+            data: { territoryBlockId: tb.id, addressId: address.id, tenantId: tenant.id },
+        });
+
+        // Create House linked to TBA (Required for round creation)
         await prisma.house.create({
             data: {
                 number: '100',
@@ -52,6 +60,7 @@ describe('Round Lifecycle (e2e)', () => {
                 addressId: address.id,
                 territoryId: territory.id,
                 tenantId: tenant.id,
+                territoryBlockAddressId: tba.id,
             },
         });
 
@@ -175,5 +184,69 @@ describe('Round Lifecycle (e2e)', () => {
             .send({});
 
         expect(response.status).toBe(500); // Based on the controller code throwing a generic Error
+    });
+
+    it('house stale (sem TBA) não gera linha na rodada', async () => {
+        const tenant = await prisma.multitenancy.create({ data: { name: 'Tenant Stale Round' } });
+        const type = await prisma.type.create({ data: { name: 'Tipo Stale', tenantId: tenant.id } });
+        const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
+        const territory = await prisma.territory.create({
+            data: { name: 'Território Stale', tenantId: tenant.id, typeId: type.id },
+        });
+        const block = await prisma.block.create({ data: { name: 'Quadra Stale', tenantId: tenant.id } });
+        const address = await prisma.address.create({ data: { name: 'Rua Ativa', tenantId: tenant.id } });
+        const addressStale = await prisma.address.create({ data: { name: 'Rua Antiga', tenantId: tenant.id } });
+
+        // TBA: apenas "Rua Ativa" está cadastrada no bloco
+        const tb = await prisma.territory_block.create({
+            data: { blockId: block.id, territoryId: territory.id, tenantId: tenant.id },
+        });
+        const tba = await prisma.territory_block_address.create({
+            data: { territoryBlockId: tb.id, addressId: address.id, tenantId: tenant.id },
+        });
+
+        // Casa vinculada ao TBA (deve entrar na rodada)
+        await prisma.house.create({
+            data: {
+                number: '10',
+                blockId: block.id,
+                addressId: address.id,
+                territoryId: territory.id,
+                tenantId: tenant.id,
+                territoryBlockAddressId: tba.id,
+            },
+        });
+
+        // Casa stale: address_id aponta para rua antiga, sem TBA link (não deve entrar na rodada)
+        await prisma.house.create({
+            data: {
+                number: '99',
+                blockId: block.id,
+                addressId: addressStale.id,
+                territoryId: territory.id,
+                tenantId: tenant.id,
+                territoryBlockAddressId: null,
+            },
+        });
+
+        const startResponse = await request(app.getHttpServer())
+            .post('/v1/rounds/start')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                name: 'Rodada Stale Test',
+                typeId: type.id,
+                theme: 'default',
+                colorPrimary: '#000',
+                colorSecondary: '#fff',
+            });
+
+        expect(startResponse.status).toBe(201);
+
+        const roundsCreated = await prisma.round.findMany({ where: { tenantId: tenant.id } });
+        expect(roundsCreated).toHaveLength(1);
+        expect(roundsCreated[0].houseId).not.toBeNull();
+
+        const houseInRound = await prisma.house.findUnique({ where: { id: roundsCreated[0].houseId } });
+        expect(houseInRound?.number).toBe('10');
     });
 });

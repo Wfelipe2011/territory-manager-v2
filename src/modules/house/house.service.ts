@@ -16,7 +16,6 @@ const TTL_ADDRESSES = 300_000; // 5 minutos
 const TTL_HOUSES = 30_000;  // 30 segundos
 
 export type CreateHouseInput = {
-  territoryBlockAddressId: number;
   streetId: number;
   number: string;
   legend: string;
@@ -67,7 +66,18 @@ export class HouseService {
 
     const result = await this.getBlockDetails(blockId, territoryId);
     if (!result) throw new NotFoundException('Não foi possível encontrar os dados da quadra');
-    const data = BlockSignatureDTO.mapper(result);
+    let data: BlockSignatureDTO;
+    if (result.length === 0) {
+      data = new BlockSignatureDTO();
+      data.territoryId = territoryBlock.territory.id;
+      data.territoryName = territoryBlock.territory.name;
+      data.imageUrl = territoryBlock.territory.imageUrl || undefined;
+      data.blockId = territoryBlock.block.id;
+      data.blockName = territoryBlock.block.name;
+      data.addresses = [];
+    } else {
+      data = BlockSignatureDTO.mapper(result);
+    }
     await this.cacheManager.set(cacheKey, data, TTL_ADDRESSES);
     return data;
   }
@@ -182,6 +192,7 @@ export class HouseService {
       INNER JOIN block b ON b.id = h.block_id
       LEFT JOIN territory_overseer to2 on to2.territory_id = t.id  and to2.finished = false 
       WHERE h.territory_id = ${territoryId} AND h.block_id = ${blockId} 
+        AND h.territory_block_address_id IS NOT NULL
     `;
   }
 
@@ -283,13 +294,15 @@ export class HouseService {
   async update(id: number, input: CreateHouseInput) {
     const house = await this.prisma.house.findUnique({ where: { id } });
     if (!house) throw new NotFoundException('Casa não encontrada');
-    const { streetId, number, legend, dontVisit, territoryId, blockId, territoryBlockAddressId } = input;
+    const { streetId, number, legend, dontVisit, territoryId, blockId } = input;
     const address = await this.prisma.address.findUnique({ where: { id: +streetId } });
     if (!address) throw new NotFoundException('Rua não encontrada');
     const block = await this.prisma.block.findUnique({ where: { id: +blockId } });
     if (!block) throw new NotFoundException('Bloco não encontrado');
     const territory = await this.prisma.territory.findUnique({ where: { id: +territoryId } });
     if (!territory) throw new NotFoundException('Território não encontrado');
+
+    const resolvedTbaId = await this.addressBlockService.resolveTerritoryBlockAddressId(+territoryId, +blockId, +streetId, territory.tenantId);
 
     return this.prisma.house.update({
       where: {
@@ -321,7 +334,7 @@ export class HouseService {
         },
         territoryBlockAddress: {
           connect: {
-            id: territoryBlockAddressId,
+            id: resolvedTbaId,
           },
         },
       },

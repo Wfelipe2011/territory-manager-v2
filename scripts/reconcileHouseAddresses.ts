@@ -61,6 +61,16 @@ export interface ManualMapping {
     territoryBlockAddressId: number;
 }
 
+export type QuarantineSubcategory = 'orphan' | 'tba_missing' | 'address_mismatch';
+
+export function classifyQuarantineSubcategory(hasTerritoryBlock: boolean, blockTbaCount: number): QuarantineSubcategory {
+    if (!hasTerritoryBlock) {
+        return 'orphan';
+    }
+
+    return blockTbaCount > 0 ? 'address_mismatch' : 'tba_missing';
+}
+
 // ─── CLI Args ─────────────────────────────────────────────────────────────────
 
 function parseArgs() {
@@ -431,7 +441,8 @@ export async function phaseQuarantine(
     console.log('\n=== FASE: QUARENTENA (no_territory_block) ===');
     console.log('Estratégia: MANTER COMO ESTÁ — sem deletes, sem recriar, sem updates.');
     console.log('  orphan     : dados legados pré-territory_block; irrecuperáveis sem intervenção manual.');
-    console.log('  tba_missing: endereços intencionalmente removidos do bloco pelo usuário.');
+    console.log('  tba_missing: territory_block existe, mas não há TBAs no bloco.');
+    console.log('  address_mismatch: territory_block existe e há TBAs no bloco, mas sem match de address_id.');
 
     type RawRow = {
         house_id: bigint;
@@ -439,7 +450,9 @@ export async function phaseQuarantine(
         address_id: bigint;
         block_id: bigint;
         territory_id: bigint;
-        subcategory: string;
+        has_tb: bigint;
+        matching_tba_count: bigint;
+        block_tba_count: bigint;
     };
 
     const tenantFilter = tenantId !== undefined
@@ -456,17 +469,21 @@ export async function phaseQuarantine(
         tb_check AS (
             SELECT
                 s.id AS house_id,
-                COUNT(tba.id)::bigint AS tba_count,
+                COUNT(DISTINCT tba_match.id)::bigint AS matching_tba_count,
+                COUNT(DISTINCT tba_any.id)::bigint AS block_tba_count,
                 MAX(CASE WHEN tb.id IS NOT NULL THEN 1 ELSE 0 END) AS has_tb
             FROM stale s
             LEFT JOIN territory_block tb
                 ON tb.block_id = s.block_id
                AND tb.territory_id = s.territory_id
                AND tb.tenant_id = s.tenant_id
-            LEFT JOIN territory_block_address tba
-                ON tba.territory_block_id = tb.id
-               AND tba.address_id = s.address_id
-               AND tba.tenant_id = s.tenant_id
+            LEFT JOIN territory_block_address tba_match
+                ON tba_match.territory_block_id = tb.id
+               AND tba_match.address_id = s.address_id
+               AND tba_match.tenant_id = s.tenant_id
+            LEFT JOIN territory_block_address tba_any
+                ON tba_any.territory_block_id = tb.id
+               AND tba_any.tenant_id = s.tenant_id
             GROUP BY s.id
         )
         SELECT
@@ -475,36 +492,43 @@ export async function phaseQuarantine(
             s.address_id,
             s.block_id,
             s.territory_id,
-            CASE
-                WHEN COALESCE(tc.has_tb, 0) = 0 THEN 'orphan'
-                ELSE 'tba_missing'
-            END AS subcategory
+            COALESCE(tc.has_tb, 0)::bigint AS has_tb,
+            COALESCE(tc.matching_tba_count, 0)::bigint AS matching_tba_count,
+            COALESCE(tc.block_tba_count, 0)::bigint AS block_tba_count
         FROM stale s
         JOIN tb_check tc ON tc.house_id = s.id
-        WHERE COALESCE(tc.tba_count, 0) = 0
+        WHERE COALESCE(tc.matching_tba_count, 0) = 0
         ORDER BY s.tenant_id, s.id
     `;
 
-    const orphan = rows.filter((r) => r.subcategory === 'orphan');
-    const tbaMissing = rows.filter((r) => r.subcategory === 'tba_missing');
+    const classifiedRows = rows.map((r) => ({
+        ...r,
+        subcategory: classifyQuarantineSubcategory(Number(r.has_tb) > 0, Number(r.block_tba_count)),
+    }));
 
-    console.log(`\nHouses no_territory_block encontradas: ${rows.length}`);
+    const orphan = classifiedRows.filter((r) => r.subcategory === 'orphan');
+    const tbaMissing = classifiedRows.filter((r) => r.subcategory === 'tba_missing');
+    const addressMismatch = classifiedRows.filter((r) => r.subcategory === 'address_mismatch');
+
+    console.log(`\nHouses no_territory_block encontradas: ${classifiedRows.length}`);
     console.log(`  orphan (sem territory_block algum):        ${orphan.length}`);
-    console.log(`  tba_missing (tb existe, TBA não):          ${tbaMissing.length}`);
+    console.log(`  tba_missing (tb existe, 0 TBAs no bloco):  ${tbaMissing.length}`);
+    console.log(`  address_mismatch (tb com outros TBAs):     ${addressMismatch.length}`);
 
     // Breakdown por tenant
-    const byTenant = new Map<number, { orphan: number; tbaMissing: number }>();
-    for (const r of rows) {
+    const byTenant = new Map<number, { orphan: number; tbaMissing: number; addressMismatch: number }>();
+    for (const r of classifiedRows) {
         const tid = Number(r.tenant_id);
-        const entry = byTenant.get(tid) ?? { orphan: 0, tbaMissing: 0 };
+        const entry = byTenant.get(tid) ?? { orphan: 0, tbaMissing: 0, addressMismatch: 0 };
         if (r.subcategory === 'orphan') entry.orphan++;
-        else entry.tbaMissing++;
+        else if (r.subcategory === 'tba_missing') entry.tbaMissing++;
+        else if (r.subcategory === 'address_mismatch') entry.addressMismatch++;
         byTenant.set(tid, entry);
     }
     if (byTenant.size > 0) {
         console.log('\n--- Breakdown por tenant (quarentena) ---');
         for (const [tid, counts] of byTenant) {
-            console.log(`  tenant=${tid}: orphan=${counts.orphan} tba_missing=${counts.tbaMissing}`);
+            console.log(`  tenant=${tid}: orphan=${counts.orphan} tba_missing=${counts.tbaMissing} address_mismatch=${counts.addressMismatch}`);
         }
     }
 
@@ -514,10 +538,11 @@ export async function phaseQuarantine(
         strategy: 'quarantine',
         rationale: {
             orphan: 'Dados legados importados antes da tabela territory_block existir. Sem territory_block correspondente — irrecuperáveis sem intervenção manual. Deletar destruiria histórico de rounds.',
-            tba_missing: 'territory_block existe mas address foi intencionalmente removido do bloco via manageAddresses. Recriar TBA reintroduziria casas em blocos que o usuário limpou.',
+            tba_missing: 'territory_block existe mas bloco está vazio de endereços (0 TBAs). Recriar TBA reintroduziria casas em blocos que o usuário limpou.',
+            address_mismatch: 'territory_block existe e possui TBAs com outros endereços. A house aponta para um endereço que não está cadastrado no bloco. Pode precisar de correção manual (atualizar address_id e TBA).',
         },
-        totals: { orphan: orphan.length, tbaMissing: tbaMissing.length, total: rows.length },
-        houses: rows.map((r) => ({
+        totals: { orphan: orphan.length, tbaMissing: tbaMissing.length, addressMismatch: addressMismatch.length, total: classifiedRows.length },
+        houses: classifiedRows.map((r) => ({
             houseId: Number(r.house_id),
             tenantId: Number(r.tenant_id),
             addressId: Number(r.address_id),
@@ -539,10 +564,10 @@ export async function phaseQuarantine(
 
     console.log('\n[DECISÃO task 3.2] Estratégia executada: QUARENTENA.');
     console.log('  Nenhuma house foi deletada, recriada ou modificada.');
-    console.log(`  ${rows.length} house(s) documentadas como exceção permanente ao zero-gap global.`);
+    console.log(`  ${classifiedRows.length} house(s) documentadas como exceção permanente ao zero-gap global.`);
     console.log('  Zero-gap para house-territory-address-db-hardening considera apenas houses LINKÁVEIS.');
 
-    return rows.length;
+    return classifiedRows.length;
 }
 
 // ─── Purge Orphans Phase ─────────────────────────────────────────────────────

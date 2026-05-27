@@ -113,34 +113,25 @@ export class UploadTerritoryUseCase {
     logger.log(`Consultando ou criando a quadra ${row.Quadra}`);
     const block = await this.createBlock(row, tenantId);
 
-    logger.log(`Consultando ou criando a casa ${row.Numero}`);
-    const house = await this.createHouse(row, territory, address, block);
-
     logger.log(`Consultando ou criando o território da quadra ${row.Quadra}`);
-    await this.createTerritoryBlock(territory, block, house);
+    const { territoryBlock, isNew } = await this.createTerritoryBlock(territory, block);
+
+    if (isNew) {
+      logger.log(`Quadra nova — garantindo mapeamento de endereço na quadra ${row.Quadra}`);
+      await this.ensureTerritoryBlockAddress(territoryBlock, address, tenantId);
+    }
+
+    logger.log(`Consultando ou criando a casa ${row.Numero}`);
+    await this.createHouse(row, territory, address, block);
 
     logger.log(`Casa ${row.Numero} da quadra ${row.Quadra} do território ${nameTerritory} do tipo ${row.TipoTerritorio} importada com sucesso!`);
   }
 
   async createTerritoryBlock(
     territory: { id: number; name: string; tenantId: number; typeId: number; imageUrl: string | null },
-    block: { id: number; name: string; tenantId: number },
-    house: {
-      id: number;
-      number: string;
-      complement: string | null;
-      legend: string | null;
-      order: number | null;
-      dontVisit: boolean;
-      observations: string | null;
-      blockId: number;
-      addressId: number;
-      phone: string | null;
-      territoryId: number;
-      tenantId: number;
-    }
-  ) {
-    let territoryBlock = await this.prisma.territory_block.findUnique({
+    block: { id: number; name: string; tenantId: number }
+  ): Promise<{ territoryBlock: { id: number; territoryId: number; blockId: number; tenantId: number; signatureId: number | null }; isNew: boolean }> {
+    const existing = await this.prisma.territory_block.findUnique({
       where: {
         territoryId_blockId: {
           territoryId: territory.id,
@@ -148,24 +139,48 @@ export class UploadTerritoryUseCase {
         },
       },
     });
-    if (!territoryBlock) {
-      territoryBlock = await this.prisma.territory_block.create({
+    if (existing) {
+      return { territoryBlock: existing, isNew: false };
+    }
+    const territoryBlock = await this.prisma.territory_block.create({
+      data: {
+        territory: {
+          connect: {
+            id: territory.id,
+          },
+        },
+        block: {
+          connect: {
+            id: block.id,
+          },
+        },
+        multitenancy: {
+          connect: {
+            id: territory.tenantId,
+          },
+        },
+      },
+    });
+    return { territoryBlock, isNew: true };
+  }
+
+  async ensureTerritoryBlockAddress(
+    territoryBlock: { id: number },
+    address: { id: number; name: string; tenantId: number },
+    tenantId: number
+  ) {
+    const existing = await this.prisma.territory_block_address.findFirst({
+      where: {
+        territoryBlockId: territoryBlock.id,
+        addressId: address.id,
+      },
+    });
+    if (!existing) {
+      await this.prisma.territory_block_address.create({
         data: {
-          territory: {
-            connect: {
-              id: territory.id,
-            },
-          },
-          block: {
-            connect: {
-              id: house.blockId,
-            },
-          },
-          multitenancy: {
-            connect: {
-              id: territory.tenantId,
-            },
-          },
+          addressId: address.id,
+          tenantId,
+          territoryBlockId: territoryBlock.id,
         },
       });
     }
@@ -357,13 +372,23 @@ export class UploadTerritoryUseCase {
           return true;
         }
 
-        const territoryAddress = await tsx.territory_block_address.create({
-          data: {
+        const existingTba = await tsx.territory_block_address.findFirst({
+          where: {
+            territoryBlockId: territoryBlock.id,
             addressId: house.addressId,
-            tenantId: house.tenantId,
-            territoryBlockId: territoryBlock.id
-          }
+          },
         });
+
+        let territoryAddress = existingTba;
+        if (!existingTba) {
+          territoryAddress = await tsx.territory_block_address.create({
+            data: {
+              addressId: house.addressId,
+              tenantId: house.tenantId,
+              territoryBlockId: territoryBlock.id
+            }
+          });
+        }
         await tsx.house.updateMany({
           where: {
             territoryId: house.territoryId,
