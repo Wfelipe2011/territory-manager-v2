@@ -112,7 +112,10 @@ export class HouseService {
         WHERE h.address_id = ${streetId}
           AND h.block_id = ${blockId}
           AND h.territory_id = ${territoryId}
-        ORDER BY h."order" ASC;
+        ORDER BY 
+          h."order" ASC NULLS LAST,
+          CASE WHEN h."number" ~ '^[0-9]' THEN 0 ELSE 1 END ASC,
+          h.id ASC;
       `;
 
     if (!houses.length) throw new NotFoundException('Não foi possível encontrar as casas da rua');
