@@ -115,6 +115,12 @@ export class HouseService {
         ORDER BY 
           h."order" ASC NULLS LAST,
           CASE WHEN h."number" ~ '^[0-9]' THEN 0 ELSE 1 END ASC,
+          CASE 
+            WHEN h."number" ~ '^[0-9]+' 
+            THEN (regexp_match(h."number", '^([0-9]+)'))[1]::int 
+            ELSE NULL 
+          END ASC NULLS LAST,
+          lower(regexp_replace(h."number", '^[0-9]*', '', 'g')) ASC,
           h.id ASC;
       `;
 
