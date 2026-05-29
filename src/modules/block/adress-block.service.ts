@@ -357,15 +357,22 @@ export class AddressBlockService {
 
         let rounds = fetchedRounds;
         if (!rounds.length) {
-            await prisma.round_info.create({
-                data: {
+            await prisma.round_info.upsert({
+                where: {
+                    tenantId_roundNumber: {
+                        tenantId,
+                        roundNumber: 1,
+                    },
+                },
+                create: {
                     roundNumber: 1,
                     name: "Inicial",
                     theme: ThemeMode.default,
                     colorPrimary: themeColors[ThemeMode.default].primary,
                     colorSecondary: themeColors[ThemeMode.default].secondary,
                     tenantId,
-                }
+                },
+                update: {},
             });
             this.logger.log(`Round info inicial criado.`);
             rounds = [{ roundNumber: 1 }];
