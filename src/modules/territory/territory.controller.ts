@@ -244,10 +244,6 @@ export class TerritoryController {
     try {
       logger.log(`Usuário ${req.user.userId} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está iniciando importação em massa`);
 
-      if (body.rows.length > 1000) {
-        throw new BadRequestException('Limite de 1000 registros por requisição excedido');
-      }
-
       return await this.uploadTerritoryUseCase.bulkInsert(
         body.rows,
         req.user.tenantId,
