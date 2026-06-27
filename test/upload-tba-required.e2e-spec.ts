@@ -7,7 +7,7 @@ import { createTestToken } from './utils/auth-helper';
 import { Role } from '../src/enum/role.enum';
 import xlsx from 'node-xlsx';
 
-describe('Porta 2 — Upload de Território: erro em linha sem TBA mapeado (e2e)', () => {
+describe('Upload de Território: mapeamento TBA automático (e2e)', () => {
     let app: INestApplication;
     let prisma: PrismaService;
 
@@ -24,7 +24,7 @@ describe('Porta 2 — Upload de Território: erro em linha sem TBA mapeado (e2e)
         await cleanDatabase(prisma);
     });
 
-    it('5.4 — linha sem TBA mapeado deve registrar erro no ImportReport sem interromper outras linhas', async () => {
+    it('importa ruas diferentes na mesma quadra criando os mapeamentos necessários', async () => {
         const tenant = await prisma.multitenancy.create({
             data: { name: 'Tenant Upload', city: 'Cidade', state: 'UF' },
         });
@@ -51,8 +51,8 @@ describe('Porta 2 — Upload de Território: erro em linha sem TBA mapeado (e2e)
 
         const adminToken = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
 
-        // Linha 1: TBA existe → deve ter sucesso
-        // Linha 2: endereço diferente sem TBA → deve registrar erro
+        // Linha 1: TBA existe.
+        // Linha 2: endereço diferente sem TBA deve ser criado pelo upload.
         const data = [
             ['TipoTerritorio', 'Território', 'Quadra', 'Logradouro', 'Numero', 'Legenda', 'Ordem', 'Não Bater'],
             ['Residencial', 'Território Upload', 1, 'Rua Com TBA', '100', 'Casa', 1, 'FALSO'],
@@ -67,9 +67,12 @@ describe('Porta 2 — Upload de Território: erro em linha sem TBA mapeado (e2e)
 
         expect(response.status).toBe(201);
         expect(response.body.totalProcessed).toBe(2);
-        expect(response.body.successCount).toBe(1);
-        expect(response.body.errorCount).toBe(1);
-        expect(response.body.errors).toHaveLength(1);
-        expect(response.body.errors[0].error).toMatch(/territory_block_address/i);
+        expect(response.body.successCount).toBe(2);
+        expect(response.body.errorCount).toBe(0);
+
+        const territoryBlockAddresses = await prisma.territory_block_address.findMany({
+            where: { territoryBlockId: territoryBlock.id, tenantId: tenant.id },
+        });
+        expect(territoryBlockAddresses).toHaveLength(2);
     });
 });

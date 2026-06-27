@@ -114,12 +114,10 @@ export class UploadTerritoryUseCase {
     const block = await this.createBlock(row, tenantId);
 
     logger.log(`Consultando ou criando o território da quadra ${row.Quadra}`);
-    const { territoryBlock, isNew } = await this.createTerritoryBlock(territory, block);
+    const { territoryBlock } = await this.createTerritoryBlock(territory, block);
 
-    if (isNew) {
-      logger.log(`Quadra nova — garantindo mapeamento de endereço na quadra ${row.Quadra}`);
-      await this.ensureTerritoryBlockAddress(territoryBlock, address, tenantId);
-    }
+    logger.log(`Garantindo mapeamento de endereço na quadra ${row.Quadra}`);
+    await this.ensureTerritoryBlockAddress(territoryBlock, address, tenantId);
 
     logger.log(`Consultando ou criando a casa ${row.Numero}`);
     await this.createHouse(row, territory, address, block);
