@@ -42,5 +42,5 @@ docker/postgres
 docker/grafana
 cache
 .postgres
-*.env*
+*.env
 
