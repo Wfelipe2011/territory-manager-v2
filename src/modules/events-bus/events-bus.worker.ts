@@ -26,6 +26,7 @@ export class EventsBusWorker implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(EventsBusWorker.name);
   private client: Client | null = null;
   private reconnectTimer: NodeJS.Timeout | null = null;
+  private isDestroyed = false;
 
   constructor(
     private readonly sseManager: SseManager,
@@ -37,6 +38,7 @@ export class EventsBusWorker implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleDestroy(): Promise<void> {
+    this.isDestroyed = true;
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
@@ -88,6 +90,7 @@ export class EventsBusWorker implements OnModuleInit, OnModuleDestroy {
       this.logger.warn(`Erro no cliente LISTEN: ${err.message}`);
     });
     client.on('end', () => {
+      if (this.isDestroyed) return;
       this.logger.warn('Conexão LISTEN encerrada; reconectando em 2s');
       this.client = null;
       this.scheduleReconnect();
@@ -96,6 +99,7 @@ export class EventsBusWorker implements OnModuleInit, OnModuleDestroy {
     void client
       .connect()
       .then(async () => {
+        if (this.isDestroyed) return;
         await client.query(`LISTEN "${PGBOSS_NOTIFY_CHANNELS.STREET_CHANGED}"`);
         await client.query(`LISTEN "${PGBOSS_NOTIFY_CHANNELS.USER_JOINED_STREET}"`);
         await client.query(`LISTEN "${PGBOSS_NOTIFY_CHANNELS.USER_LEFT_STREET}"`);
@@ -104,12 +108,14 @@ export class EventsBusWorker implements OnModuleInit, OnModuleDestroy {
         );
       })
       .catch((err: Error) => {
+        if (this.isDestroyed) return;
         this.logger.error(`Falha conectando listener LISTEN: ${err.message}`);
         this.scheduleReconnect();
       });
   }
 
   private scheduleReconnect(): void {
+    if (this.isDestroyed) return;
     if (this.reconnectTimer) return;
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;

@@ -1,10 +1,24 @@
 #!/bin/bash
 
+# Garante a derrubada do banco mesmo em falha ou interrupção (evita container vivo
+# e conexões vazadas acumulando entre execuções)
+CLEANED_UP=0
+
+cleanup() {
+  if [ "$CLEANED_UP" -eq 0 ]; then
+    CLEANED_UP=1
+    npm run test:db:down
+  fi
+}
+
+trap cleanup EXIT
+trap 'cleanup; exit 130' INT TERM
+
 # Sobe o banco de dados
 npm run test:db:up
 
-# Aguarda o banco estar pronto
-npx wait-on tcp:127.0.0.1:5433
+# Aguarda o banco estar pronto (timeout evita hang indefinido)
+npx wait-on --timeout 120000 tcp:127.0.0.1:5433
 sleep 2
 
 # Roda as migrações
@@ -17,8 +31,5 @@ npx prisma generate
 npm run test:e2e:cov
 TEST_EXIT_CODE=$?
 
-# Derruba o banco de dados (limpeza)
-npm run test:db:down
-
-# Sai com o código de erro dos testes
+# Sai com o código de erro dos testes (limpeza via trap EXIT)
 exit $TEST_EXIT_CODE
