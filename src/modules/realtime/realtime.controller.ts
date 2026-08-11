@@ -124,6 +124,18 @@ export class RealtimeController implements OnModuleInit {
           connectionId = id;
           this.sseManager.register(connection);
 
+          subject.subscribe({
+            next: (event: RealtimeEvent | AuthExpiredEvent | PingEvent) =>
+              subscriber.next(event as MessageEvent),
+            error: (err: unknown) => {
+              this.logger.warn(`Subject erro em ${streetKey}: ${String(err)}`);
+              void teardown('subject-error');
+            },
+            complete: () => {
+              void teardown('subject-complete');
+            },
+          });
+
           subscriber.next({
             type: 'connected',
             data: { streetKey, instanceId },
@@ -150,18 +162,6 @@ export class RealtimeController implements OnModuleInit {
 
           heartbeatTimer = timer(HEARTBEAT_INTERVAL_MS, HEARTBEAT_INTERVAL_MS).subscribe(() => {
             if (!subscriber.closed) subscriber.next(PING_EVENT);
-          });
-
-          subject.subscribe({
-            next: (event: RealtimeEvent | AuthExpiredEvent | PingEvent) =>
-              subscriber.next(event as MessageEvent),
-            error: (err: unknown) => {
-              this.logger.warn(`Subject erro em ${streetKey}: ${String(err)}`);
-              void teardown('subject-error');
-            },
-            complete: () => {
-              void teardown('subject-complete');
-            },
           });
         } catch (err) {
           this.logger.warn(`Falha abrindo SSE em ${streetKey}: ${(err as Error).message}`);
