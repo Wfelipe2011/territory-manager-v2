@@ -16,6 +16,28 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Auto-bump version (standard-version)
+        id: bump
+        if: "!contains(github.event.head_commit.message, 'chore(release)')"
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          npx standard-version --no-verify
+          NEW_TAG=$(git describe --tags --abbrev=0)
+          echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+          git push --follow-tags origin HEAD:acp
 
       - name: Log in to Docker Hub
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a

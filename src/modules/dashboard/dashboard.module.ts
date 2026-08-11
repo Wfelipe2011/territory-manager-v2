@@ -3,10 +3,10 @@ import { DashboardController } from './dashboard.controller';
 import { DashboardService } from './dashboard.service';
 import { HealthService } from './health.service';
 import { AuthModule } from '../auth/auth.module';
-import { EventsModule } from '../gateway/event.module';
+import { PresenceModule } from '../presence/presence.module';
 
 @Module({
-  imports: [AuthModule, EventsModule],
+  imports: [AuthModule, PresenceModule],
   controllers: [DashboardController],
   providers: [DashboardService, HealthService],
   exports: [HealthService],

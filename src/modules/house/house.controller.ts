@@ -1,4 +1,3 @@
-import { EventsGateway } from './../gateway/event.gateway';
 import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, Logger, NotFoundException, Param, Patch, Post, Put, Query, Request, UsePipes, ValidationPipe } from '@nestjs/common';
 import { NameResolverService } from 'src/infra/name-resolver/name-resolver.service';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -24,7 +23,6 @@ export class HouseController {
 
   constructor(
     private houseService: HouseService,
-    private eventsGateway: EventsGateway,
     private nameResolver: NameResolverService,
   ) {
     this.signatureIsValid = new SignatureIsValid(houseService.prisma);
@@ -119,15 +117,15 @@ export class HouseController {
       if (!body.round || isNaN(+body.round)) throw new BadRequestException('Rodada inválida');
       const isAdmin = req.user.roles.includes(Role.ADMIN);
 
-      const result = await this.houseService.updateHouse(+houseId, body, isAdmin, +body.round);
+      const streetKey = `house:${territoryId}:${blockId}:${addressId}:${body.round}`;
+      const result = await this.houseService.executeUpdateHouseWithTransaction(
+        +houseId,
+        body,
+        isAdmin,
+        +body.round,
+        streetKey,
+      );
       await this.houseService.invalidateHousesCache(+territoryId, +blockId, +addressId, +body.round);
-      setImmediate(() => this.eventsGateway.emitRoom(`${territoryId}-${blockId}-${addressId}-${body.round}`, {
-        type: 'update_house',
-        data: {
-          houseId: houseId,
-          completed: body.status,
-        },
-      }));
       return result;
     } catch (error) {
       this.logger.error(error);

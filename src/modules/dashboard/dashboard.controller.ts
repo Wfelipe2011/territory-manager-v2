@@ -25,6 +25,12 @@ export class DashboardController {
   ) { }
 
   @Public()
+  @Get('healthz')
+  async healthz() {
+    return await this.healthService.getHealthData();
+  }
+
+  @Public()
   @Get('login')
   @Render('login')
   loginPage() {

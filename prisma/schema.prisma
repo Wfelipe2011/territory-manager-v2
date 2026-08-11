@@ -274,6 +274,21 @@ model socket {
   @@index([tenantId, createdAt])
 }
 
+model street_presence {
+  presenceId   String   @id @default(uuid()) @map("presence_id") @db.Uuid
+  streetKey    String   @map("street_key")
+  userId       Int?     @map("user_id")
+  identityKey  String   @default("__unset__") @map("identity_key")
+  connectionId String   @unique @map("connection_id") @db.Uuid
+  instanceId   String   @map("instance_id")
+  connectedAt  DateTime @default(now()) @map("connected_at")
+  lastSeenAt   DateTime @default(now()) @map("last_seen_at")
+
+  @@index([streetKey, lastSeenAt])
+  @@index([streetKey, identityKey])
+  @@index([lastSeenAt])
+}
+
 model paypal_transaction {
   id                      Int      @id @unique @default(autoincrement())
   transactionId           String   @unique // ID da transação do PayPal

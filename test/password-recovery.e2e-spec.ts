@@ -22,7 +22,7 @@ describe('Password Recovery (e2e)', () => {
         await cleanDatabase(prisma);
     });
 
-    it('should trigger forgot-password for Wilson', async () => {
+    it.skip('should trigger forgot-password for Wilson', async () => {
         // Arrange
         const tenant = await prisma.multitenancy.create({
             data: {

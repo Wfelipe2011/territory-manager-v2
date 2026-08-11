@@ -11,6 +11,7 @@ import dayjs from 'dayjs';
 import { UpdateHouseOrder } from './contracts/UpdateHouseOrder';
 import { ParametersService } from '../parameters/parameters.service';
 import { AddressBlockService } from '../block/adress-block.service';
+import { EventsBusService } from '../events-bus/events-bus.service';
 
 const TTL_ADDRESSES = 300_000; // 5 minutos
 const TTL_HOUSES = 30_000;  // 30 segundos
@@ -31,6 +32,7 @@ export class HouseService {
     readonly prisma: PrismaService,
     private readonly parametersService: ParametersService,
     private readonly addressBlockService: AddressBlockService,
+    private readonly eventsBus: EventsBusService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) { }
 
@@ -155,33 +157,55 @@ export class HouseService {
   }
 
   async updateHouse(houseId: number, body: { status: boolean }, isAdmin: boolean, roundNumber: number) {
-    const [[round], house] = await Promise.all([
-      this.prisma.$queryRaw<Round[]>`SELECT * FROM round WHERE house_id = ${houseId} AND round_number = ${roundNumber}`,
-      this.prisma.house.findUnique({ where: { id: houseId }, include: { territory: true, block: true } }),
-    ]);
-    if (!round) throw new BadRequestException('Casa não encontrada');
-    if (!house) throw new NotFoundException('Casa não encontrada');
-    this.logger.log(`Verificando se a casa [${house?.territory.name}-${house?.block.name}-${house?.number}] pode ser atualizada`);
+    return this.executeUpdateHouseWithTransaction(houseId, body, isAdmin, roundNumber, undefined);
+  }
 
-    if (!isAdmin && round.completed_date && body.status === false) {
-      const now = dayjs();
-      const updateDate = dayjs(round.completed_date);
-      const customHours = await this.parametersService.getValue(house.tenantId, 'SIGNATURE_EXPIRATION_HOURS');
-      const hours = customHours ? parseInt(customHours) : 5;
-      if (now.diff(updateDate, 'hours') > hours)
-        throw new ForbiddenException(`Casa [${house?.territory.name}-${house?.block.name}-${house?.number}] não pode ser atualizada`);
-    }
+  async executeUpdateHouseWithTransaction(
+    houseId: number,
+    body: { status: boolean },
+    isAdmin: boolean,
+    roundNumber: number,
+    streetKey?: string,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const [[round], house] = await Promise.all([
+        tx.$queryRaw<Round[]>`SELECT * FROM round WHERE house_id = ${houseId} AND round_number = ${roundNumber}`,
+        tx.house.findUnique({ where: { id: houseId }, include: { territory: true, block: true } }),
+      ]);
+      if (!round) throw new BadRequestException('Casa não encontrada');
+      if (!house) throw new NotFoundException('Casa não encontrada');
+      this.logger.log(`Verificando se a casa [${house?.territory.name}-${house?.block.name}-${house?.number}] pode ser atualizada`);
 
-    await this.prisma.$queryRaw`
-      UPDATE round SET 
-        update_date = ${new Date()}, 
-        completed = ${body.status}, 
-        completed_date = ${new Date()} 
-      WHERE house_id = ${houseId} AND round_number = ${roundNumber}`;
+      if (!isAdmin && round.completed_date && body.status === false) {
+        const now = dayjs();
+        const updateDate = dayjs(round.completed_date);
+        const customHours = await this.parametersService.getValue(house.tenantId, 'SIGNATURE_EXPIRATION_HOURS');
+        const hours = customHours ? parseInt(customHours) : 5;
+        if (now.diff(updateDate, 'hours') > hours)
+          throw new ForbiddenException(`Casa [${house?.territory.name}-${house?.block.name}-${house?.number}] não pode ser atualizada`);
+      }
 
-    this.logger.log(`Casa [${house?.territory.name}-${house?.block.name}-${house?.number}] atualizada com sucesso`);
+      await tx.$queryRaw`
+        UPDATE round SET
+          update_date = ${new Date()},
+          completed = ${body.status},
+          completed_date = ${new Date()}
+        WHERE house_id = ${houseId} AND round_number = ${roundNumber}`;
 
-    return { message: 'Casa atualizada com sucesso' };
+      if (streetKey) {
+        await this.eventsBus.publishStreetChanged(tx, {
+          streetKey,
+          reason: 'HOUSE_UPDATED',
+          territoryId: house.territoryId,
+          blockId: house.blockId,
+          round: roundNumber,
+        });
+      }
+
+      this.logger.log(`Casa [${house?.territory.name}-${house?.block.name}-${house?.number}] atualizada com sucesso`);
+
+      return { message: 'Casa atualizada com sucesso' };
+    });
   }
 
   private async getBlockDetails(blockId: number, territoryId: number): Promise<BlockSignature[]> {

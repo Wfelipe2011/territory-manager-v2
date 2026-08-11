@@ -43,4 +43,5 @@ docker/grafana
 cache
 .postgres
 *.env
-
+*dump*
+opencode.json

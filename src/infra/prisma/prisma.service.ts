@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { Logger } from '@nestjs/common';
 
 export class PrismaService extends PrismaClient {
@@ -17,9 +17,20 @@ export class PrismaService extends PrismaClient {
       this.logger.warn('⚠️ Conexão com o banco de dados foi perdida.');
     });
 
-    this.$on('error' as never, (error) => {
-      this.isConnected = false;
-      this.logger.error(`🔥 Erro no Prisma: `, error);
+    this.$on('error' as never, (error: any) => {
+      const msg = error?.message ?? error?.toString?.() ?? '<sem mensagem>';
+      const code = error?.code ? `[${error.code}]` : '';
+      this.logger.error(`🔥 Erro no Prisma ${code}: ${msg}`);
+
+      const losesConnection =
+        error instanceof Prisma.PrismaClientInitializationError ||
+        error instanceof Prisma.PrismaClientRustPanicError ||
+        /connection|reset|refused|timed out|EHOSTUNREACH|ECONNRESET|EPIPE/i.test(msg);
+
+      if (losesConnection) {
+        this.isConnected = false;
+        this.logger.warn('Conexão considerada perdida; próxima chamada tentará reconectar.');
+      }
     });
   }
 

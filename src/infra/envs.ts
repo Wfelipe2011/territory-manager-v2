@@ -6,4 +6,10 @@ export const envs = {
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
   CLOUDWATCH_LOG_GROUP: process.env.CLOUDWATCH_LOG_GROUP || 'territory-manager',
   LOG_LEVEL: process.env.LOG_LEVEL || 'debug',
+  INSTANCE_ID: process.env.INSTANCE_ID,
+  PGBOSS_SCHEMA: process.env.PGBOSS_SCHEMA || 'pgboss',
 };
+
+export function instanceIdFromEnv(): string {
+  return process.env.INSTANCE_ID || 'unknown';
+}

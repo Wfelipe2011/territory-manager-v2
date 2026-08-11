@@ -40,6 +40,10 @@ import { FirebaseModule } from './infra/firebase.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { NameResolverModule } from './infra/name-resolver/name-resolver.module';
+import { PgbossModule } from './infra/pgboss/pgboss.module';
+import { EventsBusModule } from './modules/events-bus/events-bus.module';
+import { PresenceModule } from './modules/presence/presence.module';
+import { RealtimeModule } from './modules/realtime/realtime.module';
 
 // Usar instância global singleton do TraceService
 const winstonTransports: winston.transport[] = [
@@ -130,6 +134,10 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
     ParametersModule,
     FinancialModule,
     NameResolverModule,
+    PgbossModule,
+    EventsBusModule,
+    PresenceModule,
+    RealtimeModule,
   ],
   controllers: [AppController, TransactionsController],
   providers: [

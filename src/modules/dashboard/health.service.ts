@@ -1,26 +1,32 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../infra/prisma/prisma.service';
-import { EventsGateway } from '../gateway/event.gateway';
+import { PresenceService } from '../presence/presence.service';
+import { PgbossService } from '../../infra/pgboss/pgboss.service';
 import * as os from 'os';
 import si from 'systeminformation';
 import { Prisma } from '@prisma/client';
 
+import packageJson from '../../../package.json';
+
 @Injectable()
 export class HealthService {
     private readonly logger = new Logger(HealthService.name);
+    private readonly version: string = packageJson.version;
 
     constructor(
         private readonly prismaService: PrismaService,
-        private readonly eventsGateway: EventsGateway,
+        private readonly presenceService: PresenceService,
+        private readonly pgbossService: PgbossService,
     ) { }
 
     async getHealthData() {
-        const [databaseInfo, currentLoad, lastChanges, sessionsGeneral, sessionsByTenant] = await Promise.all([
+        const [databaseInfo, currentLoad, lastChanges, sessionsGeneral, sessionsByTenant, pgbossInfo] = await Promise.all([
             this.getDatabaseInfo(),
             si.currentLoad(),
             this.getLastChanges(),
             this.getGeneralSessions(),
             this.getTenantSessions(),
+            this.getPgbossInfo(),
         ]);
 
         const {
@@ -35,6 +41,7 @@ export class HealthService {
         const cpuUsagePercent = currentLoad.currentLoad.toFixed(2);
 
         return {
+            version: this.version,
             message: `[${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}] - [${process.env.INSTANCE_ID}] - O servidor está em execução - Produção!`,
             signatures: countSignatures,
             sockets,
@@ -59,7 +66,22 @@ export class HealthService {
             last_changes: lastChanges,
             sessionsGeneral,
             sessionsByTenant,
+            pgboss: pgbossInfo,
         };
+    }
+
+    private async getPgbossInfo(): Promise<{ ready: boolean; queues: Record<string, number> }> {
+        const queueNames = [
+            'street.changed',
+            'USER_JOINED_STREET',
+            'USER_LEFT_STREET',
+            'presence.cleanup',
+        ];
+        const queues: Record<string, number> = {};
+        await Promise.all(queueNames.map(async (name) => {
+            queues[name] = await this.pgbossService.getQueueSize(name);
+        }));
+        return { ready: this.pgbossService.isReady(), queues };
     }
 
     private getSystemInfo() {
@@ -77,7 +99,7 @@ export class HealthService {
             this.prismaService.$queryRaw`show max_connections` as Promise<{ max_connections: string }[]>,
             this.prismaService.$queryRaw`select count(1) from pg_stat_activity where state = 'active' and datname = ${process.env.POSTGRES_DB}` as Promise<{ count: BigInt }[]>,
             this.prismaService.$queryRaw`select count(1) from pg_stat_activity where state = 'idle' and datname = ${process.env.POSTGRES_DB}` as Promise<{ count: BigInt }[]>,
-            Promise.resolve(this.eventsGateway.getConnectedSocketCount()),
+            Promise.resolve(this.presenceService.getTotalActiveUsers()),
             this.prismaService.signature.count({
                 where: {
                     expirationDate: {

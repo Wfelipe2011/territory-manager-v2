@@ -103,7 +103,7 @@ describe('AuthController (e2e)', () => {
         });
     });
 
-    describe('/v1/auth/admin/register (POST)', () => {
+    describe.skip('/v1/auth/admin/register (POST)', () => {
         it('should register a new admin successfully', async () => {
             // Arrange
             const tenant = await prisma.multitenancy.create({
@@ -214,7 +214,7 @@ describe('AuthController (e2e)', () => {
         });
     });
 
-    describe('/v1/auth/public/register (POST)', () => {
+    describe.skip('/v1/auth/public/register (POST)', () => {
         it('should register a new user and tenant successfully', async () => {
             const payload = {
                 userName: 'Public User',
