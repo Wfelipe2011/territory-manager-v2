@@ -50,6 +50,11 @@ export function toggleHouse(territoryId, blockId, addressId, houseId, status, ro
         payload,
         { headers: makeHeaders(token), tags: { name: 'toggleHouse' } }
     );
+    const ok = res.status === 200 || res.status === 204;
+    if (!ok) {
+        const bodySnippet = (res.body ?? '').slice(0, 200);
+        console.log(`[toggleHouse] falhou: status=${res.status} house=${houseId} body=${bodySnippet}`);
+    }
     check(res, {
         'toggleHouse status is 200 or 204': (r) => r.status === 200 || r.status === 204,
     });

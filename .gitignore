@@ -45,3 +45,6 @@ cache
 *.env
 *dump*
 opencode.json
+
+# k6 result artifacts
+/load-tests/results

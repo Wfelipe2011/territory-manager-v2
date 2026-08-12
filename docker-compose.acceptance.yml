@@ -31,7 +31,7 @@ services:
     environment:
       - PORT=$PORT
       # DATABASE_URL aponta para PgBouncer HMG (transaction pooling)
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer-hmg:5432/${POSTGRES_DB}?pgbouncer=true&connection_limit=10
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer-hmg:5432/${POSTGRES_DB}?pgbouncer=true&connection_limit=100
       # DIRECT_URL aponta direto ao Postgres — usado pelo Prisma para migrations
       # e pelo worker LISTEN/NOTIFY (PgBouncer em modo transaction não suporta LISTEN)
       - DIRECT_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT:-5432}/${POSTGRES_DB}
