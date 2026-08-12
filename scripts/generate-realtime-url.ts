@@ -6,6 +6,8 @@ import { parseArgs } from 'node:util';
 import { PrismaClient } from '@prisma/client';
 import * as jwt from 'jsonwebtoken';
 
+const HOMOLOG_BASE_URL = 'https://qa.territory-manager.com.br';
+
 interface CliArgs {
   territory: number;
   round: number;
@@ -16,6 +18,7 @@ interface CliArgs {
   expirationSeconds: number;
   userName: string;
   roles: string[];
+  env: 'dev' | 'homolog';
 }
 
 function parseCli(): CliArgs {
@@ -30,9 +33,15 @@ function parseCli(): CliArgs {
       'expiration-seconds': { type: 'string', default: '3600' },
       'user-name': { type: 'string', default: 'Test User' },
       roles: { type: 'string', default: 'admin' },
+      env: { type: 'string', default: 'dev' },
     },
     allowPositionals: false,
   });
+
+  const env = parsed.values.env as string;
+  if (env !== 'dev' && env !== 'homolog') {
+    throw new Error(`--env deve ser 'dev' ou 'homolog' (recebido: ${env})`);
+  }
 
   return {
     territory: intOrThrow(parsed.values.territory, 'territory'),
@@ -44,6 +53,7 @@ function parseCli(): CliArgs {
     expirationSeconds: intOrThrow(parsed.values['expiration-seconds'], 'expiration-seconds'),
     userName: parsed.values['user-name'] as string,
     roles: (parsed.values.roles as string).split(',').map((r) => r.trim()).filter(Boolean),
+    env: env as 'dev' | 'homolog',
   };
 }
 
@@ -101,7 +111,10 @@ async function main() {
     });
 
     const p = `territorio/${args.territory}?round=${args.round}`;
-    const url = `http://${args.host}:${args.port}/home?p=${encodeURIComponent(p)}&s=${key}`;
+    const url =
+      args.env === 'homolog'
+        ? `${HOMOLOG_BASE_URL}/home?p=${encodeURIComponent(p)}&s=${key}`
+        : `http://${args.host}:${args.port}/home?p=${encodeURIComponent(p)}&s=${key}`;
 
     console.log(url);
   } finally {
