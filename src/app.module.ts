@@ -1,6 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD } from '@nestjs/core';
 
 import { ConfigModule } from '@nestjs/config';
 import { WinstonModule } from 'nest-winston';
@@ -15,7 +15,7 @@ import { ApiKeyGuard } from './decorators/api-key.guard';
 import { SignatureModule } from './modules/signature/signature.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RoundModule } from './modules/round/round.module';
-import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
+import { CacheModule } from '@nestjs/cache-manager';
 import { HouseModule } from './modules/house/house.module';
 import { EventsModule } from './modules/gateway/event.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -119,7 +119,7 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     CacheModule.register({
-      ttl: 60, // seconds
+      ttl: 60 * 1000, // milliseconds (cache-manager v5 usa ms)
       max: 1000, // maximum number of items in cache
       isGlobal: true,
     }),
@@ -152,10 +152,6 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
     {
       provide: APP_GUARD,
       useClass: ApiKeyGuard,
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: CacheInterceptor,
     },
     {
       provide: APP_GUARD,
