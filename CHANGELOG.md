@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.1](https://github.com/Wfelipe2011/territory-manager-v2/compare/v2.1.0...v2.1.1) (2026-08-12)
+
+
+### Bug Fixes
+
+* alinha compose de acceptance com o de prod (pgbouncer + DIRECT_URL) ([e0898df](https://github.com/Wfelipe2011/territory-manager-v2/commit/e0898df24d8c9fa7e3a3f3ac3398b08519ab4771))
+
 ## [2.1.0](https://github.com/Wfelipe2011/territory-manager-v2/compare/v2.0.0...v2.1.0) (2026-08-12)
 
 
