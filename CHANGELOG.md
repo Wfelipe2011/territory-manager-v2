@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.2](https://github.com/Wfelipe2011/territory-manager-v2/compare/v2.1.1...v2.1.2) (2026-08-12)
+
+
+### Bug Fixes
+
+* renomeia alias do pgbouncer hmg para pgbouncer-hmg ([284bd82](https://github.com/Wfelipe2011/territory-manager-v2/commit/284bd82a549dad87041710440280019b1c2dcc39))
+
 ### [2.1.1](https://github.com/Wfelipe2011/territory-manager-v2/compare/v2.1.0...v2.1.1) (2026-08-12)
 
 
