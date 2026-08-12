@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0](https://github.com/Wfelipe2011/territory-manager-v2/compare/v2.0.0...v2.1.0) (2026-08-12)
+
+
+### Features
+
+* adiciona suporte a homolog no gerador de URL realtime ([949b171](https://github.com/Wfelipe2011/territory-manager-v2/commit/949b171074b0b3d086940f6295b7323613a05af1))
+
+
+### Bug Fixes
+
+* aponta DIRECT_URL direto ao Postgres para o LISTEN/NOTIFY do SSE ([429beaf](https://github.com/Wfelipe2011/territory-manager-v2/commit/429beaf893cef5fb5f789020dfb2e244fc6047ec))
+
 ## 2.0.0 (2026-08-12)
 
 
