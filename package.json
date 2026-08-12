@@ -1,6 +1,6 @@
 {
   "name": "territory-manager",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "description": "Esta API oferece recursos para gerenciamento de territórios, autenticação de usuários, verificação de saúde do servidor, manuseio de informações de casas, realização de rodadas, e assinaturas eletrônicas.",
   "title": "Territory Manager",
   "author": "",

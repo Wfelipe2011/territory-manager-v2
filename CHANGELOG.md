@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.0](https://github.com/Wfelipe2011/territory-manager-v2/compare/v2.1.2...v2.2.0) (2026-08-12)
+
+
+### Features
+
+* load tests SSE parametrizados, scripts HMG e pool do acceptance em 100 ([69e4687](https://github.com/Wfelipe2011/territory-manager-v2/commit/69e46879ec5a0685c1e4e7316ed94908fd73176b))
+
 ### [2.1.2](https://github.com/Wfelipe2011/territory-manager-v2/compare/v2.1.1...v2.1.2) (2026-08-12)
 
 
