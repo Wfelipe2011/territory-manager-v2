@@ -1,11 +1,14 @@
 import { Module } from '@nestjs/common';
+
+import { ParametersModule } from '../parameters/parameters.module';
 import { SignatureController } from './signature.controller';
 import { SignatureService } from './signature.service';
-import { ParametersModule } from '../parameters/parameters.module';
+import { TenantSignatureController } from './tenant-signature.controller';
 
 @Module({
   imports: [ParametersModule],
-  controllers: [SignatureController],
+  controllers: [SignatureController, TenantSignatureController],
   providers: [SignatureService],
+  exports: [SignatureService],
 })
-export class SignatureModule { }
+export class SignatureModule {}

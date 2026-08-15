@@ -1,12 +1,13 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import * as jwt from 'jsonwebtoken';
+import { Role } from 'src/enum/role.enum';
+import { envs } from 'src/infra/envs';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { calculateExpiresIn, uuid } from 'src/shared';
-import * as jwt from 'jsonwebtoken';
-import { envs } from 'src/infra/envs';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { Role } from 'src/enum/role.enum';
-import { SignatureDate } from './usecase/SignatureDate';
+
 import { ParametersService } from '../parameters/parameters.service';
+import { SignatureDate } from './usecase/SignatureDate';
 
 type GenerateTerritoryParams = {
   overseer: string;
@@ -40,14 +41,14 @@ export class SignatureService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly parametersService: ParametersService
-  ) { }
+  ) {}
 
   async generateTerritory({ overseer, expirationTime, territoryId, tenantId, round }: GenerateTerritoryParams): Promise<{ signature: string }> {
     this.signatureDate.isValidDate(expirationTime);
 
     const territoryOverseer = await this.prisma.territory_overseer.findFirst({
       where: {
-        territoryId: territoryId,
+        territoryId,
         roundNumber: +round,
         finished: false,
       },
@@ -181,16 +182,14 @@ export class SignatureService {
     this.logger.log('Deletando assinatura das quadras');
     await Promise.all(
       territoryBlocks
-        .flatMap(territoryBlock =>
-          territoryBlock.signatureId ? [territoryBlock.signatureId] : [],
-        )
+        .flatMap(territoryBlock => (territoryBlock.signatureId ? [territoryBlock.signatureId] : []))
         .map(signatureId =>
           this.prisma.signature.delete({
             where: {
               id: signatureId,
             },
-          }),
-        ),
+          })
+        )
     );
   }
 
@@ -208,6 +207,93 @@ export class SignatureService {
         id: territoryBlock.signatureId,
       },
     });
+  }
+
+  async generateTenantSignature(tenantId: number): Promise<{ key: string }> {
+    await this.prisma.signature.updateMany({
+      where: {
+        tenantId,
+        kind: 'tenant',
+        revokedAt: null,
+      },
+      data: {
+        revokedAt: new Date(),
+      },
+    });
+
+    const uniqueId = uuid();
+    const token = jwt.sign({ id: uniqueId, tenantId, kind: 'tenant', roles: [Role.PUBLICADOR] }, envs.JWT_SECRET);
+    const signature = await this.prisma.signature.create({
+      data: {
+        key: uniqueId,
+        expirationDate: null,
+        token,
+        tenantId,
+        kind: 'tenant',
+      },
+    });
+    this.logger.log(`Assinatura de tenant gerada para o tenant ${tenantId}`);
+    return { key: signature.key };
+  }
+
+  async getTenantSignature(tenantId: number) {
+    const signature = await this.prisma.signature.findFirst({
+      where: {
+        tenantId,
+        kind: 'tenant',
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        key: true,
+        createdAt: true,
+        revokedAt: true,
+      },
+    });
+    if (!signature) throw new NotFoundException('Assinatura de tenant não encontrada');
+    return signature;
+  }
+
+  async revokeTenantSignature(tenantId: number): Promise<{ revoked: boolean }> {
+    const { count } = await this.prisma.signature.updateMany({
+      where: {
+        tenantId,
+        kind: 'tenant',
+        revokedAt: null,
+      },
+      data: {
+        revokedAt: new Date(),
+      },
+    });
+    this.logger.log(`Revogadas ${count} assinaturas de tenant do tenant ${tenantId}`);
+    return { revoked: true };
+  }
+
+  async generateBlockSignatureForShare({ territoryId, blockId, tenantId, round }: GenerateBlockParams): Promise<{ key: string }> {
+    const territoryBlock = await this.prisma.territory_block.findFirst({
+      where: {
+        territoryId,
+        blockId,
+        tenantId,
+      },
+    });
+    if (!territoryBlock) throw new NotFoundException('Bloco não encontrado');
+
+    const uniqueId = uuid();
+    const customHours = await this.parametersService.getValue(territoryBlock.tenantId, 'SIGNATURE_EXPIRATION_HOURS');
+    const hours = customHours ? parseInt(customHours) : 5;
+    const expirationTime = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString(); // 5 horas ou customizado
+    const token = this.createJWT({ id: uniqueId, territoryId, blockId, roles: [Role.PUBLICADOR], tenantId, round }, expirationTime);
+    const signature = await this.prisma.signature.create({
+      data: {
+        key: uniqueId,
+        expirationDate: new Date(expirationTime),
+        token,
+        tenantId,
+        kind: 'block',
+      },
+    });
+    this.logger.log(`Assinatura de quadra gerada para compartilhamento (block ${blockId})`);
+    return { key: signature.key };
   }
 
   @Cron(CronExpression.EVERY_10_MINUTES)
