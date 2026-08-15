@@ -5,6 +5,7 @@ export const PGBOSS_QUEUES = {
   STREET_CHANGED: 'street.changed',
   USER_JOINED_STREET: 'USER_JOINED_STREET',
   USER_LEFT_STREET: 'USER_LEFT_STREET',
+  WAITING_ROOM_CHANGED: 'waiting_room.changed',
 } as const;
 
 export const PGBOSS_NOTIFY_CHANNELS = PGBOSS_QUEUES;

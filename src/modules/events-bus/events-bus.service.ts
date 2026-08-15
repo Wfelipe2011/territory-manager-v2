@@ -5,6 +5,7 @@ export const PGBOSS_NOTIFY_CHANNELS = {
   STREET_CHANGED: 'street.changed',
   USER_JOINED_STREET: 'USER_JOINED_STREET',
   USER_LEFT_STREET: 'USER_LEFT_STREET',
+  WAITING_ROOM_CHANGED: 'waiting_room.changed',
 } as const;
 
 export const PGBOSS_QUEUE_NAMES = Object.values(PGBOSS_NOTIFY_CHANNELS);
@@ -27,14 +28,16 @@ export interface PresencePayload {
   presenceId: string;
 }
 
+export interface WaitingRoomChangedPayload {
+  groupId: string;
+  type: 'presence' | 'assignments';
+}
+
 @Injectable()
 export class EventsBusService {
   private readonly logger = new Logger(EventsBusService.name);
 
-  async publishStreetChanged(
-    tx: Prisma.TransactionClient,
-    payload: StreetChangedPayload,
-  ): Promise<void> {
+  async publishStreetChanged(tx: Prisma.TransactionClient, payload: StreetChangedPayload): Promise<void> {
     const data = JSON.stringify(payload);
     try {
       await tx.$executeRaw`
@@ -49,10 +52,7 @@ export class EventsBusService {
     }
   }
 
-  async publishUserJoined(
-    tx: Prisma.TransactionClient,
-    payload: PresencePayload,
-  ): Promise<void> {
+  async publishUserJoined(tx: Prisma.TransactionClient, payload: PresencePayload): Promise<void> {
     const data = JSON.stringify(payload);
     try {
       await tx.$executeRaw`
@@ -67,10 +67,7 @@ export class EventsBusService {
     }
   }
 
-  async publishUserLeft(
-    tx: Prisma.TransactionClient,
-    payload: PresencePayload,
-  ): Promise<void> {
+  async publishUserLeft(tx: Prisma.TransactionClient, payload: PresencePayload): Promise<void> {
     const data = JSON.stringify(payload);
     try {
       await tx.$executeRaw`
@@ -81,6 +78,21 @@ export class EventsBusService {
       `;
     } catch (err) {
       this.logger.error(`Falha publicando USER_LEFT_STREET (${payload.streetKey}): ${(err as Error).message}`);
+      throw err;
+    }
+  }
+
+  async publishWaitingRoomChanged(tx: Prisma.TransactionClient, payload: WaitingRoomChangedPayload): Promise<void> {
+    const data = JSON.stringify(payload);
+    try {
+      await tx.$executeRaw`
+        SELECT pg_notify(
+          ${PGBOSS_NOTIFY_CHANNELS.WAITING_ROOM_CHANGED},
+          ${data}::text
+        )
+      `;
+    } catch (err) {
+      this.logger.error(`Falha publicando waiting_room.changed (${payload.groupId}): ${(err as Error).message}`);
       throw err;
     }
   }

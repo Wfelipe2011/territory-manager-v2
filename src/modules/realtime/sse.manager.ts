@@ -5,7 +5,7 @@ import { instanceIdFromEnv } from '../../infra/envs';
 
 export interface SseConnection {
   id: string;
-  streetKey: string;
+  roomKey: string;
   identityKey: string;
   tenantId: number;
   signatureExpiresAt: Date | null;
@@ -40,22 +40,22 @@ export class SseManager {
   private readonly watchTimer = new Map<string, NodeJS.Timeout>();
 
   register(connection: SseConnection): void {
-    let bucket = this.connections.get(connection.streetKey);
+    let bucket = this.connections.get(connection.roomKey);
     if (!bucket) {
       bucket = new Map();
-      this.connections.set(connection.streetKey, bucket);
+      this.connections.set(connection.roomKey, bucket);
     }
     bucket.set(connection.id, connection);
     this.logger.log(
-      `Conexão ${connection.id} (identity=${connection.identityKey}, tenant=${connection.tenantId}) entrou em ${connection.streetKey} — ${bucket.size} conexões locais`,
+      `Conexão ${connection.id} (identity=${connection.identityKey}, tenant=${connection.tenantId}) entrou em ${connection.roomKey} — ${bucket.size} conexões locais`
     );
     if (connection.signatureExpiresAt) {
       this.watchAuth(connection);
     }
   }
 
-  unregister(connectionId: string): { streetKey: string; streetCount: number } | null {
-    for (const [streetKey, bucket] of this.connections) {
+  unregister(connectionId: string): { roomKey: string; roomCount: number } | null {
+    for (const [roomKey, bucket] of this.connections) {
       const found = bucket.get(connectionId);
       if (!found) continue;
       const timer = this.watchTimer.get(connectionId);
@@ -67,16 +67,16 @@ export class SseManager {
       found.subject.complete();
       const remaining = bucket.size;
       if (remaining === 0) {
-        this.connections.delete(streetKey);
+        this.connections.delete(roomKey);
       }
-      this.logger.log(`Conexão ${connectionId} removida de ${streetKey} — ${remaining} conexões locais restantes`);
-      return { streetKey, streetCount: remaining };
+      this.logger.log(`Conexão ${connectionId} removida de ${roomKey} — ${remaining} conexões locais restantes`);
+      return { roomKey, roomCount: remaining };
     }
     return null;
   }
 
-  broadcastToStreet(streetKey: string, event: RealtimeEvent): void {
-    const bucket = this.connections.get(streetKey);
+  broadcastToRoom(roomKey: string, event: RealtimeEvent): void {
+    const bucket = this.connections.get(roomKey);
     if (!bucket || bucket.size === 0) return;
     for (const conn of bucket.values()) {
       try {
@@ -85,18 +85,18 @@ export class SseManager {
         this.logger.warn(`Falha enviando evento para ${conn.id}: ${(err as Error).message}`);
       }
     }
-    this.logger.debug(`Broadcast '${event.type}' em ${streetKey} para ${bucket.size} conexões`);
+    this.logger.debug(`Broadcast '${event.type}' em ${roomKey} para ${bucket.size} conexões`);
   }
 
-  emitPresenceChanged(streetKey: string, userCount: number): void {
-    this.broadcastToStreet(streetKey, {
+  emitPresenceChanged(roomKey: string, userCount: number): void {
+    this.broadcastToRoom(roomKey, {
       type: 'presence_changed',
-      data: { streetKey, userCount },
+      data: { streetKey: roomKey, userCount },
     });
   }
 
-  getLocalUserCount(streetKey: string): number {
-    return this.connections.get(streetKey)?.size ?? 0;
+  getLocalUserCount(roomKey: string): number {
+    return this.connections.get(roomKey)?.size ?? 0;
   }
 
   getTotalLocalConnections(): number {
@@ -113,10 +113,10 @@ export class SseManager {
     return undefined;
   }
 
-  getStreetKey(connectionId: string): string | undefined {
+  getRoomKey(connectionId: string): string | undefined {
     for (const bucket of this.connections.values()) {
       const c = bucket.get(connectionId);
-      if (c) return c.streetKey;
+      if (c) return c.roomKey;
     }
     return undefined;
   }

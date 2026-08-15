@@ -44,6 +44,8 @@ import { PgbossModule } from './infra/pgboss/pgboss.module';
 import { EventsBusModule } from './modules/events-bus/events-bus.module';
 import { PresenceModule } from './modules/presence/presence.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
+import { GroupsModule } from './modules/groups/groups.module';
+import { WaitingRoomModule } from './modules/waiting-room/waiting-room.module';
 
 // Usar instância global singleton do TraceService
 const winstonTransports: winston.transport[] = [
@@ -138,6 +140,8 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
     EventsBusModule,
     PresenceModule,
     RealtimeModule,
+    GroupsModule,
+    WaitingRoomModule,
   ],
   controllers: [AppController, TransactionsController],
   providers: [
