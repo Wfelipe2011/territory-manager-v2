@@ -250,6 +250,9 @@ model signature {
   key            String       @unique
   expirationDate DateTime?    @map("expiration_date")
   token          String
+  kind           String       @default("territory")
+  revokedAt      DateTime?    @map("revoked_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
   multitenancy   multitenancy @relation(fields: [tenantId], references: [id])
   tenantId       Int          @map("tenant_id")
 
@@ -287,6 +290,63 @@ model street_presence {
   @@index([streetKey, lastSeenAt])
   @@index([streetKey, identityKey])
   @@index([lastSeenAt])
+}
+
+model Group {
+  id        String   @id @default(uuid())
+  tenantId  Int
+  name      String
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("group")
+}
+
+model Publisher {
+  id          String   @id @default(uuid())
+  tenantId    Int
+  identityKey String
+  firstName   String
+  lastName    String
+  phoneLast4  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tenantId, identityKey])
+  @@index([tenantId])
+  @@map("publisher")
+}
+
+model Assignment {
+  id          String @id @default(uuid())
+  tenantId    Int
+  publisherId String
+  groupId     String
+  blockId     Int
+  territoryId Int
+  round       Int
+  createdAt   DateTime @default(now())
+
+  @@unique([publisherId, blockId])
+  @@index([tenantId])
+  @@map("assignment")
+}
+
+model WaitingRoomPresence {
+  id          String    @id @default(uuid())
+  tenantId    Int
+  groupId     String
+  territoryId Int?
+  round       Int?
+  identityKey String
+  kind        String
+  displayName String?
+  joinedAt    DateTime  @default(now())
+  lastSeenAt  DateTime  @updatedAt
+
+  @@unique([groupId, identityKey])
+  @@map("waiting_room_presence")
 }
 
 model paypal_transaction {
