@@ -121,13 +121,16 @@ export class SignatureService {
     if (!signature) throw new NotFoundException('Assinatura não encontrada');
     const tokenDecode = jwt.decode(signature.token) as TokenData;
     this.logger.debug(`Token decodificado para assinatura ${signatureId}`, { tokenDecode });
-    const roundInfo = await this.prisma.round_info.findFirst({
-      where: {
-        roundNumber: +tokenDecode.round,
-        tenantId: tokenDecode.tenantId,
-      },
-    });
-    if (!roundInfo) throw new NotFoundException('Round não encontrado');
+    let roundInfo = null;
+    if (tokenDecode.round) {
+      roundInfo = await this.prisma.round_info.findFirst({
+        where: {
+          roundNumber: +tokenDecode.round,
+          tenantId: tokenDecode.tenantId,
+        },
+      });
+      if (!roundInfo) throw new NotFoundException('Round não encontrado');
+    }
     return {
       token: signature.token,
       roundInfo,
