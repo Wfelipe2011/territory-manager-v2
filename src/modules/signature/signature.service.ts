@@ -295,6 +295,18 @@ export class SignatureService {
         kind: 'block',
       },
     });
+
+    await this.prisma.territory_block.update({
+      where: {
+        territoryId_blockId: {
+          territoryId: +territoryId,
+          blockId: +blockId,
+        },
+      },
+      data: {
+        signatureId: signature.id,
+      },
+    });
     this.logger.log(`Assinatura de quadra gerada para compartilhamento (block ${blockId})`);
     return { key: signature.key };
   }

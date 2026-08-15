@@ -26,11 +26,11 @@ export class WaitingRoomController {
 
   @Public()
   @Get('groups')
-  @ApiOperation({ summary: 'Lista grupos ativos (com dirigente presente há menos de 2min)' })
+  @ApiOperation({ summary: 'Lista grupos: dirigente vê todos (com flag active); publicador vê só ativos' })
   async listGroups(@Query('s') signatureKey: string, @Req() req: Request) {
     try {
       const ctx = await this.waitingRoomService.resolveTenantContext(signatureKey, this.identityKey(req));
-      return await this.waitingRoomService.listActiveGroups(ctx.tenantId);
+      return await this.waitingRoomService.listGroups(ctx);
     } catch (error) {
       this.logger.error(error);
       throw error;
@@ -44,12 +44,7 @@ export class WaitingRoomController {
   async join(@Param('groupId') groupId: string, @Body() body: JoinRoomDto, @Query('s') signatureKey: string, @Req() req: Request) {
     try {
       const ctx = await this.waitingRoomService.resolveTenantContext(signatureKey, this.identityKey(req));
-      return await this.waitingRoomService.joinRoom({
-        groupId,
-        tenantId: ctx.tenantId,
-        identityKey: ctx.identityKey,
-        body,
-      });
+      return await this.waitingRoomService.joinRoom({ groupId, ctx, body });
     } catch (error) {
       this.logger.error(error);
       throw error;

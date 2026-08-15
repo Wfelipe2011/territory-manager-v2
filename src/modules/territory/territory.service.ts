@@ -19,19 +19,25 @@ export class TerritoryService {
           t.type_id,
           t.name,
           to2.overseer,
-          s.key,
-          s.expiration_date,
+          to2.key,
+          to2.expiration_date,
           COUNT(r.id) > 0 as has_rounds,
           ARRAY_REMOVE(ARRAY_AGG(CASE WHEN r.completed THEN r.update_date END), NULL) as positive_completed,
           SUM(CASE WHEN NOT r.completed THEN 1 ELSE 0 END) as negative_completed
       FROM territory t
       INNER JOIN round r ON r.territory_id = t.id and r.round_number = ${+territoryDto.round}
-      LEFT JOIN territory_overseer to2 ON to2.territory_id = t.id AND to2.signature_id IS NOT NULL AND to2.round_number = ${+territoryDto.round}
-      LEFT JOIN signature s ON s.id = to2.signature_id
+      LEFT JOIN LATERAL (
+        SELECT to2.overseer, s.key, s.expiration_date
+        FROM territory_overseer to2
+        LEFT JOIN signature s ON s.id = to2.signature_id
+        WHERE to2.territory_id = t.id AND to2.signature_id IS NOT NULL AND to2.round_number = ${+territoryDto.round}
+        ORDER BY s.id DESC
+        LIMIT 1
+      ) to2 ON TRUE
       WHERE t.tenant_id = ${+tenantId}
       ${type ? Prisma.sql`AND t.type_id = ${+type}` : Prisma.empty}
       ${filter ? Prisma.sql`AND LOWER(t.name) LIKE '%' || ${filter.toLowerCase()} || '%'` : Prisma.empty} 
-      GROUP BY t.id, t.name, to2.overseer, s.key, s.expiration_date
+      GROUP BY t.id, t.name, to2.overseer, to2.key, to2.expiration_date
       ORDER BY t.name ASC;
     `) as RawTerritoryAll[];
     this.logger.log(`Territórios encontrados: ${territories.length}`);

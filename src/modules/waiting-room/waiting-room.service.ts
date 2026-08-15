@@ -16,6 +16,9 @@ const PRESENCE_ACTIVE_MS = 2 * 60 * 1000;
 export interface TenantAuthContext {
   tenantId: number;
   identityKey: string;
+  kind: 'tenant' | 'territory';
+  territoryId?: number;
+  round?: number;
 }
 
 @Injectable()
@@ -39,7 +42,7 @@ export class WaitingRoomService {
       select: { id: true, token: true, tenantId: true, kind: true, revokedAt: true },
     });
 
-    if (!signature || signature.kind !== 'tenant') {
+    if (!signature || (signature.kind !== 'tenant' && signature.kind !== 'territory')) {
       throw new UnauthorizedException('Assinatura inválida');
     }
 
@@ -63,28 +66,35 @@ export class WaitingRoomService {
     return {
       tenantId,
       identityKey: sessionId && typeof sessionId === 'string' ? sessionId : 'anonymous',
+      kind: signature.kind,
+      territoryId: typeof decoded.territoryId === 'number' ? decoded.territoryId : undefined,
+      round: typeof decoded.round === 'number' ? decoded.round : undefined,
     };
   }
 
-  async listActiveGroups(tenantId: number) {
+  async listGroups({ tenantId, kind }: TenantAuthContext) {
     const threshold = new Date(Date.now() - PRESENCE_ACTIVE_MS);
     const overseerGroups = await this.prisma.waitingRoomPresence.findMany({
       where: { tenantId, kind: 'overseer', lastSeenAt: { gte: threshold } },
       select: { groupId: true },
       distinct: ['groupId'],
     });
-    const groupIds = overseerGroups.map(row => row.groupId);
-    if (groupIds.length === 0) return [];
+    const activeIds = new Set(overseerGroups.map(row => row.groupId));
+
+    if (kind !== 'territory' && activeIds.size === 0) return [];
+
+    const groupWhere: Prisma.GroupWhereInput =
+      kind === 'territory' ? { tenantId } : { tenantId, id: { in: [...activeIds] } };
 
     const [groups, publisherCounts] = await Promise.all([
       this.prisma.group.findMany({
-        where: { tenantId, id: { in: groupIds } },
+        where: groupWhere,
         orderBy: { createdAt: 'asc' },
         select: { id: true, name: true },
       }),
       this.prisma.waitingRoomPresence.groupBy({
         by: ['groupId'],
-        where: { tenantId, kind: 'publisher', lastSeenAt: { gte: threshold }, groupId: { in: groupIds } },
+        where: { tenantId, kind: 'publisher', lastSeenAt: { gte: threshold }, groupId: { in: [...activeIds] } },
         _count: { _all: true },
       }),
     ]);
@@ -94,10 +104,12 @@ export class WaitingRoomService {
       id: group.id,
       name: group.name,
       publishers: counts.get(group.id) ?? 0,
+      active: activeIds.has(group.id),
     }));
   }
 
-  async joinRoom({ groupId, tenantId, identityKey, body }: { groupId: string; tenantId: number; identityKey: string; body: JoinRoomDto }) {
+  async joinRoom({ groupId, ctx, body }: { groupId: string; ctx: TenantAuthContext; body: JoinRoomDto }) {
+    const { tenantId, identityKey } = ctx;
     const group = await this.prisma.group.findFirst({
       where: { id: groupId, tenantId },
       select: { id: true },
@@ -105,6 +117,9 @@ export class WaitingRoomService {
     if (!group) throw new NotFoundException('Grupo não encontrado');
 
     if (body.territoryId !== undefined && body.territoryId !== null) {
+      if (ctx.kind === 'territory' && ctx.territoryId !== undefined && body.territoryId !== ctx.territoryId) {
+        throw new ForbiddenException('Território não corresponde à sua designação');
+      }
       if (body.round === undefined || body.round === null) {
         throw new BadRequestException('O campo "round" é obrigatório para dirigentes');
       }
