@@ -1,5 +1,4 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-
 import { Cron, CronExpression } from '@nestjs/schedule';
 import * as jwt from 'jsonwebtoken';
 import { Role } from 'src/enum/role.enum';
@@ -23,6 +22,7 @@ type GenerateBlockParams = {
   blockId: number;
   tenantId: number;
   round: number;
+  groupId?: string;
 };
 
 type TokenData = {
@@ -33,6 +33,7 @@ type TokenData = {
   roles: Role[];
   round: string;
   tenantId: number;
+  groupId?: string;
 };
 
 @Injectable()
@@ -232,11 +233,7 @@ export class SignatureService {
           territoryId,
         },
       });
-      await Promise.all(
-        affectedGroups.map(group =>
-          this.eventsBus.publishWaitingRoomChanged(tx, { groupId: group.groupId, type: 'assignments' })
-        )
-      );
+      await Promise.all(affectedGroups.map(group => this.eventsBus.publishWaitingRoomChanged(tx, { groupId: group.groupId, type: 'assignments' })));
     });
   }
 
@@ -299,7 +296,7 @@ export class SignatureService {
     return { revoked: true };
   }
 
-  async generateBlockSignatureForShare({ territoryId, blockId, tenantId, round }: GenerateBlockParams): Promise<{ key: string }> {
+  async generateBlockSignatureForShare({ territoryId, blockId, tenantId, round, groupId }: GenerateBlockParams): Promise<{ key: string }> {
     const territoryBlock = await this.prisma.territory_block.findFirst({
       where: {
         territoryId,
@@ -313,7 +310,10 @@ export class SignatureService {
     const customHours = await this.parametersService.getValue(territoryBlock.tenantId, 'SIGNATURE_EXPIRATION_HOURS');
     const hours = customHours ? parseInt(customHours) : 5;
     const expirationTime = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString(); // 5 horas ou customizado
-    const token = this.createJWT({ id: uniqueId, territoryId, blockId, roles: [Role.PUBLICADOR], tenantId, round }, expirationTime);
+    const token = this.createJWT(
+      { id: uniqueId, territoryId, blockId, roles: [Role.PUBLICADOR], tenantId, round, ...(groupId ? { groupId } : {}) },
+      expirationTime
+    );
     const signature = await this.prisma.signature.create({
       data: {
         key: uniqueId,

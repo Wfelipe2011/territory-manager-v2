@@ -12,6 +12,7 @@ export interface SseAuthContext {
 
 export interface TenantAuthContext {
   tenantId: number;
+  groupId?: string;
 }
 
 @Injectable()
@@ -73,7 +74,7 @@ export class SseAuthService {
       select: { id: true, token: true, tenantId: true, kind: true, revokedAt: true },
     });
 
-    if (!signature || signature.kind !== 'tenant') {
+    if (!signature || (signature.kind !== 'tenant' && signature.kind !== 'block')) {
       throw new UnauthorizedException('Assinatura inválida');
     }
 
@@ -94,6 +95,9 @@ export class SseAuthService {
       throw new UnauthorizedException('Assinatura não corresponde ao tenant');
     }
 
-    return { tenantId };
+    return {
+      tenantId,
+      groupId: typeof decoded.groupId === 'string' ? decoded.groupId : undefined,
+    };
   }
 }

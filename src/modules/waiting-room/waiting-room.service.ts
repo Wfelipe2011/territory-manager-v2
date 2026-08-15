@@ -16,9 +16,10 @@ const PRESENCE_ACTIVE_MS = 2 * 60 * 1000;
 export interface TenantAuthContext {
   tenantId: number;
   identityKey: string;
-  kind: 'tenant' | 'territory';
+  kind: 'tenant' | 'territory' | 'block';
   territoryId?: number;
   round?: number;
+  groupId?: string;
 }
 
 @Injectable()
@@ -42,7 +43,7 @@ export class WaitingRoomService {
       select: { id: true, token: true, tenantId: true, kind: true, revokedAt: true },
     });
 
-    if (!signature || (signature.kind !== 'tenant' && signature.kind !== 'territory')) {
+    if (!signature || (signature.kind !== 'tenant' && signature.kind !== 'territory' && signature.kind !== 'block')) {
       throw new UnauthorizedException('Assinatura inválida');
     }
 
@@ -69,6 +70,7 @@ export class WaitingRoomService {
       kind: signature.kind,
       territoryId: typeof decoded.territoryId === 'number' ? decoded.territoryId : undefined,
       round: typeof decoded.round === 'number' ? decoded.round : undefined,
+      groupId: typeof decoded.groupId === 'string' ? decoded.groupId : undefined,
     };
   }
 
@@ -83,8 +85,7 @@ export class WaitingRoomService {
 
     if (kind !== 'territory' && activeIds.size === 0) return [];
 
-    const groupWhere: Prisma.GroupWhereInput =
-      kind === 'territory' ? { tenantId } : { tenantId, id: { in: [...activeIds] } };
+    const groupWhere: Prisma.GroupWhereInput = kind === 'territory' ? { tenantId } : { tenantId, id: { in: [...activeIds] } };
 
     const [groups, publisherCounts] = await Promise.all([
       this.prisma.group.findMany({
@@ -230,12 +231,13 @@ export class WaitingRoomService {
       where: { tenantId, identityKey },
       select: { firstName: true, lastName: true, phoneLast4: true },
     });
-    const assignments = await this.getPublisherAssignments(groupId, identityKey);
+    const [assignments, peers] = await Promise.all([this.getPublisherAssignments(groupId, identityKey), this.getActivePublishersPayload(groupId, identityKey)]);
     return {
       role: 'publisher',
       group: { id: group.id, name: group.name },
       profile: publisher ?? { firstName: null, lastName: null, phoneLast4: null },
       assignments,
+      peers,
     };
   }
 
@@ -336,12 +338,45 @@ export class WaitingRoomService {
       blockId: assignment.blockId,
       tenantId,
       round: assignment.round,
+      groupId,
     });
   }
 
   async getPublishersPayload(groupId: string) {
     const presences = await this.prisma.waitingRoomPresence.findMany({
       where: { groupId, kind: 'publisher' },
+      orderBy: { joinedAt: 'asc' },
+    });
+    if (presences.length === 0) return [];
+
+    const identityKeys = presences.map(row => row.identityKey);
+    const publishers = await this.prisma.publisher.findMany({
+      where: { identityKey: { in: identityKeys } },
+      select: { identityKey: true, tenantId: true, firstName: true, lastName: true, phoneLast4: true },
+    });
+    const byKey = new Map(publishers.map(row => [`${row.tenantId}:${row.identityKey}`, row]));
+
+    return presences.map(row => {
+      const publisher = byKey.get(`${row.tenantId}:${row.identityKey}`);
+      return {
+        identityKey: row.identityKey,
+        firstName: publisher?.firstName ?? null,
+        lastName: publisher?.lastName ?? null,
+        phoneLast4: publisher?.phoneLast4 ?? null,
+        joinedAt: row.joinedAt,
+      };
+    });
+  }
+
+  async getActivePublishersPayload(groupId: string, excludeIdentityKey?: string) {
+    const threshold = new Date(Date.now() - PRESENCE_ACTIVE_MS);
+    const presences = await this.prisma.waitingRoomPresence.findMany({
+      where: {
+        groupId,
+        kind: 'publisher',
+        lastSeenAt: { gte: threshold },
+        ...(excludeIdentityKey ? { NOT: { identityKey: excludeIdentityKey } } : {}),
+      },
       orderBy: { joinedAt: 'asc' },
     });
     if (presences.length === 0) return [];

@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Logger, MessageEvent, OnModuleInit, Param, Query, Req, Sse } from '@nestjs/common';
+import { BadRequestException, Controller, Logger, MessageEvent, OnModuleInit, Param, Query, Req, Sse, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 import { Observable, Subject, Subscription, timer } from 'rxjs';
 
@@ -203,6 +203,9 @@ export class RealtimeController implements OnModuleInit {
       void (async () => {
         try {
           const ctx = await this.sseAuthService.resolveTenantBySignatureKey(query.s ?? '');
+          if (ctx.groupId && ctx.groupId !== groupId) {
+            throw new UnauthorizedException('Assinatura não corresponde ao grupo');
+          }
           const sessionId = req.headers['session-id'];
           const identityKey = typeof sessionId === 'string' && sessionId ? sessionId : 'anonymous';
           const instanceId = instanceIdOrDefault();
