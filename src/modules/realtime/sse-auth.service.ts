@@ -74,7 +74,7 @@ export class SseAuthService {
       select: { id: true, token: true, tenantId: true, kind: true, revokedAt: true },
     });
 
-    if (!signature || (signature.kind !== 'tenant' && signature.kind !== 'block')) {
+    if (!signature || !['tenant', 'territory', 'block'].includes(signature.kind)) {
       throw new UnauthorizedException('Assinatura inválida');
     }
 
