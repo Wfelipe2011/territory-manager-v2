@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+
 import { Cron, CronExpression } from '@nestjs/schedule';
 import * as jwt from 'jsonwebtoken';
 import { Role } from 'src/enum/role.enum';
@@ -6,9 +7,9 @@ import { envs } from 'src/infra/envs';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { calculateExpiresIn, uuid } from 'src/shared';
 
+import { EventsBusService } from '../events-bus/events-bus.service';
 import { ParametersService } from '../parameters/parameters.service';
 import { SignatureDate } from './usecase/SignatureDate';
-
 type GenerateTerritoryParams = {
   overseer: string;
   expirationTime: string;
@@ -40,7 +41,8 @@ export class SignatureService {
   private signatureDate = new SignatureDate();
   constructor(
     private readonly prisma: PrismaService,
-    private readonly parametersService: ParametersService
+    private readonly parametersService: ParametersService,
+    private readonly eventsBus: EventsBusService
   ) {}
 
   async generateTerritory({ overseer, expirationTime, territoryId, tenantId, round }: GenerateTerritoryParams): Promise<{ signature: string }> {
@@ -203,12 +205,38 @@ export class SignatureService {
         blockId,
       },
     });
-    if (!territoryBlock?.signatureId) throw new NotFoundException('Quadra não encontrada');
+    if (!territoryBlock) throw new NotFoundException('Quadra não encontrada');
+    if (!territoryBlock.signatureId) throw new NotFoundException('Quadra não encontrada');
+    const signatureId = territoryBlock.signatureId;
 
-    await this.prisma.signature.delete({
+    const affectedGroups = await this.prisma.assignment.findMany({
       where: {
-        id: territoryBlock.signatureId,
+        blockId,
+        territoryId,
       },
+      distinct: ['groupId'],
+      select: {
+        groupId: true,
+      },
+    });
+
+    await this.prisma.$transaction(async tx => {
+      await tx.signature.delete({
+        where: {
+          id: signatureId,
+        },
+      });
+      await tx.assignment.deleteMany({
+        where: {
+          blockId,
+          territoryId,
+        },
+      });
+      await Promise.all(
+        affectedGroups.map(group =>
+          this.eventsBus.publishWaitingRoomChanged(tx, { groupId: group.groupId, type: 'assignments' })
+        )
+      );
     });
   }
 
