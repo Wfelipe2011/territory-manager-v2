@@ -19,11 +19,13 @@ export class WaitingRoomCleanupCron {
   async handleCleanup(): Promise<void> {
     try {
       const threshold = new Date(Date.now() - PRESENCE_STALE_MS);
-      const staleGroups = await this.prisma.waitingRoomPresence.findMany({
+      const stalePresences = await this.prisma.waitingRoomPresence.findMany({
         where: { lastSeenAt: { lt: threshold } },
-        select: { groupId: true },
-        distinct: ['groupId'],
+        select: { groupId: true, identityKey: true, kind: true },
       });
+
+      const staleGroups = Array.from(new Set(stalePresences.map(presence => presence.groupId)));
+      const stalePublisherKeys = stalePresences.filter(presence => presence.kind === 'publisher').map(presence => presence.identityKey);
 
       const { count } = await this.prisma.waitingRoomPresence.deleteMany({
         where: { lastSeenAt: { lt: threshold } },
@@ -31,9 +33,17 @@ export class WaitingRoomCleanupCron {
 
       if (count > 0) {
         this.logger.log(`Cleanup da sala de espera removeu ${count} presenças stale`);
-        for (const row of staleGroups) {
+        if (stalePublisherKeys.length > 0) {
+          const { count: removedAssignments } = await this.prisma.assignment.deleteMany({
+            where: { publisherId: { in: stalePublisherKeys } },
+          });
+          if (removedAssignments > 0) {
+            this.logger.log(`Cleanup removeu ${removedAssignments} atribuições de publicadores que saíram`);
+          }
+        }
+        for (const groupId of staleGroups) {
           await this.eventsBus.publishWaitingRoomChanged(this.prisma, {
-            groupId: row.groupId,
+            groupId,
             type: 'presence',
           });
         }
