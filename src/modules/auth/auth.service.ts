@@ -1,20 +1,21 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, UnauthorizedException } from '@nestjs/common';
-import { PrismaService } from 'src/infra/prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
-import { uuid } from 'src/shared/uuid.shared';
-import { envs } from 'src/infra/envs';
 import nodemailer from 'nodemailer';
-import { AdminRegisterInput, PublicRegisterInput, UserOutput } from './contracts';
+import { envs } from 'src/infra/envs';
+import { PrismaService } from 'src/infra/prisma/prisma.service';
+import { uuid } from 'src/shared/uuid.shared';
+
 import { ParametersService } from '../parameters/parameters.service';
+import { AdminRegisterInput, PublicRegisterInput, UserOutput } from './contracts';
 
 @Injectable()
 export class AuthService {
   logger = new Logger(AuthService.name);
   constructor(
     private prisma: PrismaService,
-    private parametersService: ParametersService,
-  ) { }
+    private parametersService: ParametersService
+  ) {}
 
   async login(email: string, password: string) {
     this.logger.log(`login ${email}`);
@@ -282,7 +283,7 @@ export class AuthService {
   hashPassword(password: string) {
     return {
       password: bcrypt.hashSync(password, 10),
-    }
+    };
   }
 
   private createTransporter() {

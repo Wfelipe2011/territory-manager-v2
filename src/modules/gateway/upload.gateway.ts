@@ -1,9 +1,10 @@
 import { Logger, UseGuards } from '@nestjs/common';
 import { WebSocketGateway, WebSocketServer, OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, ConnectedSocket } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import { AuthGuard } from '../auth/guard/auth.guard';
 import * as jwt from 'jsonwebtoken';
+import { Server, Socket } from 'socket.io';
 import { envs } from 'src/infra/envs';
+
+import { AuthGuard } from '../auth/guard/auth.guard';
 
 @WebSocketGateway({ transports: ['websocket'] })
 export class UploadGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {

@@ -1,12 +1,13 @@
 import { Body, Controller, Get, Logger, NotFoundException, Param, ParseIntPipe, Post, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { CurrentUser } from 'src/decorators/current-user.decorator';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/enum/role.enum';
 import { VERSION } from 'src/enum/version.enum';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
-import { Role } from 'src/enum/role.enum';
-import { Roles } from 'src/decorators/roles.decorator';
-import { Prisma } from '@prisma/client';
-import { CreateReportDto } from './contracts/CreateReport';
-import { CurrentUser } from 'src/decorators/current-user.decorator';
+
 import { UserToken } from '../auth/contracts';
+import { CreateReportDto } from './contracts/CreateReport';
 
 @Controller({
   version: VERSION.V1,
@@ -14,7 +15,7 @@ import { UserToken } from '../auth/contracts';
 })
 export class ReportController {
   logger = new Logger(ReportController.name);
-  constructor(private prismaService: PrismaService) { }
+  constructor(private prismaService: PrismaService) {}
 
   @Get()
   @Roles(Role.ADMIN)
@@ -163,7 +164,7 @@ export class ReportController {
       }
 
       await txt.house.update({
-        where: { id, tenantId: house.tenantId, },
+        where: { id, tenantId: house.tenantId },
         data: {
           reportType: null,
           backupData: Prisma.JsonNull,
@@ -176,7 +177,7 @@ export class ReportController {
         number: 'ghost',
         tenantId: house.tenantId,
         territoryId: house.territoryId,
-        OR: [] as any[]
+        OR: [] as any[],
       };
 
       if (house.territoryBlockAddressId) {
@@ -185,17 +186,14 @@ export class ReportController {
 
       if (house.blockId && house.addressId) {
         filter.OR.push({
-          AND: [
-            { blockId: house.blockId },
-            { addressId: house.addressId }
-          ]
+          AND: [{ blockId: house.blockId }, { addressId: house.addressId }],
         });
       }
 
       // buscar house ghost e remover
       const houseGhost = await txt.house.findFirst({
-        where: filter
-      })
+        where: filter,
+      });
 
       if (houseGhost) {
         await txt.round.deleteMany({

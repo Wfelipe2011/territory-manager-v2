@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
-import { FinancialService } from './financial.service';
-import { FinancialController } from './financial.controller';
+
 import { DonationController } from './donation.controller';
+import { FinancialController } from './financial.controller';
+import { FinancialService } from './financial.service';
 
 @Module({
-    controllers: [FinancialController, DonationController],
-    providers: [FinancialService],
-    exports: [FinancialService],
+  controllers: [FinancialController, DonationController],
+  providers: [FinancialService],
+  exports: [FinancialService],
 })
-export class FinancialModule { }
+export class FinancialModule {}

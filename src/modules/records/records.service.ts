@@ -4,17 +4,16 @@ import { PrismaService } from 'src/infra/prisma/prisma.service';
 
 export interface RecordsData {
   Território: string;
-  "Tipo Território": string;
+  'Tipo Território': string;
   Dirigente: string;
-  "Data Designação": Date;
+  'Data Designação': Date;
   Rodada: number;
 }
-
 
 @Injectable()
 export class RecordsService {
   logger = new Logger(RecordsService.name);
-  constructor(private prismaService: PrismaService) { }
+  constructor(private prismaService: PrismaService) {}
   async find(tenant_id: number, dateFrom: string, dateTo: string) {
     return this.prismaService.$queryRaw<RecordsData[]>`
     select distinct 

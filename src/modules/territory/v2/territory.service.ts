@@ -1,8 +1,9 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { FirebaseService } from 'src/infra/firebase.service';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { BaseService } from 'src/shared/BaseService';
+
 import { FindAllParams } from '../contracts/find-all';
-import { FirebaseService } from 'src/infra/firebase.service';
 import { FindOneParams } from '../contracts/find-one';
 import { TerritoryEditOutput } from '../interfaces/TerritoryEditOutputV2';
 
@@ -78,7 +79,7 @@ export class TerritoryServiceV2 extends BaseService {
         territory_overseer: true,
         house: {
           where: {
-            ...query.blockId ? { blockId: query.blockId } : {},
+            ...(query.blockId ? { blockId: query.blockId } : {}),
             number: { not: 'ghost' },
           },
           include: { address: true, block: true },
@@ -109,4 +110,3 @@ export class TerritoryServiceV2 extends BaseService {
     };
   }
 }
-

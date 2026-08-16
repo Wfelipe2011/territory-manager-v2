@@ -1,11 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from 'src/infra/prisma/prisma.service';
-import { AddressBlockService } from '../block/adress-block.service';
-import xlsx from 'node-xlsx';
 import EventEmitter from 'events';
+import xlsx from 'node-xlsx';
+import { PrismaService } from 'src/infra/prisma/prisma.service';
+
+import { AddressBlockService } from '../block/adress-block.service';
 import { UploadGateway } from '../gateway/upload.gateway';
-import { BulkImportRow, ImportReport } from './contracts/BulkImportInput';
 import { LegengDTO } from '../house/dtos/Legend';
+import { BulkImportRow, ImportReport } from './contracts/BulkImportInput';
 
 export interface Row {
   TipoTerritorio: string;
@@ -25,7 +26,7 @@ export class UploadTerritoryUseCase {
   constructor(
     readonly prisma: PrismaService,
     private readonly uploadGateway: UploadGateway,
-    private readonly addressBlockService: AddressBlockService,
+    private readonly addressBlockService: AddressBlockService
   ) {
     this.eventEmitter = new EventEmitter();
   }
@@ -53,18 +54,13 @@ export class UploadTerritoryUseCase {
       Numero: row.Numero,
       Legenda: row.Legenda,
       Ordem: row.Ordem,
-      'Não Bater': row['Não Bater'] === 'VERDADEIRO'
+      'Não Bater': row['Não Bater'] === 'VERDADEIRO',
     }));
 
     return this.bulkInsert(bulkRows, body.tenantId, body.userId, logger);
   }
 
-  async bulkInsert(
-    rows: BulkImportRow[],
-    tenantId: number,
-    userId: number,
-    logger: Logger
-  ): Promise<ImportReport> {
+  async bulkInsert(rows: BulkImportRow[], tenantId: number, userId: number, logger: Logger): Promise<ImportReport> {
     const report: ImportReport = {
       totalProcessed: rows.length,
       successCount: 0,
@@ -162,11 +158,7 @@ export class UploadTerritoryUseCase {
     return { territoryBlock, isNew: true };
   }
 
-  async ensureTerritoryBlockAddress(
-    territoryBlock: { id: number },
-    address: { id: number; name: string; tenantId: number },
-    tenantId: number
-  ) {
+  async ensureTerritoryBlockAddress(territoryBlock: { id: number }, address: { id: number; name: string; tenantId: number }, tenantId: number) {
     const existing = await this.prisma.territory_block_address.findFirst({
       where: {
         territoryBlockId: territoryBlock.id,
@@ -190,12 +182,7 @@ export class UploadTerritoryUseCase {
     address: { id: number; name: string; tenantId: number },
     block: { id: number; name: string; tenantId: number }
   ) {
-    const territoryBlockAddressId = await this.addressBlockService.resolveTerritoryBlockAddressId(
-      territory.id,
-      block.id,
-      address.id,
-      territory.tenantId,
-    );
+    const territoryBlockAddressId = await this.addressBlockService.resolveTerritoryBlockAddressId(territory.id, block.id, address.id, territory.tenantId);
 
     return await this.prisma.house.create({
       data: {
@@ -237,7 +224,7 @@ export class UploadTerritoryUseCase {
     let block = await this.prisma.block.findFirst({
       where: {
         name: 'Quadra ' + row.Quadra,
-        tenantId: tenantId,
+        tenantId,
       },
     });
     if (!block) {
@@ -259,7 +246,7 @@ export class UploadTerritoryUseCase {
     let address = await this.prisma.address.findFirst({
       where: {
         name: row.Logradouro,
-        tenantId: tenantId,
+        tenantId,
       },
     });
     if (!address) {
@@ -282,7 +269,7 @@ export class UploadTerritoryUseCase {
       where: {
         name: String(nameTerritory),
         typeId: type.id,
-        tenantId: tenantId,
+        tenantId,
       },
     });
     if (!territory) {
@@ -309,14 +296,14 @@ export class UploadTerritoryUseCase {
     let type = await this.prisma.type.findFirst({
       where: {
         name: row.TipoTerritorio,
-        tenantId: tenantId,
+        tenantId,
       },
     });
     if (!type) {
       type = await this.prisma.type.create({
         data: {
           name: row.TipoTerritorio,
-          tenantId: tenantId,
+          tenantId,
         },
       });
     }
@@ -347,62 +334,69 @@ export class UploadTerritoryUseCase {
         territoryId: true,
         blockId: true,
         addressId: true,
-        tenantId: true
+        tenantId: true,
       },
       where: {
-        tenantId
-      }
+        tenantId,
+      },
     });
 
     for (const house of distinctHouses) {
-      await this.prisma.$transaction(async (tsx) => {
-        this.logger.debug(`Processando casa: territory=${house.territoryId} block=${house.blockId} address=${house.addressId}`);
-        const territoryBlock = await tsx.territory_block.findUnique({
-          where: {
-            territoryId_blockId: {
-              territoryId: house.territoryId,
-              blockId: house.blockId
+      await this.prisma
+        .$transaction(
+          async tsx => {
+            this.logger.debug(`Processando casa: territory=${house.territoryId} block=${house.blockId} address=${house.addressId}`);
+            const territoryBlock = await tsx.territory_block.findUnique({
+              where: {
+                territoryId_blockId: {
+                  territoryId: house.territoryId,
+                  blockId: house.blockId,
+                },
+              },
+            });
+
+            if (!territoryBlock) {
+              return true;
             }
-          }
-        });
 
-        if (!territoryBlock) {
-          return true;
-        }
+            const existingTba = await tsx.territory_block_address.findFirst({
+              where: {
+                territoryBlockId: territoryBlock.id,
+                addressId: house.addressId,
+              },
+            });
 
-        const existingTba = await tsx.territory_block_address.findFirst({
-          where: {
-            territoryBlockId: territoryBlock.id,
-            addressId: house.addressId,
+            const territoryAddress =
+              existingTba ??
+              (await tsx.territory_block_address.create({
+                data: {
+                  addressId: house.addressId,
+                  tenantId: house.tenantId,
+                  territoryBlockId: territoryBlock.id,
+                },
+              }));
+            await tsx.house.updateMany({
+              where: {
+                territoryId: house.territoryId,
+                blockId: house.blockId,
+                addressId: house.addressId,
+                tenantId: house.tenantId,
+              },
+              data: {
+                territoryBlockAddressId: territoryAddress.id,
+              },
+            });
+            this.logger.debug(`Territory address criado: ${territoryAddress.id}`);
+            return true;
           },
-        });
-
-        const territoryAddress = existingTba ?? await tsx.territory_block_address.create({
-          data: {
-            addressId: house.addressId,
-            tenantId: house.tenantId,
-            territoryBlockId: territoryBlock.id
+          {
+            maxWait: 1000 * 60 * 10, // 10 minutes,
+            timeout: 1000 * 60 * 10, // 10 minutes
           }
+        )
+        .catch(err => {
+          this.logger.error('Erro ao processar territory address', err);
         });
-        await tsx.house.updateMany({
-          where: {
-            territoryId: house.territoryId,
-            blockId: house.blockId,
-            addressId: house.addressId,
-            tenantId: house.tenantId
-          },
-          data: {
-            territoryBlockAddressId: territoryAddress.id
-          }
-        });
-        this.logger.debug(`Territory address criado: ${territoryAddress.id}`);
-        return true;
-      }, {
-        maxWait: 1000 * 60 * 10, // 10 minutes,
-        timeout: 1000 * 60 * 10 // 10 minutes
-      }).catch((err) => {
-        this.logger.error('Erro ao processar territory address', err);
-      });
     }
     this.logger.log('Endereços de território populados com sucesso');
   }

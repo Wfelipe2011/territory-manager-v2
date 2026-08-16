@@ -1,17 +1,18 @@
-import * as admin from 'firebase-admin';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import * as admin from 'firebase-admin';
+
 import { PrismaService } from './prisma/prisma.service';
 
 @Injectable()
 export class FirebaseService implements OnModuleInit {
-  private logger = new Logger(FirebaseService.name)
-  constructor(private prisma: PrismaService) { }
+  private logger = new Logger(FirebaseService.name);
+  constructor(private prisma: PrismaService) {}
 
   async onModuleInit() {
     this.logger.log('Inicializando Firebase Admin SDK');
-    await this.prisma.connectToDatabase()
+    await this.prisma.connectToDatabase();
     this.logger.log('Conectado ao banco de dados');
-    const firebase = await this.prisma.firebase.findFirst()
+    const firebase = await this.prisma.firebase.findFirst();
     admin.initializeApp({
       credential: admin.credential.cert(firebase?.config as any),
       storageBucket: 'territorio-digital.appspot.com',

@@ -1,14 +1,15 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/infra/prisma/prisma.service';
-import { TerritoryAllInput, TerritoryAllOutput, TerritoryOneOutput, TerritoryTypesOutput } from './contracts';
-import { RawTerritoryAll, RawTerritoryOne } from './interfaces';
 import { Prisma } from '@prisma/client';
+import { PrismaService } from 'src/infra/prisma/prisma.service';
+
+import { TerritoryAllInput, TerritoryAllOutput, TerritoryOneOutput, TerritoryTypesOutput } from './contracts';
 import { CreateTerritoryParams } from './contracts/UpsertTerritoryParams';
+import { RawTerritoryAll, RawTerritoryOne } from './interfaces';
 
 @Injectable()
 export class TerritoryService {
   private readonly logger = new Logger(TerritoryService.name);
-  constructor(readonly prisma: PrismaService) { }
+  constructor(readonly prisma: PrismaService) {}
 
   async findAll(territoryDto: TerritoryAllInput, tenantId: number): Promise<TerritoryAllOutput[]> {
     const { filter = '', type } = territoryDto;
@@ -133,7 +134,7 @@ export class TerritoryService {
       throw new NotFoundException('Território não encontrado');
     }
 
-    await this.prisma.$transaction(async (prisma) => {
+    await this.prisma.$transaction(async prisma => {
       this.logger.log(`Iniciando exclusão do território: ${id}`);
 
       // 1. Delete Rounds
@@ -148,18 +149,13 @@ export class TerritoryService {
         include: { territory_block_address: true },
       });
 
-      const territoryBlockAddressIds = territoryBlocks.flatMap((tb) =>
-        tb.territory_block_address.map((tba) => tba.id),
-      );
+      const territoryBlockAddressIds = territoryBlocks.flatMap(tb => tb.territory_block_address.map(tba => tba.id));
 
       if (territoryBlockAddressIds.length > 0) {
         // 3. Delete Houses
         await prisma.house.deleteMany({
           where: {
-            OR: [
-              { territoryBlockAddressId: { in: territoryBlockAddressIds } },
-              { territoryId: id }
-            ],
+            OR: [{ territoryBlockAddressId: { in: territoryBlockAddressIds } }, { territoryId: id }],
             tenantId,
           },
         });
@@ -209,8 +205,8 @@ export class TerritoryService {
         territory_overseer: true,
         house: {
           where: whereCondition,
-          skip: skip,
-          take: take,
+          skip,
+          take,
           include: { address: true },
         },
         territory_block: {
@@ -244,15 +240,17 @@ export class TerritoryService {
       typeName: result.type.name,
       imageUrl: result.imageUrl,
       totalHouse: totalHousesByTerritory,
-      house: result.house.filter(h => Boolean(h.number !== 'ghost')).map(h => ({
-        id: h.id,
-        dontVisit: h.dontVisit,
-        legend: h.legend,
-        number: h.number,
-        street: h.address.name,
-        observations: h.observations,
-        order: h.order,
-      })),
+      house: result.house
+        .filter(h => Boolean(h.number !== 'ghost'))
+        .map(h => ({
+          id: h.id,
+          dontVisit: h.dontVisit,
+          legend: h.legend,
+          number: h.number,
+          street: h.address.name,
+          observations: h.observations,
+          order: h.order,
+        })),
       historyOverseer: result.territory_overseer.map(t => ({
         overseer: t.overseer,
         finished: t.finished,
@@ -274,21 +272,21 @@ export class TerritoryService {
       data: {
         tenantId,
         name: params.name,
-        typeId: params.typeId
-      }
-    })
+        typeId: params.typeId,
+      },
+    });
   }
 
   async update(territoryId: number, params: CreateTerritoryParams) {
     return this.prisma.territory.update({
       where: {
-        id: territoryId
+        id: territoryId,
       },
       data: {
         name: params.name,
-        typeId: params.typeId
-      }
-    })
+        typeId: params.typeId,
+      },
+    });
   }
 
   processStreetFilter(streetFilter?: string) {

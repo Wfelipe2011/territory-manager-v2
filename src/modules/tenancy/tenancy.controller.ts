@@ -13,7 +13,7 @@ import { RequestUser } from 'src/interfaces/RequestUser';
 })
 export class TenancyController {
   private logger = new Logger(TenancyController.name);
-  constructor(readonly prisma: PrismaService) { }
+  constructor(readonly prisma: PrismaService) {}
 
   @Roles(Role.ADMIN, Role.DIRIGENTE, Role.PUBLICADOR)
   @Get('/info')

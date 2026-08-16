@@ -1,12 +1,13 @@
 import { Controller, Get, Query, Res, UsePipes, ValidationPipe } from '@nestjs/common';
-import { RecordsService } from './records.service';
-import { RecordsParams } from './dto/records-params';
-import { CurrentUser } from 'src/decorators/current-user.decorator';
-import { UserToken } from '../auth/contracts';
-import { VERSION } from 'src/enum/version.enum';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import * as Papa from 'papaparse';
 import { Response } from 'express';
+import * as Papa from 'papaparse';
+import { CurrentUser } from 'src/decorators/current-user.decorator';
+import { VERSION } from 'src/enum/version.enum';
+
+import { UserToken } from '../auth/contracts';
+import { RecordsParams } from './dto/records-params';
+import { RecordsService } from './records.service';
 
 @ApiTags('Records')
 @ApiBearerAuth()
@@ -15,7 +16,7 @@ import { Response } from 'express';
   path: 'records',
 })
 export class RecordsController {
-  constructor(private readonly recordsService: RecordsService) { }
+  constructor(private readonly recordsService: RecordsService) {}
 
   @Get()
   @ApiOperation({ summary: 'Lista registros dentro de um intervalo de datas' })

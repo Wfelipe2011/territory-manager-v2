@@ -1,11 +1,12 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/infra/prisma/prisma.service';
-import { SignatureService } from '../signature/signature.service';
 import { ThemeMode } from '@prisma/client';
-import { themeColors } from 'src/constants/themeColors';
 import dayjs from 'dayjs';
-import { CreateRoundDto } from './contracts/CreateRoundDto';
+import { themeColors } from 'src/constants/themeColors';
+import { PrismaService } from 'src/infra/prisma/prisma.service';
+
 import { ParametersService } from '../parameters/parameters.service';
+import { SignatureService } from '../signature/signature.service';
+import { CreateRoundDto } from './contracts/CreateRoundDto';
 
 @Injectable()
 export class RoundService {
@@ -14,7 +15,7 @@ export class RoundService {
     readonly prisma: PrismaService,
     private readonly signatureService: SignatureService,
     private readonly parametersService: ParametersService
-  ) { }
+  ) {}
 
   async getRoundInfo(tenantId: number): Promise<any> {
     const rounds = await this.prisma.$queryRaw`
@@ -171,75 +172,78 @@ export class RoundService {
 
   private async createRound(tenantId: number, rounds: any[], body: CreateRoundDto) {
     const roundStartDate = await this.getRoundStartDate(tenantId);
-    await this.prisma.$transaction(async txt => {
-      this.logger.log(`Iniciando criação da rodada para o inquilino ${tenantId}`);
-      const houses = await txt.house.findMany({
-        where: {
-          tenantId,
-          territory: {
-            typeId: body.typeId
+    await this.prisma.$transaction(
+      async txt => {
+        this.logger.log(`Iniciando criação da rodada para o inquilino ${tenantId}`);
+        const houses = await txt.house.findMany({
+          where: {
+            tenantId,
+            territory: {
+              typeId: body.typeId,
+            },
+            territoryBlockAddressId: { not: null },
           },
-          territoryBlockAddressId: { not: null },
-        },
-        include: {
-          address: true,
-          block: true,
-          territory: {
-            include: {
-              type: true
-            }
-          },
-          multitenancy: true,
-          rounds: {
-            where: {
-              mode: ThemeMode.default,
-              startDate: {
-                gte: roundStartDate,
+          include: {
+            address: true,
+            block: true,
+            territory: {
+              include: {
+                type: true,
               },
             },
-            select: {
-              completed: true,
-            }
-          }
-        },
-      });
-      if (!houses.length) {
-        throw new NotFoundException("Nenhuma casa encontrada para a criação da rodada");
-      }
-      this.logger.log(`Casas encontradas para o inquilino ${tenantId}: ${houses.length}`);
+            multitenancy: true,
+            rounds: {
+              where: {
+                mode: ThemeMode.default,
+                startDate: {
+                  gte: roundStartDate,
+                },
+              },
+              select: {
+                completed: true,
+              },
+            },
+          },
+        });
+        if (!houses.length) {
+          throw new NotFoundException('Nenhuma casa encontrada para a criação da rodada');
+        }
+        this.logger.log(`Casas encontradas para o inquilino ${tenantId}: ${houses.length}`);
 
-      const roundInfo = await txt.round_info.create({
-        data: {
-          roundNumber: rounds.length + 1,
-          name: body.name,
-          theme: body.theme,
-          colorPrimary: body.colorPrimary,
-          colorSecondary: body.colorSecondary,
-          type: houses[0].territory.type.name,
-          tenantId,
-        },
-      });
+        const roundInfo = await txt.round_info.create({
+          data: {
+            roundNumber: rounds.length + 1,
+            name: body.name,
+            theme: body.theme,
+            colorPrimary: body.colorPrimary,
+            colorSecondary: body.colorSecondary,
+            type: houses[0].territory.type.name,
+            tenantId,
+          },
+        });
 
-      this.logger.log(`Informações da rodada criadas: ${JSON.stringify(roundInfo)}`);
+        this.logger.log(`Informações da rodada criadas: ${JSON.stringify(roundInfo)}`);
 
-      await txt.round.createMany({
-        data: houses.map(house => {
-          const leaveLetter = house.rounds.length > 0 && house.rounds.every(r => !r.completed) && body.theme === ThemeMode.default;
-          return {
-            houseId: house.id,
-            blockId: house.blockId,
-            territoryId: house.territoryId,
-            tenantId: house.tenantId,
-            completed: false,
-            roundNumber: roundInfo.roundNumber,
-            mode: roundInfo.theme,
-            leaveLetter
-          };
-        }),
-      });
+        await txt.round.createMany({
+          data: houses.map(house => {
+            const leaveLetter = house.rounds.length > 0 && house.rounds.every(r => !r.completed) && body.theme === ThemeMode.default;
+            return {
+              houseId: house.id,
+              blockId: house.blockId,
+              territoryId: house.territoryId,
+              tenantId: house.tenantId,
+              completed: false,
+              roundNumber: roundInfo.roundNumber,
+              mode: roundInfo.theme,
+              leaveLetter,
+            };
+          }),
+        });
 
-      this.logger.log(`Rodada ${roundInfo.roundNumber} para congregação ${houses[0].multitenancy.name} iniciada`);
-    }, { timeout: 120_000 });
+        this.logger.log(`Rodada ${roundInfo.roundNumber} para congregação ${houses[0].multitenancy.name} iniciada`);
+      },
+      { timeout: 120_000 }
+    );
   }
 
   private async getRoundStartDate(tenantId: number) {
@@ -250,4 +254,3 @@ export class RoundService {
     return dayjs().subtract(6, 'months').toDate();
   }
 }
-

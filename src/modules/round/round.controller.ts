@@ -1,12 +1,13 @@
-import { RoundService } from './round.service';
 import { Body, Controller, Get, Logger, Param, ParseIntPipe, Post, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enum/role.enum';
 import { VERSION } from 'src/enum/version.enum';
+
 import { UserToken } from '../auth/contracts';
 import { CreateRoundDto } from './contracts/CreateRoundDto';
+import { RoundService } from './round.service';
 
 @ApiTags('Round')
 @ApiBearerAuth()
@@ -16,7 +17,7 @@ import { CreateRoundDto } from './contracts/CreateRoundDto';
 })
 export class RoundController {
   private logger = new Logger(RoundController.name);
-  constructor(private roundService: RoundService) { }
+  constructor(private roundService: RoundService) {}
 
   @Roles(Role.ADMIN)
   @Post('/start')

@@ -1,20 +1,21 @@
-import { PrismaService } from '../../infra/prisma/prisma.service';
-import { BadRequestException, ForbiddenException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { BadRequestException, ForbiddenException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Cache } from 'cache-manager';
-import { BlockSignatureDTO } from './dtos/BlockSignatureDTO';
-import { BlockSignature } from './dtos/BlockSignature';
-import { RawHouse } from './dtos/RawHouse';
-import { Output, Round } from './dtos/Houses';
-import { LegengDTO } from './dtos/Legend';
 import dayjs from 'dayjs';
-import { UpdateHouseOrder } from './contracts/UpdateHouseOrder';
-import { ParametersService } from '../parameters/parameters.service';
+
+import { PrismaService } from '../../infra/prisma/prisma.service';
 import { AddressBlockService } from '../block/adress-block.service';
 import { EventsBusService } from '../events-bus/events-bus.service';
+import { ParametersService } from '../parameters/parameters.service';
+import { UpdateHouseOrder } from './contracts/UpdateHouseOrder';
+import { BlockSignature } from './dtos/BlockSignature';
+import { BlockSignatureDTO } from './dtos/BlockSignatureDTO';
+import { Output, Round } from './dtos/Houses';
+import { LegengDTO } from './dtos/Legend';
+import { RawHouse } from './dtos/RawHouse';
 
 const TTL_ADDRESSES = 300_000; // 5 minutos
-const TTL_HOUSES = 30_000;  // 30 segundos
+const TTL_HOUSES = 30_000; // 30 segundos
 
 export type CreateHouseInput = {
   streetId: number;
@@ -33,8 +34,8 @@ export class HouseService {
     private readonly parametersService: ParametersService,
     private readonly addressBlockService: AddressBlockService,
     private readonly eventsBus: EventsBusService,
-    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-  ) { }
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
+  ) {}
 
   async getAddressPerTerritoryByIdAndBlockById(blockId: number, territoryId: number) {
     const cacheKey = `addresses:${territoryId}:${blockId}`;
@@ -133,17 +134,19 @@ export class HouseService {
       territoryName: territory_name,
       blockName: block_name,
       streetName: street_name,
-      houses: houses.filter(h => h.number !== "ghost").map(house => ({
-        id: house.house_id,
-        number: house.number,
-        complement: house.complement,
-        leaveLetter: house.leave_letter,
-        legend: LegengDTO.mapper(house?.legend),
-        order: house.order,
-        status: house.status,
-        dontVisit: house.dont_visit,
-        reportType: house.report_type,
-      })),
+      houses: houses
+        .filter(h => h.number !== 'ghost')
+        .map(house => ({
+          id: house.house_id,
+          number: house.number,
+          complement: house.complement,
+          leaveLetter: house.leave_letter,
+          legend: LegengDTO.mapper(house?.legend),
+          order: house.order,
+          status: house.status,
+          dontVisit: house.dont_visit,
+          reportType: house.report_type,
+        })),
     };
 
     await this.cacheManager.set(cacheKey, output, TTL_HOUSES);
@@ -160,14 +163,8 @@ export class HouseService {
     return this.executeUpdateHouseWithTransaction(houseId, body, isAdmin, roundNumber, undefined);
   }
 
-  async executeUpdateHouseWithTransaction(
-    houseId: number,
-    body: { status: boolean },
-    isAdmin: boolean,
-    roundNumber: number,
-    streetKey?: string,
-  ) {
-    return this.prisma.$transaction(async (tx) => {
+  async executeUpdateHouseWithTransaction(houseId: number, body: { status: boolean }, isAdmin: boolean, roundNumber: number, streetKey?: string) {
+    return this.prisma.$transaction(async tx => {
       const [[round], house] = await Promise.all([
         tx.$queryRaw<Round[]>`SELECT * FROM round WHERE house_id = ${houseId} AND round_number = ${roundNumber}`,
         tx.house.findUnique({ where: { id: houseId }, include: { territory: true, block: true } }),
@@ -389,17 +386,19 @@ export class HouseService {
 
   async updateOrder(inputs: UpdateHouseOrder): Promise<void> {
     this.logger.log(`Atualizando ordem das casas`);
-    await this.prisma.$transaction(inputs.houses.map(house => {
-      this.logger.log(`Atualizando casa ${house.id} para a ordem ${house.order}`);
-      return this.prisma.house.update({
-        where: {
-          id: house.id,
-        },
-        data: {
-          order: house.order,
-        },
-      });
-    }));
+    await this.prisma.$transaction(
+      inputs.houses.map(house => {
+        this.logger.log(`Atualizando casa ${house.id} para a ordem ${house.order}`);
+        return this.prisma.house.update({
+          where: {
+            id: house.id,
+          },
+          data: {
+            order: house.order,
+          },
+        });
+      })
+    );
     this.logger.log(`Ordem das casas atualizada com sucesso`);
   }
 }

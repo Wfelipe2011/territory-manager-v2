@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
+
 import { FirebaseService } from './infra/firebase.service';
 
 @Injectable()
@@ -8,7 +9,7 @@ export class FirebaseUploadService {
   constructor(
     readonly prisma: PrismaService,
     readonly firebaseService: FirebaseService
-  ) { }
+  ) {}
 
   async uploadFile(path: string, file: Express.Multer.File) {
     const fileType = file.mimetype.split('/')[1];

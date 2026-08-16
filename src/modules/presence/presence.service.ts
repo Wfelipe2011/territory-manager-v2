@@ -77,7 +77,7 @@ export class PresenceService {
         FROM street_presence
         WHERE street_key = ${streetKey}
           AND last_seen_at >= ${threshold}
-      `,
+      `
     );
     return Number(rows[0]?.count ?? 0);
   }
@@ -89,7 +89,7 @@ export class PresenceService {
         SELECT COUNT(DISTINCT identity_key)::int AS count
         FROM street_presence
         WHERE last_seen_at >= ${threshold}
-      `,
+      `
     );
     return Number(rows[0]?.count ?? 0);
   }
@@ -100,7 +100,7 @@ export class PresenceService {
       where: { streetKey, lastSeenAt: { gte: threshold } },
       orderBy: { connectedAt: 'asc' },
     });
-    return rows.map((r) => this.toRow(r));
+    return rows.map(r => this.toRow(r));
   }
 
   async cleanupExpired(): Promise<number> {

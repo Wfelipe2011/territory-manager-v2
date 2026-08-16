@@ -1,11 +1,12 @@
 import { Controller, Get, Logger, Param, Request } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enum/role.enum';
 import { VERSION } from 'src/enum/version.enum';
-import { AddressService } from './address.service';
-import { CurrentUser } from 'src/decorators/current-user.decorator';
+
 import { UserToken } from '../auth/contracts';
+import { AddressService } from './address.service';
 
 const logger = new Logger('AddressController');
 @ApiBearerAuth()
@@ -14,7 +15,7 @@ const logger = new Logger('AddressController');
   version: VERSION.V1,
 })
 export class AddressController {
-  constructor(private addressService: AddressService) { }
+  constructor(private addressService: AddressService) {}
   @Roles(Role.ADMIN)
   @Get('territories/:territoryId/addresses')
   async findAll(@Param('territoryId') territoryId: number) {

@@ -5,12 +5,13 @@ import * as jwt from 'jsonwebtoken';
 import { IS_PUBLIC_KEY } from 'src/decorators/public.decorator';
 import { envs } from 'src/infra/envs';
 import { RequestUser } from 'src/interfaces/RequestUser';
+
 import { UserToken } from '../contracts';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   logger = new Logger(AuthGuard.name);
-  constructor(private reflector: Reflector) { }
+  constructor(private reflector: Reflector) {}
   canActivate(context: ExecutionContext): boolean {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [context.getHandler(), context.getClass()]);
     const request = context.switchToHttp().getRequest<RequestUser>();
@@ -26,7 +27,7 @@ export class AuthGuard implements CanActivate {
     this.logger.debug(`Rota privada - ${request.url} - ${request.method} - ${token}`);
 
     const payload = this.validateToken(token);
-    request['user'] = payload;
+    request.user = payload;
 
     return true;
   }
@@ -35,8 +36,8 @@ export class AuthGuard implements CanActivate {
     let token = '';
     if (request?.headers?.authorization) {
       token = request?.headers?.authorization;
-    } else if (request?.cookies?.['access_token']) {
-      token = request.cookies['access_token'];
+    } else if (request?.cookies?.access_token) {
+      token = request.cookies.access_token;
     } else if (request?.handshake?.auth.token) {
       token = request?.handshake?.auth.token;
     }

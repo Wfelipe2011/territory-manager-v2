@@ -1,16 +1,34 @@
-import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, Logger, NotFoundException, Param, Patch, Post, Put, Query, Request, UsePipes, ValidationPipe } from '@nestjs/common';
-import { NameResolverService } from 'src/infra/name-resolver/name-resolver.service';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  Logger,
+  NotFoundException,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+  Request,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enum/role.enum';
-import { HouseService } from './house.service';
-import { AddressPerTerritoryAndBlockOutput } from './contracts/AddressPerTerritoryAndBlockOutput';
 import { VERSION } from 'src/enum/version.enum';
-import { SignatureIsValid } from '../signature/usecase/SignatureIsValid';
+import { NameResolverService } from 'src/infra/name-resolver/name-resolver.service';
 import { RequestSignature, RequestUser } from 'src/interfaces/RequestUser';
+
+import { SignatureIsValid } from '../signature/usecase/SignatureIsValid';
 import { RoundParams } from '../territory/contracts';
+import { AddressPerTerritoryAndBlockOutput } from './contracts/AddressPerTerritoryAndBlockOutput';
 import { UpdateHouseOrder } from './contracts/UpdateHouseOrder';
 import { UpsertHouseInput } from './contracts/UpsertHouseInput';
+import { HouseService } from './house.service';
 
 @ApiBearerAuth()
 @ApiTags('House')
@@ -23,7 +41,7 @@ export class HouseController {
 
   constructor(
     private houseService: HouseService,
-    private nameResolver: NameResolverService,
+    private nameResolver: NameResolverService
   ) {
     this.signatureIsValid = new SignatureIsValid(houseService.prisma);
   }
@@ -39,7 +57,11 @@ export class HouseController {
     @Request() req: RequestSignature
   ): Promise<AddressPerTerritoryAndBlockOutput> {
     try {
-      this.logger.log(`Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está buscando os endereços do território ${this.nameResolver.resolveTerritory(territoryId)} e bloco ${this.nameResolver.resolveBlock(blockId)}`);
+      this.logger.log(
+        `Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(
+          req.user.tenantId
+        )}] está buscando os endereços do território ${this.nameResolver.resolveTerritory(territoryId)} e bloco ${this.nameResolver.resolveBlock(blockId)}`
+      );
       if (!territoryId) throw new BadRequestException('Território são obrigatório');
       if (!blockId) throw new BadRequestException('Bloco são obrigatório');
       if (isNaN(+territoryId)) throw new BadRequestException('Território inválido');
@@ -70,7 +92,11 @@ export class HouseController {
   ) {
     try {
       this.logger.log(
-        `Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está buscando os endereços do território ${this.nameResolver.resolveTerritory(territoryId)}, bloco ${this.nameResolver.resolveBlock(blockId)} e endereço ${this.nameResolver.resolveAddress(addressId)}`
+        `Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(
+          req.user.tenantId
+        )}] está buscando os endereços do território ${this.nameResolver.resolveTerritory(territoryId)}, bloco ${this.nameResolver.resolveBlock(
+          blockId
+        )} e endereço ${this.nameResolver.resolveAddress(addressId)}`
       );
       if (!territoryId) throw new BadRequestException('Território são obrigatório');
       if (!blockId) throw new BadRequestException('Bloco são obrigatório');
@@ -102,7 +128,11 @@ export class HouseController {
   ) {
     try {
       this.logger.log(
-        `Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está atualizando a casa ${houseId} no território ${this.nameResolver.resolveTerritory(territoryId)}, bloco ${this.nameResolver.resolveBlock(blockId)}, endereço ${this.nameResolver.resolveAddress(addressId)}`
+        `Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(
+          req.user.tenantId
+        )}] está atualizando a casa ${houseId} no território ${this.nameResolver.resolveTerritory(territoryId)}, bloco ${this.nameResolver.resolveBlock(
+          blockId
+        )}, endereço ${this.nameResolver.resolveAddress(addressId)}`
       );
       if (!houseId) throw new BadRequestException('Casa são obrigatório');
       if (!territoryId) throw new BadRequestException('Território são obrigatório');
@@ -118,13 +148,7 @@ export class HouseController {
       const isAdmin = req.user.roles.includes(Role.ADMIN);
 
       const streetKey = `house:${territoryId}:${blockId}:${addressId}:${body.round}`;
-      const result = await this.houseService.executeUpdateHouseWithTransaction(
-        +houseId,
-        body,
-        isAdmin,
-        +body.round,
-        streetKey,
-      );
+      const result = await this.houseService.executeUpdateHouseWithTransaction(+houseId, body, isAdmin, +body.round, streetKey);
       await this.houseService.invalidateHousesCache(+territoryId, +blockId, +addressId, +body.round);
       return result;
     } catch (error) {

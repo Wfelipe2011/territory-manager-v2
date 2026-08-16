@@ -1,5 +1,5 @@
-import { Prisma, PrismaClient } from '@prisma/client';
 import { Logger } from '@nestjs/common';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 export class PrismaService extends PrismaClient {
   private logger = new Logger(PrismaService.name);
@@ -47,7 +47,7 @@ export class PrismaService extends PrismaClient {
       } catch (error) {
         this.logger.warn(`Tentativa ${6 - retries} de reconexão falhou: ${error.message}`);
         retries--;
-        await new Promise((res) => setTimeout(res, (5 - retries) * 1000)); // Backoff exponencial
+        await new Promise(res => setTimeout(res, (5 - retries) * 1000)); // Backoff exponencial
       }
     }
 

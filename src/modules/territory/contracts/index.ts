@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { RawTerritoryAll, RawTerritoryOne } from '../interfaces';
 import dayjs from 'dayjs';
+
+import { RawTerritoryAll, RawTerritoryOne } from '../interfaces';
 
 export * from './BulkImportInput';
 
@@ -12,6 +13,7 @@ export class RoundParams {
 export class TerritoryTypesOutput {
   @ApiProperty({ required: false, description: 'Id do tipo de território', type: Number, example: 1 })
   id: number;
+
   @ApiProperty({ required: false, description: 'Nome do tipo de território', type: String, example: 'Residencial' })
   name: string;
 }
@@ -35,10 +37,13 @@ export class TerritoryAllInput extends RoundParams {
 export class HistoryTerritory {
   @ApiProperty({ required: false, description: 'Nome do dirigente', type: String, example: 'João' })
   overseer: string;
+
   @ApiProperty({ required: false, description: 'Data de início', type: Date, example: '2021-01-01T00:00:00.000Z' })
   initialDate: Date;
+
   @ApiProperty({ required: false, description: 'Data de expiração', type: Date, example: '2021-01-01T00:00:00.000Z' })
   expirationDate?: Date;
+
   @ApiProperty({ required: false, description: 'Rodada está ativa?', type: Boolean, example: true })
   finished: boolean;
 }
@@ -46,16 +51,22 @@ export class HistoryTerritory {
 class Blocks {
   @ApiProperty({ required: false, description: 'Id do bloco', type: Number, example: 1 })
   id: number;
+
   @ApiProperty({ required: false, description: 'Nome do bloco', type: String, example: 'Vila Velha' })
   name: string;
+
   @ApiProperty({ required: false, description: 'Objeto de assinatura', type: Signature })
   signature?: Signature;
+
   @ApiProperty({ required: false, description: 'Quantidade de casas disponíveis', type: Number, example: 10 })
   positiveCompleted: number;
+
   @ApiProperty({ required: false, description: 'Quantidade de casa concluídas', type: Number, example: 20 })
   negativeCompleted: number;
+
   @ApiProperty({ required: false, description: 'Quantidade de conexões', type: Number, example: 1 })
   connections?: number;
+
   @ApiProperty({ required: false, description: 'Data de atualização', type: Date, example: '2021-01-01T00:00:00.000Z' })
   updateAt?: Date;
 }
@@ -70,6 +81,7 @@ enum Period {
 class PositiveCompleted {
   @ApiProperty({ required: false, description: 'Data que foi concluída', type: Date, example: '2021-01-01T00:00:00.000Z' })
   date: Date;
+
   @ApiProperty({ required: false, description: 'Período que foi concluída', type: String, example: Period.MORNING })
   period: Period;
 }
@@ -77,10 +89,13 @@ class PositiveCompleted {
 export class TerritoryAllOutput {
   @ApiProperty({ required: false, description: 'Id do território', type: Number, example: 1 })
   territoryId: number;
+
   @ApiProperty({ required: false, description: 'Id do tipo de território', type: Number, example: 1 })
   typeId: number;
+
   @ApiProperty({ required: false, description: 'Nome do território', type: String, example: 'Vila Velha' })
   name: string;
+
   @ApiProperty({ required: false, description: 'Nome do dirigente', type: String, example: 'João' })
   overseer: string;
 
@@ -92,6 +107,7 @@ export class TerritoryAllOutput {
 
   @ApiProperty({ required: false, description: 'Quantidade de casa concluídas', type: PositiveCompleted, isArray: true })
   positiveCompleted: PositiveCompleted[];
+
   @ApiProperty({ required: false, description: 'Quantidade de casas disponíveis', type: Number, example: 1 })
   negativeCompleted: number;
 
@@ -139,14 +155,19 @@ export class TerritoryAllOutput {
 export class TerritoryOneOutput {
   @ApiProperty({ required: false, description: 'Id do território', type: Number, example: 1 })
   territoryId: number;
+
   @ApiProperty({ required: false, description: 'Nome do território', type: String, example: 'Vila Velha' })
   territoryName: string;
+
   @ApiProperty({ required: false, description: 'Histórico de território', type: HistoryTerritory, isArray: true })
   history: HistoryTerritory[];
+
   @ApiProperty({ required: false, description: 'Rodada está ativa?', type: Boolean, example: true })
   hasRounds: boolean;
+
   @ApiProperty({ required: false, description: 'Objeto de assinatura', type: Blocks, isArray: true })
   blocks: Blocks[];
+
   @ApiProperty({ required: false, description: 'Url da imagem', type: String, example: 'https://...' })
   imageUrl?: string;
 
@@ -162,8 +183,8 @@ export class TerritoryOneOutput {
       .reduce(this.removeDuplicatedBlocks, [])
       .sort((a, b) => {
         if (a.updateAt === null && b.updateAt !== null) return -1; // a vem antes
-        if (a.updateAt !== null && b.updateAt === null) return 1;  // b vem antes
-        if (a.updateAt === null && b.updateAt === null) return 0;  // ambos nulos, mantêm posição
+        if (a.updateAt !== null && b.updateAt === null) return 1; // b vem antes
+        if (a.updateAt === null && b.updateAt === null) return 0; // ambos nulos, mantêm posição
         if (a.updateAt && b.updateAt) return new Date(a.updateAt).getTime() - new Date(b.updateAt).getTime(); // ordem decrescente
         return 0;
       });

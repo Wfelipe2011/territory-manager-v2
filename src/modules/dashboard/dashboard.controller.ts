@@ -1,15 +1,16 @@
 import { Body, Controller, Get, Post, Render, Res, Request } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { VERSION } from 'src/enum/version.enum';
-import { DashboardService } from './dashboard.service';
-import { HealthService } from './health.service';
-import { Public } from 'src/decorators/public.decorator';
-import { RequestUser } from 'src/interfaces/RequestUser';
-import { Roles } from 'src/decorators/roles.decorator';
-import { Role } from 'src/enum/role.enum';
-import { AuthService } from '../auth/auth.service';
 import { Response } from 'express';
 import * as jwt from 'jsonwebtoken';
+import { Public } from 'src/decorators/public.decorator';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/enum/role.enum';
+import { VERSION } from 'src/enum/version.enum';
+import { RequestUser } from 'src/interfaces/RequestUser';
+
+import { AuthService } from '../auth/auth.service';
+import { DashboardService } from './dashboard.service';
+import { HealthService } from './health.service';
 
 @ApiTags('Dashboard')
 @Controller({
@@ -22,7 +23,7 @@ export class DashboardController {
     readonly dashBoardService: DashboardService,
     private readonly healthService: HealthService,
     private readonly authService: AuthService
-  ) { }
+  ) {}
 
   @Public()
   @Get('healthz')
@@ -48,7 +49,7 @@ export class DashboardController {
       if (!payload || !payload?.roles?.includes(Role.SUPER_ADMIN)) {
         return res.render('login', {
           error: 'Acesso restrito a Super Administradores',
-          layout: false
+          layout: false,
         });
       }
 
@@ -91,8 +92,8 @@ export class DashboardController {
     // Formatação de Uptime para o SSR inicial
     const uptime = health.system_info.uptime_seconds;
     const d = Math.floor(uptime / (3600 * 24));
-    const h = Math.floor(uptime % (3600 * 24) / 3600);
-    const m = Math.floor(uptime % 3600 / 60);
+    const h = Math.floor((uptime % (3600 * 24)) / 3600);
+    const m = Math.floor((uptime % 3600) / 60);
     const s = Math.floor(uptime % 60);
 
     return {

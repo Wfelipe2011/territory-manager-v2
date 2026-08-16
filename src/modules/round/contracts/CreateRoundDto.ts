@@ -1,6 +1,6 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { ThemeMode } from "@prisma/client";
-import { IsIn, IsNotEmpty, IsString, } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { ThemeMode } from '@prisma/client';
+import { IsIn, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateRoundDto {
   @ApiProperty({
@@ -22,11 +22,11 @@ export class CreateRoundDto {
   @ApiProperty({
     description: 'Tema da rodada',
     example: ThemeMode.default,
-    enum: [ThemeMode.default, ThemeMode.campaign]
+    enum: [ThemeMode.default, ThemeMode.campaign],
   })
   @IsIn([ThemeMode.default, ThemeMode.campaign], { message: 'O tema da rodada deve ser "normal" ou "campanha"' })
   @IsNotEmpty({ message: 'O tema da rodada é obrigatório' })
-  theme: ThemeMode
+  theme: ThemeMode;
 
   @ApiProperty({
     description: 'Cor primária da rodada',

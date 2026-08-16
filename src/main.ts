@@ -1,17 +1,19 @@
 import 'dotenv/config';
+import { Logger, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { join } from 'path';
-import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { Logger, VersioningType } from '@nestjs/common';
-import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import fs from 'fs';
-import { uuid } from './shared';
-import hbs from 'hbs';
 import cookieParser from 'cookie-parser';
-import { AllExceptionsFilter } from './middleware/all-exceptions.filter';
+import fs from 'fs';
+import hbs from 'hbs';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { join } from 'path';
+
+import { AppModule } from './app.module';
 import { TraceService } from './infra/trace/trace.service';
+import { AllExceptionsFilter } from './middleware/all-exceptions.filter';
+import { uuid } from './shared';
+
 process.env.INSTANCE_ID = `pod-${uuid()}`;
 process.env.TZ = 'America/Sao_Paulo';
 

@@ -4,7 +4,7 @@ import { PrismaService } from 'src/infra/prisma/prisma.service';
 @Injectable()
 export class AddressService {
   private logger = new Logger(AddressService.name);
-  constructor(readonly prisma: PrismaService) { }
+  constructor(readonly prisma: PrismaService) {}
 
   async findAll(territoryId: number) {
     const territory = await this.prisma.territory.findUnique({

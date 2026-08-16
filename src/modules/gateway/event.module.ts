@@ -1,7 +1,8 @@
-import { Module } from '@nestjs/common';
-import { UploadGateway } from './upload.gateway';
-import { PaypalService } from './paypal.service';
 import { HttpModule } from '@nestjs/axios';
+import { Module } from '@nestjs/common';
+
+import { PaypalService } from './paypal.service';
+import { UploadGateway } from './upload.gateway';
 
 @Module({
   imports: [HttpModule],
@@ -9,4 +10,4 @@ import { HttpModule } from '@nestjs/axios';
   providers: [UploadGateway, PaypalService],
   exports: [UploadGateway, PaypalService],
 })
-export class EventsModule { }
+export class EventsModule {}

@@ -1,19 +1,20 @@
 import { Body, Controller, Get, Post, Request } from '@nestjs/common';
-import { AuthService } from './auth.service';
 import { ApiOperation, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/decorators/public.decorator';
-import { AdminRegisterInput, LoginInput, LoginOutput, PublicRegisterInput, UserOutput } from './contracts';
-import { VERSION } from 'src/enum/version.enum';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enum/role.enum';
+import { VERSION } from 'src/enum/version.enum';
 import { RequestUser } from 'src/interfaces/RequestUser';
+
+import { AuthService } from './auth.service';
+import { AdminRegisterInput, LoginInput, LoginOutput, PublicRegisterInput, UserOutput } from './contracts';
 
 @ApiTags('Autenticação')
 @Controller({
   version: VERSION.V1,
 })
 export class AuthController {
-  constructor(readonly authService: AuthService) { }
+  constructor(readonly authService: AuthService) {}
 
   @Public()
   @ApiOperation({ summary: 'Autenticação de usuário' })

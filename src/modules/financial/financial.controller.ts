@@ -1,72 +1,73 @@
 import { Body, Controller, Get, Post, Render, Request, Param, Delete, Put, Query } from '@nestjs/common';
-import { FinancialService } from './financial.service';
-import { RequestUser } from 'src/interfaces/RequestUser';
+import { FinancialEntryType } from '@prisma/client';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enum/role.enum';
-import { FinancialEntryType } from '@prisma/client';
 import { VERSION } from 'src/enum/version.enum';
+import { RequestUser } from 'src/interfaces/RequestUser';
+
+import { FinancialService } from './financial.service';
 
 @Controller({
-    version: VERSION.V1,
-    path: 'financial',
+  version: VERSION.V1,
+  path: 'financial',
 })
 @Roles(Role.SUPER_ADMIN)
 export class FinancialController {
-    constructor(private readonly financialService: FinancialService) { }
+  constructor(private readonly financialService: FinancialService) {}
 
-    @Get()
-    @Render('financial')
-    async financialPage(@Request() req: RequestUser) {
-        const isSuperAdmin = req.user.roles.includes(Role.SUPER_ADMIN);
-        const tenantId = req.user.tenantId;
+  @Get()
+  @Render('financial')
+  async financialPage(@Request() req: RequestUser) {
+    const isSuperAdmin = req.user.roles.includes(Role.SUPER_ADMIN);
+    const tenantId = req.user.tenantId;
 
-        // Para o Super Admin, mostramos a visão global (todas as transações e resumo global)
-        // Para os demais, restringimos ao tenant selecionado.
-        const entries = await this.financialService.findAll(isSuperAdmin ? undefined : tenantId);
-        const summary = await this.financialService.getSummary(isSuperAdmin ? undefined : tenantId);
+    // Para o Super Admin, mostramos a visão global (todas as transações e resumo global)
+    // Para os demais, restringimos ao tenant selecionado.
+    const entries = await this.financialService.findAll(isSuperAdmin ? undefined : tenantId);
+    const summary = await this.financialService.getSummary(isSuperAdmin ? undefined : tenantId);
 
-        const tenants = await this.financialService.getTenants();
+    const tenants = await this.financialService.getTenants();
 
-        return {
-            entries,
-            summary,
-            tenants,
-            user: req.user,
-            isSuperAdmin,
-            activePage: 'financial',
-        };
-    }
+    return {
+      entries,
+      summary,
+      tenants,
+      user: req.user,
+      isSuperAdmin,
+      activePage: 'financial',
+    };
+  }
 
-    @Get('entries/:id')
-    async getEntry(@Param('id') id: string) {
-        return this.financialService.findOne(+id);
-    }
+  @Get('entries/:id')
+  async getEntry(@Param('id') id: string) {
+    return this.financialService.findOne(+id);
+  }
 
-    @Post('entries')
-    async createEntry(@Body() body: any, @Request() req: RequestUser) {
-        return this.financialService.create({
-            tenantId: req.user.tenantId,
-            value: parseFloat(body.value),
-            date: new Date(body.date),
-            description: body.description,
-            type: body.type as FinancialEntryType,
-            donorName: body.donorName,
-        });
-    }
+  @Post('entries')
+  async createEntry(@Body() body: any, @Request() req: RequestUser) {
+    return this.financialService.create({
+      tenantId: req.user.tenantId,
+      value: parseFloat(body.value),
+      date: new Date(body.date),
+      description: body.description,
+      type: body.type as FinancialEntryType,
+      donorName: body.donorName,
+    });
+  }
 
-    @Put('entries/:id')
-    async updateEntry(@Param('id') id: string, @Body() body: any) {
-        return this.financialService.update(+id, {
-            value: body.value ? parseFloat(body.value) : undefined,
-            date: body.date ? new Date(body.date) : undefined,
-            description: body.description,
-            type: body.type as FinancialEntryType,
-            donorName: body.donorName,
-        });
-    }
+  @Put('entries/:id')
+  async updateEntry(@Param('id') id: string, @Body() body: any) {
+    return this.financialService.update(+id, {
+      value: body.value ? parseFloat(body.value) : undefined,
+      date: body.date ? new Date(body.date) : undefined,
+      description: body.description,
+      type: body.type as FinancialEntryType,
+      donorName: body.donorName,
+    });
+  }
 
-    @Delete('entries/:id')
-    async removeEntry(@Param('id') id: string) {
-        return this.financialService.remove(+id);
-    }
+  @Delete('entries/:id')
+  async removeEntry(@Param('id') id: string) {
+    return this.financialService.remove(+id);
+  }
 }

@@ -4,7 +4,7 @@ import { PrismaService } from 'src/infra/prisma/prisma.service';
 @Injectable()
 export class DashboardService {
   private readonly logger = new Logger(DashboardService.name);
-  constructor(readonly prisma: PrismaService) { }
+  constructor(readonly prisma: PrismaService) {}
 
   async findMarkedHouses(tenantId: number) {
     const oneYearAgo = new Date();
@@ -21,10 +21,12 @@ export class DashboardService {
     `);
 
     const legendColumns = topLegends
-      .map((legend) => `CAST(SUM(CASE WHEN h.legend = '${legend.legend}' THEN 1 ELSE 0 END) AS INT) AS "${legend.legend}"`)
+      .map(legend => `CAST(SUM(CASE WHEN h.legend = '${legend.legend}' THEN 1 ELSE 0 END) AS INT) AS "${legend.legend}"`)
       .join(',\n ');
 
-    const data = await this.prisma.$queryRawUnsafe<any>(`
+    const data = await this.prisma
+      .$queryRawUnsafe<any>(
+        `
       SELECT
           TO_CHAR(r.completed_date, 'YYYY-MM-DD') AS date,
           ${legendColumns}
@@ -40,10 +42,12 @@ export class DashboardService {
           TO_CHAR(r.completed_date, 'YYYY-MM-DD')
       ORDER BY
           date;
-`).catch((err) => {
-      this.logger.error('Erro ao buscar casas marcadas', err);
-      return [];
-    })
+`
+      )
+      .catch(err => {
+        this.logger.error('Erro ao buscar casas marcadas', err);
+        return [];
+      });
     return data;
   }
 
@@ -57,12 +61,13 @@ export class DashboardService {
       LIMIT 4
     `);
 
-    const typeColumns = topTypes.length > 0
-      ? topTypes
-        .map((type) => `CAST(SUM(CASE WHEN h.legend = '${type.legend}' THEN 1 ELSE 0 END) AS INT) AS "${type.legend}"`)
-        .join(',\n ') + ','
-      : '';
-    const data = await this.prisma.$queryRawUnsafe<any>(`
+    const typeColumns =
+      topTypes.length > 0
+        ? topTypes.map(type => `CAST(SUM(CASE WHEN h.legend = '${type.legend}' THEN 1 ELSE 0 END) AS INT) AS "${type.legend}"`).join(',\n ') + ','
+        : '';
+    const data = await this.prisma
+      .$queryRawUnsafe<any>(
+        `
     SELECT
       ${typeColumns}
       CAST(SUM(1) AS INT) AS total
@@ -70,13 +75,17 @@ export class DashboardService {
       house h
     WHERE
       h.tenant_id = ${tenantId}
-    `).catch((err) => {
-      this.logger.error('Erro ao buscar detalhes do território', err);
-      return [{
-        "Residencial": 0,
-        "total": 0
-      }];
-    });
+    `
+      )
+      .catch(err => {
+        this.logger.error('Erro ao buscar detalhes do território', err);
+        return [
+          {
+            Residencial: 0,
+            total: 0,
+          },
+        ];
+      });
 
     return data[0];
   }
@@ -90,11 +99,7 @@ export class DashboardService {
       where: {
         round: {
           some: {
-            OR: [
-              { updateDate: { gte: thirtyDaysAgo } },
-              { startDate: { gte: thirtyDaysAgo } },
-              { completedDate: { gte: thirtyDaysAgo } },
-            ],
+            OR: [{ updateDate: { gte: thirtyDaysAgo } }, { startDate: { gte: thirtyDaysAgo } }, { completedDate: { gte: thirtyDaysAgo } }],
           },
         },
       },
@@ -104,26 +109,22 @@ export class DashboardService {
         city: true,
         round: {
           where: {
-            OR: [
-              { updateDate: { gte: thirtyDaysAgo } },
-              { startDate: { gte: thirtyDaysAgo } },
-              { completedDate: { gte: thirtyDaysAgo } },
-            ],
+            OR: [{ updateDate: { gte: thirtyDaysAgo } }, { startDate: { gte: thirtyDaysAgo } }, { completedDate: { gte: thirtyDaysAgo } }],
           },
           orderBy: { updateDate: 'desc' },
           take: 1,
           select: {
             updateDate: true,
-          }
+          },
         },
         _count: {
           select: {
             users: true,
-            territories: true
-          }
-        }
+            territories: true,
+          },
+        },
       },
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' },
     });
 
     const activeIds = activeTenants.map(t => t.id);
@@ -136,21 +137,21 @@ export class DashboardService {
       this.prisma.financial_entry.aggregate({
         where: {
           type: 'POSITIVE',
-          tenantId: { in: activeIds }
+          tenantId: { in: activeIds },
         },
         _sum: {
           value: true,
         },
       }),
-      this.prisma.multitenancy.count() // Mantemos o total global apenas para referência se precisar
+      this.prisma.multitenancy.count(), // Mantemos o total global apenas para referência se precisar
     ]);
 
     // Calcular atividade (territórios sendo trabalhados agora em tenants ativos)
     const activeSignatures = await this.prisma.territory_overseer.count({
       where: {
         finished: false,
-        tenantId: { in: activeIds }
-      }
+        tenantId: { in: activeIds },
+      },
     });
 
     return {
@@ -161,7 +162,7 @@ export class DashboardService {
       totalUsers: users,
       activeTenantsList: activeTenants.map(t => ({
         ...t,
-        lastActivity: t.round[0]?.updateDate || null
+        lastActivity: t.round[0]?.updateDate || null,
       })),
       activeSignatures,
       globalBalance: financial._sum.value || 0,

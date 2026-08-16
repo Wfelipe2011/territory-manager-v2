@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+
 import { ReportController } from './report.controller';
 
 @Module({
@@ -6,4 +7,4 @@ import { ReportController } from './report.controller';
   controllers: [ReportController],
   providers: [],
 })
-export class ReportModule { }
+export class ReportModule {}

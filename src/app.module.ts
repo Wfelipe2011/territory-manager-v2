@@ -1,14 +1,3 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { APP_GUARD } from '@nestjs/core';
-
-import { ConfigModule } from '@nestjs/config';
-import { WinstonModule } from 'nest-winston';
-import * as winston from 'winston';
-import WinstonCloudWatch from 'winston-cloudwatch';
-import { envs } from './infra/envs';
-import { AuthModule } from './modules/auth/auth.module';
-import { TerritoryModule } from './modules/territory/territory.module';
 import { AuthGuard } from './modules/auth/guard/auth.guard';
 import { RolesGuard } from './modules/auth/guard/roles.guard';
 import { ApiKeyGuard } from './decorators/api-key.guard';
@@ -33,19 +22,31 @@ import { globalTraceService } from './infra/trace/trace.service';
 import { RecordsModule } from './modules/records/records.module';
 import { FinancialModule } from './modules/financial/financial.module';
 import { HttpModule } from '@nestjs/axios';
-import { TransactionsController } from './transactions.controller';
-import { TransactionsService } from './transactions.service';
-import { FirebaseUploadService } from './firebase-upload.service';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+
 import { FirebaseModule } from './infra/firebase.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { WinstonModule } from 'nest-winston';
 import { join } from 'path';
+import * as winston from 'winston';
+import WinstonCloudWatch from 'winston-cloudwatch';
+
+import { AppController } from './app.controller';
+import { FirebaseUploadService } from './firebase-upload.service';
+import { envs } from './infra/envs';
 import { NameResolverModule } from './infra/name-resolver/name-resolver.module';
 import { PgbossModule } from './infra/pgboss/pgboss.module';
+import { AuthModule } from './modules/auth/auth.module';
 import { EventsBusModule } from './modules/events-bus/events-bus.module';
+import { GroupsModule } from './modules/groups/groups.module';
 import { PresenceModule } from './modules/presence/presence.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
-import { GroupsModule } from './modules/groups/groups.module';
+import { TerritoryModule } from './modules/territory/territory.module';
 import { WaitingRoomModule } from './modules/waiting-room/waiting-room.module';
+import { TransactionsController } from './transactions.controller';
+import { TransactionsService } from './transactions.service';
 
 // Usar instância global singleton do TraceService
 const winstonTransports: winston.transport[] = [
@@ -55,14 +56,12 @@ const winstonTransports: winston.transport[] = [
       winston.format.timestamp(),
       winston.format.ms(),
       winston.format.colorize({ all: true }),
-      winston.format.printf(
-        ({ timestamp, level, message, context, ms, sessionId, clientSessionId, method, url }) => {
-          const session = sessionId ? `[${sessionId}]` : '';
-          const clientSession = clientSessionId ? `[${clientSessionId}]` : '';
-          const reqInfo = method && url ? ` ${method} ${url}` : '';
-          return `[${timestamp}] ${session}${clientSession} ${level} [${context || 'App'}] ${message}${reqInfo} ${ms}`;
-        },
-      ),
+      winston.format.printf(({ timestamp, level, message, context, ms, sessionId, clientSessionId, method, url }) => {
+        const session = sessionId ? `[${sessionId}]` : '';
+        const clientSession = clientSessionId ? `[${clientSessionId}]` : '';
+        const reqInfo = method && url ? ` ${method} ${url}` : '';
+        return `[${timestamp}] ${session}${clientSession} ${level} [${context || 'App'}] ${message}${reqInfo} ${ms}`;
+      })
     ),
   }),
 ];
@@ -74,7 +73,7 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
       logStreamName: `instance-${process.env.HOSTNAME || process.env.INSTANCE_ID || 'local'}`,
       awsRegion: envs.AWS_REGION,
       jsonMessage: true,
-      messageFormatter: (logObject) => {
+      messageFormatter: logObject => {
         return JSON.stringify({
           ...logObject,
         });
@@ -85,7 +84,7 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
           secretAccessKey: envs.AWS_SECRET_ACCESS_KEY,
         },
       },
-    }),
+    })
   );
 }
 
@@ -94,7 +93,7 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
     TraceModule,
     WinstonModule.forRoot({
       format: winston.format.combine(
-        winston.format((info) => {
+        winston.format(info => {
           const context = globalTraceService.getContext();
           if (context) {
             info.sessionId = context.sessionId;
@@ -103,7 +102,7 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
             info.clientSessionId = context.clientSessionId;
           }
           return info;
-        })(),
+        })()
       ),
       transports: winstonTransports,
     }),

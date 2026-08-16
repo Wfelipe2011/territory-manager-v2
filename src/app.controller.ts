@@ -1,10 +1,11 @@
-import { PrismaService } from './infra/prisma/prisma.service';
 import { BadRequestException, Controller, ForbiddenException, Get, Logger, Param, Post, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+
 import { Public } from './decorators/public.decorator';
 import { VERSION } from './enum/version.enum';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { FirebaseUploadService } from './firebase-upload.service';
+import { PrismaService } from './infra/prisma/prisma.service';
 import { HealthService } from './modules/dashboard/health.service';
 
 @ApiTags('Verificação de Saúde')
@@ -16,8 +17,8 @@ export class AppController {
   constructor(
     private prismaService: PrismaService,
     private firebaseUploadService: FirebaseUploadService,
-    private healthService: HealthService,
-  ) { }
+    private healthService: HealthService
+  ) {}
 
   @Public()
   @ApiOperation({ summary: 'Verificação de saúde do servidor' })
@@ -29,12 +30,7 @@ export class AppController {
 
   @Public()
   @Get('/sessions')
-  async getSessions(
-    @Query('period') period?: string,
-    @Query('groupBy') groupBy?: string,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
-  ) {
+  async getSessions(@Query('period') period?: string, @Query('groupBy') groupBy?: string, @Query('from') from?: string, @Query('to') to?: string) {
     const VALID_GROUPBY = ['10min', '30min', '1h', '1d'];
     const VALID_PERIOD = ['1d', '3d', '7d'];
     if (groupBy && !VALID_GROUPBY.includes(groupBy)) {
@@ -69,8 +65,8 @@ export class AppController {
     this.logger.log(`Iniciando upload para o ID: ${id}`);
     try {
       const maps = {
-        [process.env.ITA!]: 'ita/catalogo'
-      }
+        [process.env.ITA!]: 'ita/catalogo',
+      };
       if (!maps[id]) {
         this.logger.warn(`Map não encontrado para o ID: ${id}`);
         throw new ForbiddenException(`Map não encontrado para o ID: ${id}`);

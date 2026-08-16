@@ -1,5 +1,5 @@
-import { IsNumber, IsString, IsNotEmpty } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsNumber, IsString, IsNotEmpty } from 'class-validator';
 
 export class CreateTerritoryParams {
   @IsNotEmpty({ message: 'Nome é obrigatório' })

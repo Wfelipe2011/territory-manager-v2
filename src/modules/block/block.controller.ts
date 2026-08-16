@@ -1,12 +1,13 @@
 import { Body, Controller, Delete, Get, Logger, Param, ParseIntPipe, Post, UsePipes, ValidationPipe } from '@nestjs/common';
-import { VERSION } from 'src/enum/version.enum';
-import { Role } from 'src/enum/role.enum';
-import { Roles } from 'src/decorators/roles.decorator';
-import { CurrentUser } from 'src/decorators/current-user.decorator';
-import { UserToken } from '../auth/contracts';
-import { UpsertBlockDto } from './contracts/UpsertBlockDto';
-import { BlockService } from './block.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from 'src/decorators/current-user.decorator';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/enum/role.enum';
+import { VERSION } from 'src/enum/version.enum';
+
+import { UserToken } from '../auth/contracts';
+import { BlockService } from './block.service';
+import { UpsertBlockDto } from './contracts/UpsertBlockDto';
 
 @ApiBearerAuth()
 @ApiTags('Block')
@@ -14,7 +15,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 export class BlockController {
   private readonly logger = new Logger(BlockController.name);
 
-  constructor(private readonly blockService: BlockService) { }
+  constructor(private readonly blockService: BlockService) {}
 
   @Get('territories/:territoryId/blocks')
   @Roles(Role.ADMIN)
@@ -25,7 +26,11 @@ export class BlockController {
 
   @Get('territories/:territoryId/blocks/:blockId')
   @Roles(Role.ADMIN)
-  async getTerritoryBlockDetails(@Param('blockId', ParseIntPipe) blockId: number, @Param('territoryId', ParseIntPipe) territoryId: number, @CurrentUser() user: UserToken) {
+  async getTerritoryBlockDetails(
+    @Param('blockId', ParseIntPipe) blockId: number,
+    @Param('territoryId', ParseIntPipe) territoryId: number,
+    @CurrentUser() user: UserToken
+  ) {
     this.logger.log('Iniciando getTerritoryBlockDetails');
     return this.blockService.getTerritoryBlockDetails(blockId, territoryId, user.tenantId);
   }
@@ -46,5 +51,4 @@ export class BlockController {
     this.logger.log('Iniciando upsertBlock');
     return this.blockService.upsertBlock(upsertBlockDto, user.tenantId, territoryId);
   }
-
 }

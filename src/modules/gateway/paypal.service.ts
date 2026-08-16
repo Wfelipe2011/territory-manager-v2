@@ -1,11 +1,7 @@
-import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class PaypalService {
-
-
-    constructor(private readonly httpService: HttpService) { }
-
-
+  constructor(private readonly httpService: HttpService) {}
 }

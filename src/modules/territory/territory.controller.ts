@@ -17,19 +17,20 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { TerritoryService } from './territory.service';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Role } from 'src/enum/role.enum';
-import { Roles } from 'src/decorators/roles.decorator';
-import { TerritoryOneOutput, TerritoryAllInput, TerritoryAllOutput, RoundParams, TerritoryTypesOutput, BulkImportInput, ImportReport } from './contracts';
-import { VERSION } from 'src/enum/version.enum';
-import { SignatureIsValid } from '../signature/usecase/SignatureIsValid';
-import { RequestSignature, RequestUser } from 'src/interfaces/RequestUser';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { UploadTerritoryUseCase } from './upload-territory.usecase';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/enum/role.enum';
+import { VERSION } from 'src/enum/version.enum';
 import { Loggable } from 'src/infra/loggable.decorate';
-import { CreateTerritoryParams, UpdateTerritoryParams } from './contracts/UpsertTerritoryParams';
 import { NameResolverService } from 'src/infra/name-resolver/name-resolver.service';
+import { RequestSignature, RequestUser } from 'src/interfaces/RequestUser';
+
+import { SignatureIsValid } from '../signature/usecase/SignatureIsValid';
+import { TerritoryOneOutput, TerritoryAllInput, TerritoryAllOutput, RoundParams, TerritoryTypesOutput, BulkImportInput, ImportReport } from './contracts';
+import { CreateTerritoryParams, UpdateTerritoryParams } from './contracts/UpsertTerritoryParams';
+import { TerritoryService } from './territory.service';
+import { UploadTerritoryUseCase } from './upload-territory.usecase';
 
 const logger = new Logger('TerritoryController');
 
@@ -44,7 +45,7 @@ export class TerritoryController {
   constructor(
     readonly territoryService: TerritoryService,
     readonly uploadTerritoryUseCase: UploadTerritoryUseCase,
-    private readonly nameResolver: NameResolverService,
+    private readonly nameResolver: NameResolverService
   ) {
     this.signatureIsValid = new SignatureIsValid(territoryService.prisma);
   }
@@ -75,7 +76,7 @@ export class TerritoryController {
   )
   async createTerritory(@Request() req: RequestUser, @Body() body: CreateTerritoryParams) {
     logger.log(`Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está cadastrando um território`);
-    return this.territoryService.create(body, req.user.tenantId)
+    return this.territoryService.create(body, req.user.tenantId);
   }
 
   @ApiResponse({ status: 200, type: TerritoryOneOutput })
@@ -90,7 +91,7 @@ export class TerritoryController {
   )
   async updateTerritory(@Param('territoryId') territoryId: number, @Body() body: UpdateTerritoryParams) {
     logger.log(`Usuário está atualizando o território ${territoryId}`);
-    return this.territoryService.update(territoryId, body)
+    return this.territoryService.update(territoryId, body);
   }
 
   @ApiResponse({ status: 204, description: 'Território excluído com sucesso' })
@@ -150,7 +151,11 @@ export class TerritoryController {
     @Request() req: RequestSignature
   ): Promise<any> {
     try {
-      logger.log(`Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está buscando para edição o território ${this.nameResolver.resolveTerritory(+territorySerialize)}`);
+      logger.log(
+        `Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(
+          req.user.tenantId
+        )}] está buscando para edição o território ${this.nameResolver.resolveTerritory(+territorySerialize)}`
+      );
       if (!territorySerialize) throw new BadRequestException('Território são obrigatório');
       if (!query.blockId) throw new BadRequestException('Quadra é obrigatório');
       if (!query.page) throw new BadRequestException('Página é obrigatório');
@@ -191,7 +196,11 @@ export class TerritoryController {
     @Request() req: RequestSignature
   ): Promise<TerritoryOneOutput> {
     try {
-      logger.log(`Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está buscando o território ${this.nameResolver.resolveTerritory(+territorySerialize)}`);
+      logger.log(
+        `Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está buscando o território ${this.nameResolver.resolveTerritory(
+          +territorySerialize
+        )}`
+      );
       if (!territorySerialize) throw new BadRequestException('Território são obrigatório');
       const id = Number(territorySerialize);
       if (isNaN(id)) throw new BadRequestException('Território inválido');
@@ -236,20 +245,11 @@ export class TerritoryController {
   @Post('bulk')
   @Roles(Role.ADMIN)
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  async bulkImport(
-    @Body() body: BulkImportInput,
-    @Request() req: RequestSignature,
-    @Loggable() logger: Logger
-  ): Promise<ImportReport> {
+  async bulkImport(@Body() body: BulkImportInput, @Request() req: RequestSignature, @Loggable() logger: Logger): Promise<ImportReport> {
     try {
       logger.log(`Usuário ${req.user.userId} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está iniciando importação em massa`);
 
-      return await this.uploadTerritoryUseCase.bulkInsert(
-        body.rows,
-        req.user.tenantId,
-        req.user.userId,
-        logger
-      );
+      return await this.uploadTerritoryUseCase.bulkInsert(body.rows, req.user.tenantId, req.user.userId, logger);
     } catch (error) {
       logger.error('Erro na importação em massa:', error);
       throw error;
