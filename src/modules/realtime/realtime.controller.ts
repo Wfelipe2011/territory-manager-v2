@@ -6,6 +6,7 @@ import { Public } from '../../decorators/public.decorator';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { EventsBusService } from '../events-bus/events-bus.service';
 import { PresenceService } from '../presence/presence.service';
+import { WaitingRoomService } from '../waiting-room/waiting-room.service';
 import { SseAuthService } from './sse-auth.service';
 import {
   AuthExpiredEvent,
@@ -39,7 +40,8 @@ export class RealtimeController implements OnModuleInit {
     private readonly sseManager: SseManager,
     private readonly presenceService: PresenceService,
     private readonly eventsBus: EventsBusService,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
+    private readonly waitingRoomService: WaitingRoomService
   ) {}
 
   onModuleInit(): void {
@@ -240,6 +242,17 @@ export class RealtimeController implements OnModuleInit {
             type: 'connected',
             data: { roomKey, instanceId },
           });
+
+          try {
+            const [publishers, assignments] = await Promise.all([
+              this.waitingRoomService.getPublishersPayload(groupId),
+              this.waitingRoomService.getAssignmentsPayload(groupId),
+            ]);
+            subscriber.next({ type: 'presence_changed', data: publishers });
+            subscriber.next({ type: 'assignments_changed', data: assignments });
+          } catch (err) {
+            this.logger.warn(`Snapshot da sala ${roomKey} falhou: ${(err as Error).message}`);
+          }
 
           heartbeatTimer = timer(HEARTBEAT_INTERVAL_MS, HEARTBEAT_INTERVAL_MS).subscribe(() => {
             if (!subscriber.closed) subscriber.next(PING_EVENT);

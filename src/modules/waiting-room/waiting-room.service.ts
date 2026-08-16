@@ -109,6 +109,19 @@ export class WaitingRoomService {
     }));
   }
 
+  async getGroupIdsByTerritory({ territoryId, round }: { territoryId: number; round: number }): Promise<string[]> {
+    const presences = await this.prisma.waitingRoomPresence.findMany({
+      where: {
+        kind: 'overseer',
+        territoryId,
+        round,
+        lastSeenAt: { gte: new Date(Date.now() - PRESENCE_ACTIVE_MS) },
+      },
+      select: { groupId: true },
+    });
+    return [...new Set(presences.map(presence => presence.groupId))];
+  }
+
   async joinRoom({ groupId, ctx, body }: { groupId: string; ctx: TenantAuthContext; body: JoinRoomDto }) {
     const { tenantId, identityKey } = ctx;
     const group = await this.prisma.group.findFirst({
@@ -211,15 +224,17 @@ export class WaitingRoomService {
 
     if (presence.kind === 'overseer') {
       if (!presence.territoryId) throw new BadRequestException('Dirigente sem território vinculado');
-      const [publishers, assignments, blocks] = await Promise.all([
+      const [publishers, assignments, blocks, territory] = await Promise.all([
         this.getPublishersPayload(groupId),
         this.getAssignmentsPayload(groupId),
         this.blockService.getTerritoryBlocks(presence.territoryId, tenantId).then(rows => rows.map(row => ({ id: row.id, name: row.name }))),
+        this.prisma.territory.findFirst({ where: { id: presence.territoryId, tenantId }, select: { name: true } }),
       ]);
       return {
         role: 'overseer',
-        group: { id: group.id, name: group.name },
+        group: { id: group.id, name: group.name, active: true },
         territoryId: presence.territoryId,
+        territoryName: territory?.name ?? '',
         round: presence.round,
         publishers,
         assignments,
@@ -229,13 +244,20 @@ export class WaitingRoomService {
 
     const publisher = await this.prisma.publisher.findFirst({
       where: { tenantId, identityKey },
-      select: { firstName: true, lastName: true, phoneLast4: true },
+      select: { firstName: true, phoneLast4: true },
     });
-    const [assignments, peers] = await Promise.all([this.getPublisherAssignments(groupId, identityKey), this.getActivePublishersPayload(groupId, identityKey)]);
+    const [assignments, peers, activeOverseer] = await Promise.all([
+      this.getPublisherAssignments(groupId, identityKey),
+      this.getActivePublishersPayload(groupId, identityKey),
+      this.prisma.waitingRoomPresence.findFirst({
+        where: { groupId, kind: 'overseer', lastSeenAt: { gte: new Date(Date.now() - PRESENCE_ACTIVE_MS) } },
+        select: { id: true },
+      }),
+    ]);
     return {
       role: 'publisher',
-      group: { id: group.id, name: group.name },
-      profile: publisher ?? { firstName: null, lastName: null, phoneLast4: null },
+      group: { id: group.id, name: group.name, active: !!activeOverseer },
+      profile: publisher ?? { firstName: '', phoneLast4: '' },
       assignments,
       peers,
     };

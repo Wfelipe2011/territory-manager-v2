@@ -139,6 +139,23 @@ export class EventsBusWorker implements OnModuleInit, OnModuleDestroy {
       type: 'street_changed',
       data: { streetKey: payload.streetKey, reason: payload.reason },
     });
+
+    if (payload.territoryId !== undefined && payload.blockId !== undefined && payload.round !== undefined) {
+      try {
+        const groupIds = await this.waitingRoomService.getGroupIdsByTerritory({
+          territoryId: payload.territoryId,
+          round: payload.round,
+        });
+        for (const groupId of groupIds) {
+          this.sseManager.broadcastToRoom(`waiting-room:${groupId}`, {
+            type: 'block_updated',
+            data: { blockId: payload.blockId, reason: payload.reason },
+          });
+        }
+      } catch (err) {
+        this.logger.warn(`Falha notificando grupos do território ${payload.territoryId}: ${(err as Error).message}`);
+      }
+    }
   }
 
   private async handleUserJoined(payload: PresencePayload): Promise<void> {
