@@ -1,34 +1,35 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, VersioningType } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import cookieParser from 'cookie-parser';
+
 import { AppModule } from '../../src/app.module';
 import { FirebaseService } from '../../src/infra/firebase.service';
 import { PrismaService } from '../../src/infra/prisma/prisma.service';
-import cookieParser from 'cookie-parser';
 
 export async function createSocketTestApp(): Promise<INestApplication> {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-        imports: [AppModule],
+  const moduleFixture: TestingModule = await Test.createTestingModule({
+    imports: [AppModule],
+  })
+    .overrideProvider(FirebaseService)
+    .useValue({
+      onModuleInit: jest.fn(),
+      uploadFile: jest.fn(),
+      console: {
+        log: jest.fn(),
+        error: jest.fn(),
+      },
     })
-        .overrideProvider(FirebaseService)
-        .useValue({
-            onModuleInit: jest.fn(),
-            uploadFile: jest.fn(),
-            console: {
-                log: jest.fn(),
-                error: jest.fn(),
-            },
-        })
-        .compile();
+    .compile();
 
-    const app = moduleFixture.createNestApplication({
-        logger: false,
-    });
+  const app = moduleFixture.createNestApplication({
+    logger: false,
+  });
 
-    app.use(cookieParser());
-    app.enableVersioning({
-        type: VersioningType.URI,
-    });
+  app.use(cookieParser());
+  app.enableVersioning({
+    type: VersioningType.URI,
+  });
 
-    await app.init();
-    return app;
+  await app.init();
+  return app;
 }

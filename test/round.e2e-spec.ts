@@ -1,252 +1,233 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { createTestApp } from './utils/app-helper';
-import { PrismaService } from '../src/infra/prisma/prisma.service';
-import { cleanDatabase } from './utils/db-cleaner';
-import { createTestToken } from './utils/auth-helper';
+
 import { Role } from '../src/enum/role.enum';
+import { PrismaService } from '../src/infra/prisma/prisma.service';
+import { createTestApp } from './utils/app-helper';
+import { createTestToken } from './utils/auth-helper';
+import { cleanDatabase } from './utils/db-cleaner';
 
 describe('Round Lifecycle (e2e)', () => {
-    let app: INestApplication;
-    let prisma: PrismaService;
+  let app: INestApplication;
+  let prisma: PrismaService;
 
-    beforeAll(async () => {
-        app = await createTestApp();
-        prisma = app.get(PrismaService);
+  beforeAll(async () => {
+    app = await createTestApp();
+    prisma = app.get(PrismaService);
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  beforeEach(async () => {
+    await cleanDatabase(prisma);
+  });
+
+  it('should start and finish a round', async () => {
+    // Arrange
+    const tenant = await prisma.multitenancy.create({ data: { name: 'Test Tenant' } });
+    const type = await prisma.type.create({ data: { name: 'Type 1', tenantId: tenant.id } });
+    const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
+
+    // Create a territory to be included in the round
+    const territory = await prisma.territory.create({
+      data: { name: 'Territory 1', tenantId: tenant.id, typeId: type.id },
     });
 
-    afterAll(async () => {
-        await app.close();
+    // Create Block
+    const block = await prisma.block.create({
+      data: { name: 'Block 1', tenantId: tenant.id },
     });
 
-    beforeEach(async () => {
-        await cleanDatabase(prisma);
+    // Create Address
+    const address = await prisma.address.create({
+      data: { name: 'Street 1', tenantId: tenant.id },
     });
 
-    it('should start and finish a round', async () => {
-        // Arrange
-        const tenant = await prisma.multitenancy.create({ data: { name: 'Test Tenant' } });
-        const type = await prisma.type.create({ data: { name: 'Type 1', tenantId: tenant.id } });
-        const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
-
-        // Create a territory to be included in the round
-        const territory = await prisma.territory.create({
-            data: { name: 'Territory 1', tenantId: tenant.id, typeId: type.id },
-        });
-
-        // Create Block
-        const block = await prisma.block.create({
-            data: { name: 'Block 1', tenantId: tenant.id },
-        });
-
-        // Create Address
-        const address = await prisma.address.create({
-            data: { name: 'Street 1', tenantId: tenant.id },
-        });
-
-        // Create TBA (cadastro oficial do bloco)
-        const tb = await prisma.territory_block.create({
-            data: { blockId: block.id, territoryId: territory.id, tenantId: tenant.id },
-        });
-        const tba = await prisma.territory_block_address.create({
-            data: { territoryBlockId: tb.id, addressId: address.id, tenantId: tenant.id },
-        });
-
-        // Create House linked to TBA (Required for round creation)
-        await prisma.house.create({
-            data: {
-                number: '100',
-                blockId: block.id,
-                addressId: address.id,
-                territoryId: territory.id,
-                tenantId: tenant.id,
-                territoryBlockAddressId: tba.id,
-            },
-        });
-
-        // 1. Start Round
-        const startResponse = await request(app.getHttpServer())
-            .post('/v1/rounds/start')
-            .set('Authorization', `Bearer ${token}`)
-            .send({
-                name: 'New Round',
-                typeId: type.id,
-                theme: 'default',
-                colorPrimary: '#7AAD58',
-                colorSecondary: '#7AAD58',
-            });
-
-        expect(startResponse.status).toBe(201);
-
-        // 2. Verify Round Info
-        const infoResponse = await request(app.getHttpServer())
-            .get('/v1/rounds/info')
-            .set('Authorization', `Bearer ${token}`);
-
-        expect(infoResponse.status).toBe(200);
-        expect(infoResponse.body.length).toBeGreaterThan(0);
-        const roundNumber = infoResponse.body[0].round_number;
-
-        // 3. Finish Round
-        const finishResponse = await request(app.getHttpServer())
-            .post('/v1/rounds/finish')
-            .set('Authorization', `Bearer ${token}`)
-            .send({
-                roundNumber: roundNumber,
-            });
-
-        expect(finishResponse.status).toBe(201);
+    // Create TBA (cadastro oficial do bloco)
+    const tb = await prisma.territory_block.create({
+      data: { blockId: block.id, territoryId: territory.id, tenantId: tenant.id },
+    });
+    const tba = await prisma.territory_block_address.create({
+      data: { territoryBlockId: tb.id, addressId: address.id, tenantId: tenant.id },
     });
 
-    it('should get round info by round number', async () => {
-        const tenant = await prisma.multitenancy.create({ data: { name: 'Test Tenant Info' } });
-        const type = await prisma.type.create({ data: { name: 'Type 1', tenantId: tenant.id } });
-        const territory = await prisma.territory.create({
-            data: { name: 'Territory 1', tenantId: tenant.id, typeId: type.id },
-        });
-        const block = await prisma.block.create({ data: { name: 'Block 1', tenantId: tenant.id } });
-        const address = await prisma.address.create({ data: { name: 'Street 1', tenantId: tenant.id } });
-        const house = await prisma.house.create({
-            data: { number: '1', blockId: block.id, addressId: address.id, territoryId: territory.id, tenantId: tenant.id },
-        });
-
-        const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
-        await prisma.round_info.create({
-            data: {
-                name: 'Round 1',
-                roundNumber: 1,
-                tenantId: tenant.id,
-                theme: 'default',
-                colorPrimary: '#000',
-                colorSecondary: '#fff',
-            },
-        });
-
-        await prisma.round.create({
-            data: {
-                roundNumber: 1,
-                tenantId: tenant.id,
-                territoryId: territory.id,
-                blockId: block.id,
-                houseId: house.id,
-                completed: false,
-            },
-        });
-
-        const response = await request(app.getHttpServer())
-            .get('/v1/rounds/info/1')
-            .set('Authorization', `Bearer ${token}`);
-
-        expect(response.status).toBe(200);
-        expect(response.body.round_number).toBe(1);
+    // Create House linked to TBA (Required for round creation)
+    await prisma.house.create({
+      data: {
+        number: '100',
+        blockId: block.id,
+        addressId: address.id,
+        territoryId: territory.id,
+        tenantId: tenant.id,
+        territoryBlockAddressId: tba.id,
+      },
     });
 
-    it('should get theme round', async () => {
-        const tenant = await prisma.multitenancy.create({ data: { name: 'Test Tenant Theme' } });
-        const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
-        await prisma.round_info.create({
-            data: {
-                name: 'Round 1',
-                roundNumber: 1,
-                tenantId: tenant.id,
-                theme: 'campaign',
-                colorPrimary: '#000',
-                colorSecondary: '#fff',
-            },
-        });
-
-        const response = await request(app.getHttpServer())
-            .get('/v1/rounds/theme/1')
-            .set('Authorization', `Bearer ${token}`);
-
-        expect(response.status).toBe(200);
-        expect(response.body.theme).toBe('campaign');
+    // 1. Start Round
+    const startResponse = await request(app.getHttpServer()).post('/v1/rounds/start').set('Authorization', `Bearer ${token}`).send({
+      name: 'New Round',
+      typeId: type.id,
+      theme: 'default',
+      colorPrimary: '#7AAD58',
+      colorSecondary: '#7AAD58',
     });
 
-    it('should fix round info', async () => {
-        const tenant = await prisma.multitenancy.create({ data: { name: 'Test Tenant Fix' } });
-        const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
+    expect(startResponse.status).toBe(201);
 
-        const response = await request(app.getHttpServer())
-            .get('/v1/rounds/fix-round-info')
-            .set('Authorization', `Bearer ${token}`);
+    // 2. Verify Round Info
+    const infoResponse = await request(app.getHttpServer()).get('/v1/rounds/info').set('Authorization', `Bearer ${token}`);
 
-        expect(response.status).toBe(200);
+    expect(infoResponse.status).toBe(200);
+    expect(infoResponse.body.length).toBeGreaterThan(0);
+    const roundNumber = infoResponse.body[0].round_number;
+
+    // 3. Finish Round
+    const finishResponse = await request(app.getHttpServer()).post('/v1/rounds/finish').set('Authorization', `Bearer ${token}`).send({
+      roundNumber,
     });
 
-    it('should fail to finish round without round number', async () => {
-        const tenant = await prisma.multitenancy.create({ data: { name: 'Test Tenant Fail' } });
-        const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
+    expect(finishResponse.status).toBe(201);
+  });
 
-        const response = await request(app.getHttpServer())
-            .post('/v1/rounds/finish')
-            .set('Authorization', `Bearer ${token}`)
-            .send({});
-
-        expect(response.status).toBe(500); // Based on the controller code throwing a generic Error
+  it('should get round info by round number', async () => {
+    const tenant = await prisma.multitenancy.create({ data: { name: 'Test Tenant Info' } });
+    const type = await prisma.type.create({ data: { name: 'Type 1', tenantId: tenant.id } });
+    const territory = await prisma.territory.create({
+      data: { name: 'Territory 1', tenantId: tenant.id, typeId: type.id },
+    });
+    const block = await prisma.block.create({ data: { name: 'Block 1', tenantId: tenant.id } });
+    const address = await prisma.address.create({ data: { name: 'Street 1', tenantId: tenant.id } });
+    const house = await prisma.house.create({
+      data: { number: '1', blockId: block.id, addressId: address.id, territoryId: territory.id, tenantId: tenant.id },
     });
 
-    it('house stale (sem TBA) não gera linha na rodada', async () => {
-        const tenant = await prisma.multitenancy.create({ data: { name: 'Tenant Stale Round' } });
-        const type = await prisma.type.create({ data: { name: 'Tipo Stale', tenantId: tenant.id } });
-        const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
-        const territory = await prisma.territory.create({
-            data: { name: 'Território Stale', tenantId: tenant.id, typeId: type.id },
-        });
-        const block = await prisma.block.create({ data: { name: 'Quadra Stale', tenantId: tenant.id } });
-        const address = await prisma.address.create({ data: { name: 'Rua Ativa', tenantId: tenant.id } });
-        const addressStale = await prisma.address.create({ data: { name: 'Rua Antiga', tenantId: tenant.id } });
-
-        // TBA: apenas "Rua Ativa" está cadastrada no bloco
-        const tb = await prisma.territory_block.create({
-            data: { blockId: block.id, territoryId: territory.id, tenantId: tenant.id },
-        });
-        const tba = await prisma.territory_block_address.create({
-            data: { territoryBlockId: tb.id, addressId: address.id, tenantId: tenant.id },
-        });
-
-        // Casa vinculada ao TBA (deve entrar na rodada)
-        await prisma.house.create({
-            data: {
-                number: '10',
-                blockId: block.id,
-                addressId: address.id,
-                territoryId: territory.id,
-                tenantId: tenant.id,
-                territoryBlockAddressId: tba.id,
-            },
-        });
-
-        // Casa stale: address_id aponta para rua antiga, sem TBA link (não deve entrar na rodada)
-        await prisma.house.create({
-            data: {
-                number: '99',
-                blockId: block.id,
-                addressId: addressStale.id,
-                territoryId: territory.id,
-                tenantId: tenant.id,
-                territoryBlockAddressId: null,
-            },
-        });
-
-        const startResponse = await request(app.getHttpServer())
-            .post('/v1/rounds/start')
-            .set('Authorization', `Bearer ${token}`)
-            .send({
-                name: 'Rodada Stale Test',
-                typeId: type.id,
-                theme: 'default',
-                colorPrimary: '#000',
-                colorSecondary: '#fff',
-            });
-
-        expect(startResponse.status).toBe(201);
-
-        const roundsCreated = await prisma.round.findMany({ where: { tenantId: tenant.id } });
-        expect(roundsCreated).toHaveLength(1);
-        expect(roundsCreated[0].houseId).not.toBeNull();
-
-        const houseInRound = await prisma.house.findUnique({ where: { id: roundsCreated[0].houseId } });
-        expect(houseInRound?.number).toBe('10');
+    const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
+    await prisma.round_info.create({
+      data: {
+        name: 'Round 1',
+        roundNumber: 1,
+        tenantId: tenant.id,
+        theme: 'default',
+        colorPrimary: '#000',
+        colorSecondary: '#fff',
+      },
     });
+
+    await prisma.round.create({
+      data: {
+        roundNumber: 1,
+        tenantId: tenant.id,
+        territoryId: territory.id,
+        blockId: block.id,
+        houseId: house.id,
+        completed: false,
+      },
+    });
+
+    const response = await request(app.getHttpServer()).get('/v1/rounds/info/1').set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.round_number).toBe(1);
+  });
+
+  it('should get theme round', async () => {
+    const tenant = await prisma.multitenancy.create({ data: { name: 'Test Tenant Theme' } });
+    const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
+    await prisma.round_info.create({
+      data: {
+        name: 'Round 1',
+        roundNumber: 1,
+        tenantId: tenant.id,
+        theme: 'campaign',
+        colorPrimary: '#000',
+        colorSecondary: '#fff',
+      },
+    });
+
+    const response = await request(app.getHttpServer()).get('/v1/rounds/theme/1').set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.theme).toBe('campaign');
+  });
+
+  it('should fix round info', async () => {
+    const tenant = await prisma.multitenancy.create({ data: { name: 'Test Tenant Fix' } });
+    const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
+
+    const response = await request(app.getHttpServer()).get('/v1/rounds/fix-round-info').set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+  });
+
+  it('should fail to finish round without round number', async () => {
+    const tenant = await prisma.multitenancy.create({ data: { name: 'Test Tenant Fail' } });
+    const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
+
+    const response = await request(app.getHttpServer()).post('/v1/rounds/finish').set('Authorization', `Bearer ${token}`).send({});
+
+    expect(response.status).toBe(500); // Based on the controller code throwing a generic Error
+  });
+
+  it('house stale (sem TBA) não gera linha na rodada', async () => {
+    const tenant = await prisma.multitenancy.create({ data: { name: 'Tenant Stale Round' } });
+    const type = await prisma.type.create({ data: { name: 'Tipo Stale', tenantId: tenant.id } });
+    const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
+    const territory = await prisma.territory.create({
+      data: { name: 'Território Stale', tenantId: tenant.id, typeId: type.id },
+    });
+    const block = await prisma.block.create({ data: { name: 'Quadra Stale', tenantId: tenant.id } });
+    const address = await prisma.address.create({ data: { name: 'Rua Ativa', tenantId: tenant.id } });
+    const addressStale = await prisma.address.create({ data: { name: 'Rua Antiga', tenantId: tenant.id } });
+
+    // TBA: apenas "Rua Ativa" está cadastrada no bloco
+    const tb = await prisma.territory_block.create({
+      data: { blockId: block.id, territoryId: territory.id, tenantId: tenant.id },
+    });
+    const tba = await prisma.territory_block_address.create({
+      data: { territoryBlockId: tb.id, addressId: address.id, tenantId: tenant.id },
+    });
+
+    // Casa vinculada ao TBA (deve entrar na rodada)
+    await prisma.house.create({
+      data: {
+        number: '10',
+        blockId: block.id,
+        addressId: address.id,
+        territoryId: territory.id,
+        tenantId: tenant.id,
+        territoryBlockAddressId: tba.id,
+      },
+    });
+
+    // Casa stale: address_id aponta para rua antiga, sem TBA link (não deve entrar na rodada)
+    await prisma.house.create({
+      data: {
+        number: '99',
+        blockId: block.id,
+        addressId: addressStale.id,
+        territoryId: territory.id,
+        tenantId: tenant.id,
+        territoryBlockAddressId: null,
+      },
+    });
+
+    const startResponse = await request(app.getHttpServer()).post('/v1/rounds/start').set('Authorization', `Bearer ${token}`).send({
+      name: 'Rodada Stale Test',
+      typeId: type.id,
+      theme: 'default',
+      colorPrimary: '#000',
+      colorSecondary: '#fff',
+    });
+
+    expect(startResponse.status).toBe(201);
+
+    const roundsCreated = await prisma.round.findMany({ where: { tenantId: tenant.id } });
+    expect(roundsCreated).toHaveLength(1);
+    expect(roundsCreated[0].houseId).not.toBeNull();
+
+    const houseInRound = await prisma.house.findUnique({ where: { id: roundsCreated[0].houseId } });
+    expect(houseInRound?.number).toBe('10');
+  });
 });

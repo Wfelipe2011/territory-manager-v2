@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
+
 import { createTestApp } from './utils/app-helper';
 
 describe('AppController (e2e)', () => {
@@ -14,8 +15,6 @@ describe('AppController (e2e)', () => {
   });
 
   it('/v1/health-check (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/v1/health-check')
-      .expect(200);
+    return request(app.getHttpServer()).get('/v1/health-check').expect(200);
   });
 });
