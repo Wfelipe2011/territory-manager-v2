@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.3.0](https://github.com/Wfelipe2011/territory-manager-v2/compare/v2.2.0...v2.3.0) (2026-08-16)
+
+
+### Features
+
+* **groups:** CRUD de grupos da sala de espera (admin) ([3b2bcd6](https://github.com/Wfelipe2011/territory-manager-v2/commit/3b2bcd65b4195789386151ac47a3b99ccbe42c4f))
+* **prisma:** modelos de sala de espera e campos kind/revokedAt em signature ([30d771b](https://github.com/Wfelipe2011/territory-manager-v2/commit/30d771bdd9d0985d2ce949ea3de1b1478d081625))
+* **realtime:** snapshot da sala no SSE, grupo ativo e atualização de quadra em tempo real ([9d51f1e](https://github.com/Wfelipe2011/territory-manager-v2/commit/9d51f1e1b3ad47c3c079e5959b738764f2355677))
+* **realtime:** SSE da sala de espera com SseManager generalizado para roomKey ([295e7c8](https://github.com/Wfelipe2011/territory-manager-v2/commit/295e7c82bfebe162126e73f86e3b08605069def9))
+* **signature:** assinatura de tenant regenerável e quadra para compartilhamento ([4bb309c](https://github.com/Wfelipe2011/territory-manager-v2/commit/4bb309c004eb37e46694db13103a56a3887c3bfe))
+* **waiting-room:** peers por link de quadra com groupId ([c4b3953](https://github.com/Wfelipe2011/territory-manager-v2/commit/c4b39531f423d29d8322e3baea1122e655c33989))
+* **waiting-room:** presença, atribuições, heartbeat e links de quadra ([d12dd24](https://github.com/Wfelipe2011/territory-manager-v2/commit/d12dd24b88ee3438b876aa4bf272a3add1ab0e7e))
+
+
+### Bug Fixes
+
+* **realtime:** SSE da sala aceita assinatura de território (dirigente) ([d287456](https://github.com/Wfelipe2011/territory-manager-v2/commit/d28745699ec9e0be4a4a5bd008be8f6f8482d675))
+* **signature:** retorna roundInfo nulo para assinaturas de tenant (sem round) ([4889c81](https://github.com/Wfelipe2011/territory-manager-v2/commit/4889c811071707e3da5deeacc28d5902c4603c8b))
+* **signature:** revogar quadra remove atribuições dos publicadores ([0658928](https://github.com/Wfelipe2011/territory-manager-v2/commit/06589289d1e12ad4d022af9897dca859530aa5f0))
+* **waiting-room:** lista grupos por papel, vínculo de assinatura da quadra e dedupe de territórios ([787c16f](https://github.com/Wfelipe2011/territory-manager-v2/commit/787c16f402cad0b99c8f444869eab3b9ffa0cd04))
+* **waiting-room:** remove atribuições de publicadores que saíram da sala ([44c0970](https://github.com/Wfelipe2011/territory-manager-v2/commit/44c0970d90c2da8ab30faf5a39d147ed06e506d9))
+
+
+### Refactoring
+
+* infraestrutura multi-tenancy, trace, auth e organização de módulos ([0aaef39](https://github.com/Wfelipe2011/territory-manager-v2/commit/0aaef39008e3e18191138a72c97a14593508d844))
+
 ## [2.2.0](https://github.com/Wfelipe2011/territory-manager-v2/compare/v2.1.2...v2.2.0) (2026-08-12)
 
 
