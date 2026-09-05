@@ -1,5 +1,5 @@
 import { PrismaService } from '../../infra/prisma/prisma.service';
-import { BadRequestException, ForbiddenException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { BlockSignatureDTO } from './dtos/BlockSignatureDTO';
@@ -13,7 +13,7 @@ import { ParametersService } from '../parameters/parameters.service';
 import { AddressBlockService } from '../block/adress-block.service';
 
 const TTL_ADDRESSES = 300_000; // 5 minutos
-const TTL_HOUSES = 30_000;  // 30 segundos
+const TTL_HOUSES = 30_000; // 30 segundos
 
 export type CreateHouseInput = {
   streetId: number;
@@ -31,8 +31,8 @@ export class HouseService {
     readonly prisma: PrismaService,
     private readonly parametersService: ParametersService,
     private readonly addressBlockService: AddressBlockService,
-    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-  ) { }
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
+  ) {}
 
   async getAddressPerTerritoryByIdAndBlockById(blockId: number, territoryId: number) {
     const cacheKey = `addresses:${territoryId}:${blockId}`;
@@ -131,17 +131,19 @@ export class HouseService {
       territoryName: territory_name,
       blockName: block_name,
       streetName: street_name,
-      houses: houses.filter(h => h.number !== "ghost").map(house => ({
-        id: house.house_id,
-        number: house.number,
-        complement: house.complement,
-        leaveLetter: house.leave_letter,
-        legend: LegengDTO.mapper(house?.legend),
-        order: house.order,
-        status: house.status,
-        dontVisit: house.dont_visit,
-        reportType: house.report_type,
-      })),
+      houses: houses
+        .filter(h => h.number !== 'ghost')
+        .map(house => ({
+          id: house.house_id,
+          number: house.number,
+          complement: house.complement,
+          leaveLetter: house.leave_letter,
+          legend: LegengDTO.mapper(house?.legend),
+          order: house.order,
+          status: house.status,
+          dontVisit: house.dont_visit,
+          reportType: house.report_type,
+        })),
     };
 
     await this.cacheManager.set(cacheKey, output, TTL_HOUSES);
@@ -230,79 +232,104 @@ export class HouseService {
 
     const resolvedTbaId = await this.addressBlockService.resolveTerritoryBlockAddressId(+territoryId, +blockId, +streetId, territory.tenantId);
 
-    this.logger.log(`Verificando se a casa ${number} já existe`);
+    const result = await this.prisma.$transaction(async txt => {
+      this.logger.log(`Verificando se a casa ${number} já existe`);
 
-    const house = await this.prisma.house.create({
-      data: {
-        number,
-        legend,
-        dontVisit,
-        address: {
-          connect: {
-            id: +streetId,
-          },
-        },
-        block: {
-          connect: {
-            id: +blockId,
-          },
-        },
-        territory: {
-          connect: {
-            id: +territoryId,
-          },
-        },
-        multitenancy: {
-          connect: {
-            id: territory.tenantId,
-          },
-        },
-        territoryBlockAddress: {
-          connect: {
-            id: resolvedTbaId,
-          },
-        },
-      },
-    });
-
-    this.logger.log(`Casa ${number} criada com sucesso`);
-
-    this.logger.log(`Criando rodadas para a casa ${number}`);
-
-    this.logger.log(`Buscando as rodadas abertas do território ${territoryId} e bloco ${blockId} e endereço ${streetId} e casa ${house.id}`);
-    const openRounds = await this.prisma.round.findMany({
-      where: {
-        tenantId: territory.tenantId,
-        endDate: null,
-      },
-      distinct: ['roundNumber'],
-      select: {
-        roundNumber: true,
-      },
-    });
-
-    this.logger.log(`Criando rodadas para a casa ${number}`);
-
-    for (const round of openRounds) {
-      this.logger.log(`Criando rodada ${round.roundNumber} para a casa ${number}`);
-      await this.prisma.round.create({
-        data: {
-          completed: false,
-          roundNumber: round.roundNumber,
-          blockId: +blockId,
+      const existing = await txt.house.findFirst({
+        where: {
           tenantId: territory.tenantId,
-          houseId: house.id,
-          territoryId: +territoryId,
+          territoryBlockAddressId: resolvedTbaId,
+          number,
         },
       });
-    }
+      if (existing) throw new ConflictException(`Casa ${number} já existe neste endereço`);
 
-    this.logger.log(`Rodadas criadas com sucesso para a casa ${number}`);
+      const house = await txt.house.create({
+        data: {
+          number,
+          legend,
+          dontVisit,
+          address: {
+            connect: {
+              id: +streetId,
+            },
+          },
+          block: {
+            connect: {
+              id: +blockId,
+            },
+          },
+          territory: {
+            connect: {
+              id: +territoryId,
+            },
+          },
+          multitenancy: {
+            connect: {
+              id: territory.tenantId,
+            },
+          },
+          territoryBlockAddress: {
+            connect: {
+              id: resolvedTbaId,
+            },
+          },
+        },
+      });
+
+      this.logger.log(`Removendo casa fantasma do endereço (se houver)`);
+
+      const ghost = await txt.house.findFirst({
+        where: {
+          tenantId: territory.tenantId,
+          territoryBlockAddressId: resolvedTbaId,
+          number: 'ghost',
+        },
+      });
+      if (ghost) {
+        await txt.round.deleteMany({ where: { houseId: ghost.id } });
+        await txt.house.delete({ where: { id: ghost.id } });
+        this.logger.log(`Casa fantasma ${ghost.id} removida`);
+      }
+
+      this.logger.log(`Criando rodadas para a casa ${number}`);
+
+      const openRounds = await txt.round.findMany({
+        where: {
+          tenantId: territory.tenantId,
+          endDate: null,
+        },
+        distinct: ['roundNumber'],
+        select: {
+          roundNumber: true,
+        },
+      });
+
+      if (openRounds.length) {
+        await txt.round.createMany({
+          data: openRounds.map(round => ({
+            completed: false,
+            roundNumber: round.roundNumber,
+            blockId: +blockId,
+            tenantId: territory.tenantId,
+            houseId: house.id,
+            territoryId: +territoryId,
+          })),
+        });
+      }
+
+      return { ...house, openRoundNumbers: openRounds.map(round => round.roundNumber) };
+    });
+
+    this.logger.log(`Casa ${number} criada com sucesso (rodadas: ${result.openRoundNumbers.join(', ') || 'nenhuma'})`);
 
     await this.addressBlockService.invalidateSyncGhostCache(territory.tenantId, +territoryId, +blockId);
     await this.cacheManager.del(`addresses:${territoryId}:${blockId}`);
+    for (const roundNumber of result.openRoundNumbers) {
+      await this.invalidateHousesCache(+territoryId, +blockId, +streetId, roundNumber);
+    }
 
-    return house;
+    return result;
   }
 
   async update(id: number, input: CreateHouseInput) {
@@ -370,17 +397,19 @@ export class HouseService {
 
   async updateOrder(inputs: UpdateHouseOrder): Promise<void> {
     this.logger.log(`Atualizando ordem das casas`);
-    await this.prisma.$transaction(inputs.houses.map(house => {
-      this.logger.log(`Atualizando casa ${house.id} para a ordem ${house.order}`);
-      return this.prisma.house.update({
-        where: {
-          id: house.id,
-        },
-        data: {
-          order: house.order,
-        },
-      });
-    }));
+    await this.prisma.$transaction(
+      inputs.houses.map(house => {
+        this.logger.log(`Atualizando casa ${house.id} para a ordem ${house.order}`);
+        return this.prisma.house.update({
+          where: {
+            id: house.id,
+          },
+          data: {
+            order: house.order,
+          },
+        });
+      })
+    );
     this.logger.log(`Ordem das casas atualizada com sucesso`);
   }
 }

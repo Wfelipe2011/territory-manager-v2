@@ -15,11 +15,12 @@ import { ApiKeyGuard } from './decorators/api-key.guard';
 import { SignatureModule } from './modules/signature/signature.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RoundModule } from './modules/round/round.module';
-import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
+import { CacheModule } from '@nestjs/cache-manager';
 import { HouseModule } from './modules/house/house.module';
 import { EventsModule } from './modules/gateway/event.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AddressModule } from './modules/address/address.module';
+import { SkipCacheInterceptor } from './interceptors/skip-cache.interceptor';
 import { TenancyModule } from './modules/tenancy/tenancy.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ReportModule } from './modules/report/report.module';
@@ -49,14 +50,12 @@ const winstonTransports: winston.transport[] = [
       winston.format.timestamp(),
       winston.format.ms(),
       winston.format.colorize({ all: true }),
-      winston.format.printf(
-        ({ timestamp, level, message, context, ms, sessionId, clientSessionId, method, url }) => {
-          const session = sessionId ? `[${sessionId}]` : '';
-          const clientSession = clientSessionId ? `[${clientSessionId}]` : '';
-          const reqInfo = method && url ? ` ${method} ${url}` : '';
-          return `[${timestamp}] ${session}${clientSession} ${level} [${context || 'App'}] ${message}${reqInfo} ${ms}`;
-        },
-      ),
+      winston.format.printf(({ timestamp, level, message, context, ms, sessionId, clientSessionId, method, url }) => {
+        const session = sessionId ? `[${sessionId}]` : '';
+        const clientSession = clientSessionId ? `[${clientSessionId}]` : '';
+        const reqInfo = method && url ? ` ${method} ${url}` : '';
+        return `[${timestamp}] ${session}${clientSession} ${level} [${context || 'App'}] ${message}${reqInfo} ${ms}`;
+      })
     ),
   }),
 ];
@@ -68,7 +67,7 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
       logStreamName: `instance-${process.env.HOSTNAME || process.env.INSTANCE_ID || 'local'}`,
       awsRegion: envs.AWS_REGION,
       jsonMessage: true,
-      messageFormatter: (logObject) => {
+      messageFormatter: logObject => {
         return JSON.stringify({
           ...logObject,
         });
@@ -79,7 +78,7 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
           secretAccessKey: envs.AWS_SECRET_ACCESS_KEY,
         },
       },
-    }),
+    })
   );
 }
 
@@ -88,7 +87,7 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
     TraceModule,
     WinstonModule.forRoot({
       format: winston.format.combine(
-        winston.format((info) => {
+        winston.format(info => {
           const context = globalTraceService.getContext();
           if (context) {
             info.sessionId = context.sessionId;
@@ -97,7 +96,7 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
             info.clientSessionId = context.clientSessionId;
           }
           return info;
-        })(),
+        })()
       ),
       transports: winstonTransports,
     }),
@@ -147,7 +146,7 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: CacheInterceptor,
+      useClass: SkipCacheInterceptor,
     },
     {
       provide: APP_GUARD,

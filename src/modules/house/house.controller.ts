@@ -1,5 +1,22 @@
 import { EventsGateway } from './../gateway/event.gateway';
-import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, Logger, NotFoundException, Param, Patch, Post, Put, Query, Request, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  Logger,
+  NotFoundException,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+  Request,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { NameResolverService } from 'src/infra/name-resolver/name-resolver.service';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/decorators/roles.decorator';
@@ -12,6 +29,7 @@ import { RequestSignature, RequestUser } from 'src/interfaces/RequestUser';
 import { RoundParams } from '../territory/contracts';
 import { UpdateHouseOrder } from './contracts/UpdateHouseOrder';
 import { UpsertHouseInput } from './contracts/UpsertHouseInput';
+import { SkipCache } from 'src/decorators/skip-cache.decorator';
 
 @ApiBearerAuth()
 @ApiTags('House')
@@ -25,12 +43,13 @@ export class HouseController {
   constructor(
     private houseService: HouseService,
     private eventsGateway: EventsGateway,
-    private nameResolver: NameResolverService,
+    private nameResolver: NameResolverService
   ) {
     this.signatureIsValid = new SignatureIsValid(houseService.prisma);
   }
 
   @Roles(Role.ADMIN, Role.DIRIGENTE, Role.PUBLICADOR)
+  @SkipCache()
   @ApiOperation({ summary: 'Obter as ruas em um território por quadra' })
   @ApiResponse({ status: 200, type: AddressPerTerritoryAndBlockOutput })
   @Get('/territories/:territoryId/blocks/:blockId')
@@ -41,7 +60,11 @@ export class HouseController {
     @Request() req: RequestSignature
   ): Promise<AddressPerTerritoryAndBlockOutput> {
     try {
-      this.logger.log(`Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está buscando os endereços do território ${this.nameResolver.resolveTerritory(territoryId)} e bloco ${this.nameResolver.resolveBlock(blockId)}`);
+      this.logger.log(
+        `Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(
+          req.user.tenantId
+        )}] está buscando os endereços do território ${this.nameResolver.resolveTerritory(territoryId)} e bloco ${this.nameResolver.resolveBlock(blockId)}`
+      );
       if (!territoryId) throw new BadRequestException('Território são obrigatório');
       if (!blockId) throw new BadRequestException('Bloco são obrigatório');
       if (isNaN(+territoryId)) throw new BadRequestException('Território inválido');
@@ -62,6 +85,7 @@ export class HouseController {
   }
 
   @Roles(Role.ADMIN, Role.DIRIGENTE, Role.PUBLICADOR)
+  @SkipCache()
   @Get('/territories/:territoryId/blocks/:blockId/address/:addressId')
   async getHousesPerTerritoryByIdAndBlockByIdAndAddressById(
     @Param('territoryId') territoryId: number,
@@ -72,7 +96,11 @@ export class HouseController {
   ) {
     try {
       this.logger.log(
-        `Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está buscando os endereços do território ${this.nameResolver.resolveTerritory(territoryId)}, bloco ${this.nameResolver.resolveBlock(blockId)} e endereço ${this.nameResolver.resolveAddress(addressId)}`
+        `Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(
+          req.user.tenantId
+        )}] está buscando os endereços do território ${this.nameResolver.resolveTerritory(territoryId)}, bloco ${this.nameResolver.resolveBlock(
+          blockId
+        )} e endereço ${this.nameResolver.resolveAddress(addressId)}`
       );
       if (!territoryId) throw new BadRequestException('Território são obrigatório');
       if (!blockId) throw new BadRequestException('Bloco são obrigatório');
@@ -104,7 +132,11 @@ export class HouseController {
   ) {
     try {
       this.logger.log(
-        `Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(req.user.tenantId)}] está atualizando a casa ${houseId} no território ${this.nameResolver.resolveTerritory(territoryId)}, bloco ${this.nameResolver.resolveBlock(blockId)}, endereço ${this.nameResolver.resolveAddress(addressId)}`
+        `Usuário ${req.user.id} [tenant: ${this.nameResolver.resolveTenant(
+          req.user.tenantId
+        )}] está atualizando a casa ${houseId} no território ${this.nameResolver.resolveTerritory(territoryId)}, bloco ${this.nameResolver.resolveBlock(
+          blockId
+        )}, endereço ${this.nameResolver.resolveAddress(addressId)}`
       );
       if (!houseId) throw new BadRequestException('Casa são obrigatório');
       if (!territoryId) throw new BadRequestException('Território são obrigatório');
@@ -121,13 +153,15 @@ export class HouseController {
 
       const result = await this.houseService.updateHouse(+houseId, body, isAdmin, +body.round);
       await this.houseService.invalidateHousesCache(+territoryId, +blockId, +addressId, +body.round);
-      setImmediate(() => this.eventsGateway.emitRoom(`${territoryId}-${blockId}-${addressId}-${body.round}`, {
-        type: 'update_house',
-        data: {
-          houseId: houseId,
-          completed: body.status,
-        },
-      }));
+      setImmediate(() =>
+        this.eventsGateway.emitRoom(`${territoryId}-${blockId}-${addressId}-${body.round}`, {
+          type: 'update_house',
+          data: {
+            houseId: houseId,
+            completed: body.status,
+          },
+        })
+      );
       return result;
     } catch (error) {
       this.logger.error(error);
@@ -165,7 +199,19 @@ export class HouseController {
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async create(@Body() body: UpsertHouseInput) {
     try {
-      return await this.houseService.create(body);
+      const result = await this.houseService.create(body);
+      for (const roundNumber of result.openRoundNumbers) {
+        setImmediate(() =>
+          this.eventsGateway.emitRoom(`${body.territoryId}-${body.blockId}-${body.streetId}-${roundNumber}`, {
+            type: 'update_house',
+            data: {
+              houseId: result.id,
+              completed: false,
+            },
+          })
+        );
+      }
+      return result;
     } catch (error) {
       this.logger.error(error);
       throw error;
