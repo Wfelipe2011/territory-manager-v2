@@ -6,6 +6,7 @@ import { themeColors } from 'src/constants/themeColors';
 import dayjs from 'dayjs';
 import { CreateRoundDto } from './contracts/CreateRoundDto';
 import { ParametersService } from '../parameters/parameters.service';
+import { calculateLeaveLetter } from './calculate-leave-letter';
 
 @Injectable()
 export class RoundService {
@@ -193,12 +194,10 @@ export class RoundService {
           rounds: {
             where: {
               mode: ThemeMode.default,
-              startDate: {
-                gte: roundStartDate,
-              },
             },
             select: {
               completed: true,
+              completedDate: true,
             }
           }
         },
@@ -224,7 +223,7 @@ export class RoundService {
 
       await txt.round.createMany({
         data: houses.map(house => {
-          const leaveLetter = house.rounds.length > 0 && house.rounds.every(r => !r.completed) && body.theme === ThemeMode.default;
+          const leaveLetter = calculateLeaveLetter(house.rounds, body.theme, roundStartDate);
           return {
             houseId: house.id,
             blockId: house.blockId,
