@@ -269,21 +269,26 @@ export class HouseService {
 
     this.logger.log(`Criando rodadas para a casa ${number}`);
 
-    this.logger.log(`Buscando as rodadas do território ${territoryId} e bloco ${blockId} e endereço ${streetId} e casa ${house.id}`);
-    const roundNumber = await this.prisma.$queryRaw<{ round_number: number }[]>`
-    SELECT round.round_number  FROM round
-    WHERE round.tenant_id = ${territory.tenantId}
-    GROUP BY round.round_number
-    `;
+    this.logger.log(`Buscando as rodadas abertas do território ${territoryId} e bloco ${blockId} e endereço ${streetId} e casa ${house.id}`);
+    const openRounds = await this.prisma.round.findMany({
+      where: {
+        tenantId: territory.tenantId,
+        endDate: null,
+      },
+      distinct: ['roundNumber'],
+      select: {
+        roundNumber: true,
+      },
+    });
 
     this.logger.log(`Criando rodadas para a casa ${number}`);
 
-    for (const round of roundNumber) {
-      this.logger.log(`Criando rodada ${round.round_number} para a casa ${number}`);
+    for (const round of openRounds) {
+      this.logger.log(`Criando rodada ${round.roundNumber} para a casa ${number}`);
       await this.prisma.round.create({
         data: {
           completed: false,
-          roundNumber: round.round_number,
+          roundNumber: round.roundNumber,
           blockId: +blockId,
           tenantId: territory.tenantId,
           houseId: house.id,

@@ -44,3 +44,7 @@ cache
 .postgres
 *.env*
 
+# dumps de produção (dados reais — nunca commitar)
+dump-*.sql
+docker-compose.dump.yml
+
