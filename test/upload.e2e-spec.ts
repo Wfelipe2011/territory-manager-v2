@@ -5,7 +5,7 @@ import { createTestApp } from './utils/app-helper';
 import { createTestToken } from './utils/auth-helper';
 import { Role } from '../src/enum/role.enum';
 import { cleanDatabase } from './utils/db-cleaner';
-import xlsx from 'node-xlsx';
+import ExcelJS from 'exceljs';
 
 describe('Upload Flow (e2e)', () => {
     let app: INestApplication;
@@ -31,13 +31,12 @@ describe('Upload Flow (e2e)', () => {
 
         const adminToken = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
 
-        // Create Excel buffer
-        const data = [
-            ['TipoTerritorio', 'Território', 'Quadra', 'Logradouro', 'Numero', 'Legenda', 'Ordem', 'Não Bater'],
-            ['Residencial', 'Territory 1', 1, 'Street A', '100', 'Blue House', 1, 'FALSO'],
-            ['Residencial', 'Territory 1', 1, 'Street A', '101', 'Red House', 2, 'VERDADEIRO'],
-        ];
-        const buffer = xlsx.build([{ name: 'Sheet1', data, options: {} }]);
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet('Sheet1');
+        sheet.addRow(['TipoTerritorio', 'Território', 'Quadra', 'Logradouro', 'Numero', 'Legenda', 'Ordem', 'Não Bater']);
+        sheet.addRow(['Residencial', 'Territory 1', 1, 'Street A', '100', 'Blue House', 1, 'FALSO']);
+        sheet.addRow(['Residencial', 'Territory 1', 1, 'Street A', '101', 'Red House', 2, 'VERDADEIRO']);
+        const buffer = await workbook.xlsx.writeBuffer();
 
         const response = await request(app.getHttpServer())
             .post('/v1/territories/upload-territory')

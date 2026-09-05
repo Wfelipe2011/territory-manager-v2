@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { AddressBlockService } from '../block/adress-block.service';
-import xlsx from 'node-xlsx';
+import ExcelJS from 'exceljs';
 import EventEmitter from 'events';
 import { UploadGateway } from '../gateway/upload.gateway';
 import { BulkImportRow, ImportReport } from './contracts/BulkImportInput';
@@ -43,7 +43,7 @@ export class UploadTerritoryUseCase {
     logger: Logger
   ) {
     logger.log(`Usuário do tenant ${body.tenantId} está fazendo upload de um arquivo`);
-    const rows = this.getDataRows(body.file).filter(row => row['Território']);
+    const rows = (await this.getDataRows(body.file)).filter(row => row['Território']);
 
     const bulkRows: BulkImportRow[] = rows.map(row => ({
       TipoTerritorio: row.TipoTerritorio,
@@ -323,13 +323,16 @@ export class UploadTerritoryUseCase {
     return type;
   }
 
-  private getDataRows(file: Express.Multer.File) {
+  private async getDataRows(file: Express.Multer.File) {
     const rows = [] as Row[];
-    const abas = xlsx.parse(file.buffer);
-    for (const aba of abas) {
-      const headers = aba.data[0];
-      for (let i = 1; i < aba.data.length; i++) {
-        const row = aba.data[i];
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(file.buffer);
+    for (const aba of workbook.worksheets) {
+      const headers = aba.getRow(1).values as any[];
+      headers.shift();
+      for (let i = 2; i <= aba.rowCount; i++) {
+        const row = aba.getRow(i).values as any[];
+        row.shift();
         const rowObject = {} as any;
         for (let j = 0; j < headers.length; j++) {
           rowObject[headers[j]] = row[j];

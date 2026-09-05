@@ -5,7 +5,7 @@ import { PrismaService } from '../src/infra/prisma/prisma.service';
 import { cleanDatabase } from './utils/db-cleaner';
 import { createTestToken } from './utils/auth-helper';
 import { Role } from '../src/enum/role.enum';
-import xlsx from 'node-xlsx';
+import xlsx from 'exceljs';
 
 describe('Upload de Território: mapeamento TBA automático (e2e)', () => {
     let app: INestApplication;
@@ -53,12 +53,12 @@ describe('Upload de Território: mapeamento TBA automático (e2e)', () => {
 
         // Linha 1: TBA existe.
         // Linha 2: endereço diferente sem TBA deve ser criado pelo upload.
-        const data = [
-            ['TipoTerritorio', 'Território', 'Quadra', 'Logradouro', 'Numero', 'Legenda', 'Ordem', 'Não Bater'],
-            ['Residencial', 'Território Upload', 1, 'Rua Com TBA', '100', 'Casa', 1, 'FALSO'],
-            ['Residencial', 'Território Upload', 1, 'Rua Sem TBA', '200', 'Casa', 2, 'FALSO'],
-        ];
-        const buffer = xlsx.build([{ name: 'Sheet1', data, options: {} }]);
+        const workbook = new xlsx.Workbook();
+        const sheet = workbook.addWorksheet('Sheet1');
+        sheet.addRow(['TipoTerritorio', 'Território', 'Quadra', 'Logradouro', 'Numero', 'Legenda', 'Ordem', 'Não Bater']);
+        sheet.addRow(['Residencial', 'Território Upload', 1, 'Rua Com TBA', '100', 'Casa', 1, 'FALSO']);
+        sheet.addRow(['Residencial', 'Território Upload', 1, 'Rua Sem TBA', '200', 'Casa', 2, 'FALSO']);
+        const buffer = await workbook.xlsx.writeBuffer();
 
         const response = await request(app.getHttpServer())
             .post('/v1/territories/upload-territory')
