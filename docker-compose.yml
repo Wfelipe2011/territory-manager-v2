@@ -27,7 +27,7 @@ services:
       resources:
         limits:
           cpus: '1'
-          memory: 1G
+          memory: 2G
     environment:
       - PORT=$PORT
       # DATABASE_URL aponta para PgBouncer (transaction pooling)

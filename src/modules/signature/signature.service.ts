@@ -179,15 +179,17 @@ export class SignatureService {
     if (!territoryBlocks.length) return;
 
     this.logger.log('Deletando assinatura das quadras');
-    territoryBlocks.forEach(async territoryBlock => {
-      if (territoryBlock.signatureId) {
-        await this.prisma.signature.delete({
-          where: {
-            id: territoryBlock.signatureId,
-          },
-        });
-      }
-    });
+    await Promise.all(
+      territoryBlocks.map(async territoryBlock => {
+        if (territoryBlock.signatureId) {
+          await this.prisma.signature.delete({
+            where: {
+              id: territoryBlock.signatureId,
+            },
+          });
+        }
+      })
+    );
   }
 
   async deleteBlockSignature(territoryId: number, blockId: number) {
