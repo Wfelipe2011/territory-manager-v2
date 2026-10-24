@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Reproducible, local-only k6 matrix. Raw fixtures/logs stay in .runtime/."""
-import argparse, csv, fcntl, json, os, pathlib, subprocess, threading, time, urllib.request, statistics
+import concurrent.futures, argparse, csv, fcntl, json, os, pathlib, subprocess, threading, time, urllib.request, statistics
 ROOT = pathlib.Path(__file__).resolve().parent
 RUNTIME = ROOT / '.runtime'
 RESULTS = ROOT / 'results'
@@ -93,18 +93,19 @@ def propagation(log_path):
 
 def warmup(profile):
     fixture=json.loads((RUNTIME/'fixture.json').read_text())['blocks'][0]
-    visited=set();durations=[]
-    for _ in range(6):
-        req=urllib.request.Request('http://localhost:3301/v1/field/blocks/'+str(fixture['blockId'])+'/sync?clientId=warmup-client-000000&tabId=warmup-tab-id-000000',headers={'Authorization':'Bearer '+fixture['token']})
+    def request(index):
+        identity=f'warmup-client-{index:06d}'
+        req=urllib.request.Request('http://localhost:3301/v1/field/blocks/'+str(fixture['blockId'])+'/sync?clientId='+identity+'&tabId=warmup-tab-id-000000',headers={'Authorization':'Bearer '+fixture['token']})
         started=time.perf_counter()
         with urllib.request.urlopen(req,timeout=35) as response:
-            response.read();visited.add(response.headers.get('X-Load-Upstream'))
-        durations.append((time.perf_counter()-started)*1000)
-        if len(visited)==2 and len(durations)>=4:break
+            response.read();instance=response.headers.get('X-Load-Upstream')
+        return instance,(time.perf_counter()-started)*1000
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as pool:observations=list(pool.map(request,range(100)))
+    visited={instance for instance,_ in observations}
     if None in visited or len(visited)!=2:raise RuntimeError('Warmup did not reach both APIs')
     time.sleep(2)
     db('TRUNCATE field_session; SELECT pg_stat_statements_reset();')
-    return {'requests':len(durations),'api_instances':len(visited),'request_ms':durations,'revision_cache_pause_seconds':2}
+    return {'requests':len(observations),'concurrency':20,'api_instances':len(visited),'request_ms':[ms for _,ms in observations],'revision_cache_pause_seconds':2}
 
 def trial(label, seconds, profile, users, duration, kind='step', workload='mixed'):
     trial_id=f'{label}-{seconds}s-{profile}-{users}u-{kind}'

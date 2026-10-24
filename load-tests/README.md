@@ -37,7 +37,7 @@ independente da espera máxima, configurado por FIELD_POLL_CHECK_MS.
 
 ## Perfil v2
 
-Antes de cada ensaio, quatro GETs autenticados aquecem as duas APIs via balanceador;
+Antes de cada ensaio, cem GETs autenticados, com concorrência vinte, aquecem as duas APIs e seus pools;
 aguardam-se dois segundos para expirar a revisão em memória, e presença/estatísticas
 são reinicializadas. Esse preparo não entra na carga medida. O snapshot inicial
 mede chegada simultânea de usuários a servidores aquecidos. Partidas frias ficam
