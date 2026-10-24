@@ -1,0 +1,7 @@
+{
+  "stopped": "api1",
+  "continued_via": "api2",
+  "http_status": 200,
+  "same_block": true,
+  "seconds_including_shutdown": 20.76
+}

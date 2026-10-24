@@ -14,5 +14,5 @@ export const blocks = new SharedArray('load-blocks', () => {
   if (metadata.name !== 'territory-load-v1' || metadata.blocks.length !== 400) throw Error('Unknown fixture');
   return metadata.blocks;
 });
-export function blockFor(index) { return blocks[config.PROFILE === 'hotspot' ? 0 : index % Math.min(config.USERS, blocks.length)]; }
+export function blockFor(index) { return blocks[config.PROFILE === 'hotspot' ? 0 : Math.floor(index / 10) % blocks.length]; }
 export function headers(block) { return { 'Content-Type': 'application/json', Authorization: `Bearer ${block.token}` }; }

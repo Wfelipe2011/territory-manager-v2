@@ -1,0 +1,19 @@
+{
+  "kind": "functional_smoke",
+  "script": "load-tests/verify.cjs",
+  "check_interval_seconds": 3,
+  "results": [
+    {
+      "reader": "api1",
+      "writer": "api2",
+      "propagation_ms": 3106
+    },
+    {
+      "reader": "api2",
+      "writer": "api1",
+      "propagation_ms": 3104
+    }
+  ],
+  "balanced_instances": 2,
+  "http_errors": 0
+}

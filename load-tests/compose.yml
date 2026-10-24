@@ -49,7 +49,7 @@ services:
   api2:
     <<: *api
   admin:
-    image: territory-load-admin:${LOAD_VARIANT:-baseline}
+    image: territory-load-admin:${LOAD_ADMIN_VARIANT:-baseline}
     build:
       context: ../../admin-territory-manager
       dockerfile: Dockerfile.production

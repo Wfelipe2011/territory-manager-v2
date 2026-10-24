@@ -1,0 +1,7 @@
+{
+  "read-baseline": {
+    "api_commit": "b442e2a",
+    "admin_commit": "b080214",
+    "api_image": "sha256:5dcfe2aeb23e0d324b7999b0f16bab59a8d04cc4f32dc0d43cf17d98e1553675"
+  }
+}

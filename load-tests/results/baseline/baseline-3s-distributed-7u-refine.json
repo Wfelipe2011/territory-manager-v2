@@ -1,0 +1,1867 @@
+{
+  "id": "baseline-3s-distributed-7u-refine",
+  "label": "baseline",
+  "interval_seconds": 3,
+  "profile": "distributed",
+  "logical_users": 7,
+  "duration_seconds": 120,
+  "kind": "refine",
+  "workload": "mixed",
+  "wall_seconds": 144.09,
+  "exit_code": 99,
+  "passed": false,
+  "generator_valid": true,
+  "infrastructure_valid": true,
+  "snapshot_p95_ms": 1087.6521845000002,
+  "mark_p95_ms": 64.34410845,
+  "propagation_p95_ms": 2965,
+  "propagation_samples": 29,
+  "error_rate": 0,
+  "dropped_iterations": 0,
+  "page_p95_ms": 59.65430109999998,
+  "page_bytes_avg": 8323,
+  "cpu_avg_percent": {
+    "territory-load-api1-1": 6.49,
+    "territory-load-api2-1": 6.12,
+    "territory-load-admin-1": 0.98,
+    "territory-load-db-1": 8.51,
+    "territory-load-proxy-1": 0.08,
+    "territory-load-generator": 0.97
+  },
+  "resources_before": [
+    {
+      "service": "admin",
+      "id": "b4bfb281aaeb",
+      "image": "sha256:eec45bfa0e6b889c5657e906eaecb804f47ae723b1a21e6dff925976d6dda655",
+      "cpu": 0.5,
+      "memory": 536870912,
+      "oom": false,
+      "restarts": 0,
+      "running": true
+    },
+    {
+      "service": "api1",
+      "id": "128765d7d73c",
+      "image": "sha256:5dcfe2aeb23e0d324b7999b0f16bab59a8d04cc4f32dc0d43cf17d98e1553675",
+      "cpu": 1.0,
+      "memory": 536870912,
+      "oom": false,
+      "restarts": 0,
+      "running": true
+    },
+    {
+      "service": "api2",
+      "id": "291c1efb4448",
+      "image": "sha256:5dcfe2aeb23e0d324b7999b0f16bab59a8d04cc4f32dc0d43cf17d98e1553675",
+      "cpu": 1.0,
+      "memory": 536870912,
+      "oom": false,
+      "restarts": 0,
+      "running": true
+    },
+    {
+      "service": "db",
+      "id": "06e2db5469a9",
+      "image": "sha256:81bd698b4594e751a3269e4dcd3e03a4a0ec0daf7b72e7aa1abd43cce9887542",
+      "cpu": 1.0,
+      "memory": 1073741824,
+      "oom": false,
+      "restarts": 0,
+      "running": true
+    },
+    {
+      "service": "proxy",
+      "id": "960d2452f634",
+      "image": "sha256:dc73b49f5124cf2ee538dfbdfbd121f0b4ccdcb20fea30f3a81bd477c02e2bb5",
+      "cpu": 0.25,
+      "memory": 134217728,
+      "oom": false,
+      "restarts": 0,
+      "running": true
+    }
+  ],
+  "resources_after": [
+    {
+      "service": "admin",
+      "id": "b4bfb281aaeb",
+      "image": "sha256:eec45bfa0e6b889c5657e906eaecb804f47ae723b1a21e6dff925976d6dda655",
+      "cpu": 0.5,
+      "memory": 536870912,
+      "oom": false,
+      "restarts": 0,
+      "running": true
+    },
+    {
+      "service": "api1",
+      "id": "128765d7d73c",
+      "image": "sha256:5dcfe2aeb23e0d324b7999b0f16bab59a8d04cc4f32dc0d43cf17d98e1553675",
+      "cpu": 1.0,
+      "memory": 536870912,
+      "oom": false,
+      "restarts": 0,
+      "running": true
+    },
+    {
+      "service": "api2",
+      "id": "291c1efb4448",
+      "image": "sha256:5dcfe2aeb23e0d324b7999b0f16bab59a8d04cc4f32dc0d43cf17d98e1553675",
+      "cpu": 1.0,
+      "memory": 536870912,
+      "oom": false,
+      "restarts": 0,
+      "running": true
+    },
+    {
+      "service": "db",
+      "id": "06e2db5469a9",
+      "image": "sha256:81bd698b4594e751a3269e4dcd3e03a4a0ec0daf7b72e7aa1abd43cce9887542",
+      "cpu": 1.0,
+      "memory": 1073741824,
+      "oom": false,
+      "restarts": 0,
+      "running": true
+    },
+    {
+      "service": "proxy",
+      "id": "960d2452f634",
+      "image": "sha256:dc73b49f5124cf2ee538dfbdfbd121f0b4ccdcb20fea30f3a81bd477c02e2bb5",
+      "cpu": 0.25,
+      "memory": 134217728,
+      "oom": false,
+      "restarts": 0,
+      "running": true
+    }
+  ],
+  "generator": {
+    "cpu": 1.0,
+    "memory": 1073741824,
+    "oom": false
+  },
+  "metrics": {
+    "data_received": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 7527156,
+        "rate": 53522.70842621672
+      }
+    },
+    "iterations": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 135,
+        "rate": 0.9599330261707419
+      }
+    },
+    "propagation_ms": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 2742.689655172414,
+        "min": 169,
+        "med": 2929,
+        "max": 2992,
+        "p(90)": 2953.8,
+        "p(95)": 2965,
+        "p(99)": 2984.44
+      }
+    },
+    "page_ms": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 33.108658,
+        "max": 73.646095,
+        "p(90)": 47.88889759999999,
+        "p(95)": 59.65430109999998,
+        "p(99)": 70.84773621999999,
+        "avg": 35.24205766666667,
+        "min": 16.862986
+      }
+    },
+    "propagation_samples": {
+      "values": {
+        "count": 29,
+        "rate": 0.20620783525149272
+      },
+      "thresholds": {
+        "count>=1": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default"
+    },
+    "vus": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 1,
+        "min": 1,
+        "max": 8
+      }
+    },
+    "unexpected_errors": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 243
+      },
+      "thresholds": {
+        "rate<0.01": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_connecting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.13866007407407407,
+        "min": 0,
+        "med": 0,
+        "max": 2.198793,
+        "p(90)": 0.4299958000000001,
+        "p(95)": 1.0375303999999967,
+        "p(99)": 1.7811908599999997
+      }
+    },
+    "http_req_tls_handshaking": {
+      "contains": "time",
+      "values": {
+        "avg": 0,
+        "min": 0,
+        "med": 0,
+        "max": 0,
+        "p(90)": 0,
+        "p(95)": 0,
+        "p(99)": 0
+      },
+      "type": "trend"
+    },
+    "snapshot_ms": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 1087.6521845000002,
+        "p(99)": 1094.03096145,
+        "avg": 316.45521533333346,
+        "min": 129.528841,
+        "med": 171.70191499999999,
+        "max": 1095.690673,
+        "p(90)": 872.7474669999999
+      },
+      "thresholds": {
+        "p(95)<=1000": {
+          "ok": false
+        }
+      }
+    },
+    "vus_max": {
+      "contains": "default",
+      "values": {
+        "min": 14,
+        "max": 14,
+        "value": 14
+      },
+      "type": "gauge"
+    },
+    "page_bytes": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(90)": 8323,
+        "p(95)": 8323,
+        "p(99)": 8323,
+        "avg": 8323,
+        "min": 8323,
+        "med": 8323,
+        "max": 8323
+      }
+    },
+    "asset_bytes": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 2266059,
+        "rate": 16113.073135936633
+      }
+    },
+    "iteration_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 25054.341288,
+        "p(99)": 25344.03737708,
+        "avg": 7698.593146466667,
+        "min": 17.666575,
+        "med": 4321.026423,
+        "max": 25550.54489,
+        "p(90)": 25048.9862398
+      }
+    },
+    "http_req_duration": {
+      "values": {
+        "p(99)": 25169.862353559998,
+        "avg": 4163.868610074076,
+        "min": 4.698536,
+        "med": 156.053135,
+        "max": 25549.900262,
+        "p(90)": 23619.649513800032,
+        "p(95)": 25049.3214458
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "api_upstream_b": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 90,
+        "rate": 0.6399553507804946
+      }
+    },
+    "dropped_iterations": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count==0": {
+          "ok": true
+        }
+      }
+    },
+    "api_upstream_a": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 90,
+        "rate": 0.6399553507804946
+      }
+    },
+    "http_reqs": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 243,
+        "rate": 1.7278794471073355
+      }
+    },
+    "data_sent": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "rate": 700.8506577147631,
+        "count": 98564
+      }
+    },
+    "propagation_missing": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count==0": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_blocked": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 5.319055,
+        "p(90)": 0.6637238000000011,
+        "p(95)": 2.1576891999999943,
+        "p(99)": 3.9364637599999934,
+        "avg": 0.28608545267489693,
+        "min": 0.00894,
+        "med": 0.016692
+      }
+    },
+    "http_req_failed": {
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 243
+      },
+      "type": "rate",
+      "contains": "default"
+    },
+    "http_req_duration{expected_response:true}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 25549.900262,
+        "p(90)": 23619.649513800032,
+        "p(95)": 25049.3214458,
+        "p(99)": 25169.862353559998,
+        "avg": 4163.868610074076,
+        "min": 4.698536,
+        "med": 156.053135
+      }
+    },
+    "http_req_waiting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 23619.290043400033,
+        "p(95)": 25049.0848801,
+        "p(99)": 25169.66947154,
+        "avg": 4162.85880947325,
+        "min": 4.51688,
+        "med": 155.764064,
+        "max": 25549.781393
+      }
+    },
+    "mark_ms": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 35.481167,
+        "med": 51.487489999999994,
+        "max": 143.879736,
+        "p(90)": 60.32780600000002,
+        "p(95)": 64.34410845,
+        "p(99)": 118.15510380000006,
+        "avg": 52.81907187499999
+      },
+      "thresholds": {
+        "p(95)<=500": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_sending": {
+      "contains": "time",
+      "values": {
+        "p(95)": 0.5530593999999999,
+        "p(99)": 1.9475858799999686,
+        "avg": 0.14427179423868305,
+        "min": 0.020813,
+        "med": 0.043581,
+        "max": 4.518832,
+        "p(90)": 0.3904642000000006
+      },
+      "type": "trend"
+    },
+    "http_req_receiving": {
+      "contains": "time",
+      "values": {
+        "min": 0.072286,
+        "med": 0.188709,
+        "max": 39.346541,
+        "p(90)": 0.7455902000000005,
+        "p(95)": 5.168951499999975,
+        "p(99)": 9.117798559999958,
+        "avg": 0.8655288065843628
+      },
+      "type": "trend"
+    }
+  },
+  "monitor": [
+    {
+      "time": 1792873569.8595622,
+      "containers": [],
+      "db": "{\"connections\" : 19, \"commits\" : 16705, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 73736803}",
+      "queries": "{\"calls\" : 588, \"exec_ms\" : 2531.311735}"
+    },
+    {
+      "time": 1792873577.2850826,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "7.67%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.67%",
+          "MemUsage": "85.35MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "4.21MB / 7.7MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.35%",
+          "MemUsage": "83.71MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "5.39MB / 9.26MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "8.71%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "13.58%",
+          "MemUsage": "69.52MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "117kB / 8.76MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "8.61%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.28%",
+          "MemUsage": "279.4MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "4.88MB / 9.92MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.08%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "4.84%",
+          "MemUsage": "6.191MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "12.5MB / 12.6MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "32.8kB / 0B",
+          "CPUPerc": "0.96%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "1.76%",
+          "MemUsage": "17.98MiB / 1GiB",
+          "Name": "territory-load-generator",
+          "NetIO": "1.35MB / 27.5kB",
+          "PIDs": "6"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 16948, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 73758415}",
+      "queries": "{\"calls\" : 866, \"exec_ms\" : 2815.873560000001}"
+    },
+    {
+      "time": 1792873584.7200637,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "3.21%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.60%",
+          "MemUsage": "84.98MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "4.28MB / 7.83MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "2.66%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.21%",
+          "MemUsage": "83.01MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "5.49MB / 9.45MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "13.53%",
+          "MemUsage": "69.28MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "117kB / 8.76MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "1.34%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.36%",
+          "MemUsage": "280.1MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "4.96MB / 10.1MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.01%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "4.67%",
+          "MemUsage": "5.98MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "12.8MB / 12.8MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "32.8kB / 0B",
+          "CPUPerc": "0.57%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "1.81%",
+          "MemUsage": "18.58MiB / 1GiB",
+          "Name": "territory-load-generator",
+          "NetIO": "1.65MB / 35.6kB",
+          "PIDs": "6"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 17316, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 73777649}",
+      "queries": "{\"calls\" : 1291, \"exec_ms\" : 3154.498484000001}"
+    },
+    {
+      "time": 1792873592.191739,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "18.04%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.75%",
+          "MemUsage": "85.76MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "4.43MB / 8.12MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "3.29%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.04%",
+          "MemUsage": "82.1MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "5.59MB / 9.64MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "0.04%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "13.68%",
+          "MemUsage": "70.02MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "117kB / 8.77MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "6.78%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.45%",
+          "MemUsage": "281MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "5.06MB / 10.3MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.05%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "4.48%",
+          "MemUsage": "5.73MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "13.2MB / 13.2MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "32.8kB / 0B",
+          "CPUPerc": "0.72%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "1.86%",
+          "MemUsage": "19.02MiB / 1GiB",
+          "Name": "territory-load-generator",
+          "NetIO": "2.04MB / 45.4kB",
+          "PIDs": "6"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 17650, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 73806693}",
+      "queries": "{\"calls\" : 1733, \"exec_ms\" : 3514.801098000001}"
+    },
+    {
+      "time": 1792873599.680324,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.01%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.71%",
+          "MemUsage": "85.55MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "4.51MB / 8.26MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "7.49%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.37%",
+          "MemUsage": "83.83MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "5.69MB / 9.82MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "13.65%",
+          "MemUsage": "69.9MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "118kB / 8.78MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "16.44%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.84%",
+          "MemUsage": "285MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "5.14MB / 10.5MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.08%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "4.67%",
+          "MemUsage": "5.98MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "13.4MB / 13.5MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "32.8kB / 0B",
+          "CPUPerc": "0.76%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "1.86%",
+          "MemUsage": "19.04MiB / 1GiB",
+          "Name": "territory-load-generator",
+          "NetIO": "2.29MB / 53.8kB",
+          "PIDs": "6"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 17974, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 73836523}",
+      "queries": "{\"calls\" : 2209, \"exec_ms\" : 3860.4585770000017}"
+    },
+    {
+      "time": 1792873607.1255631,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "4.46%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.44%",
+          "MemUsage": "84.19MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "4.61MB / 8.44MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "13.65%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.23%",
+          "MemUsage": "83.11MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "5.79MB / 10MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "13.66%",
+          "MemUsage": "69.93MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "118kB / 8.79MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "12.06%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.49%",
+          "MemUsage": "281.5MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "5.22MB / 10.7MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.12%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "5.06%",
+          "MemUsage": "6.477MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "13.7MB / 13.8MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "32.8kB / 0B",
+          "CPUPerc": "0.80%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "1.93%",
+          "MemUsage": "19.74MiB / 1GiB",
+          "Name": "territory-load-generator",
+          "NetIO": "2.59MB / 62.4kB",
+          "PIDs": "6"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 18277, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 73861453}",
+      "queries": "{\"calls\" : 2598, \"exec_ms\" : 4201.445554000001}"
+    },
+    {
+      "time": 1792873614.5571394,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.02%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.40%",
+          "MemUsage": "83.96MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "4.68MB / 8.57MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "0.01%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.28%",
+          "MemUsage": "83.34MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "5.92MB / 10.2MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "13.65%",
+          "MemUsage": "69.91MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "125kB / 9.56MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "9.77%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.59%",
+          "MemUsage": "282.5MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "5.3MB / 10.9MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "4.47%",
+          "MemUsage": "5.727MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "14MB / 14.1MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "32.8kB / 0B",
+          "CPUPerc": "0.47%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "1.92%",
+          "MemUsage": "19.61MiB / 1GiB",
+          "Name": "territory-load-generator",
+          "NetIO": "3.65MB / 76.7kB",
+          "PIDs": "6"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 18557, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 73880352}",
+      "queries": "{\"calls\" : 2958, \"exec_ms\" : 4509.907559000001}"
+    },
+    {
+      "time": 1792873622.0111933,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.34%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.63%",
+          "MemUsage": "85.13MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "4.8MB / 8.8MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "16.88%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.49%",
+          "MemUsage": "84.44MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "6.02MB / 10.4MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "13.62%",
+          "MemUsage": "69.73MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "126kB / 9.57MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "10.95%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.55%",
+          "MemUsage": "282.1MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "5.39MB / 11.1MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.14%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "4.67%",
+          "MemUsage": "5.98MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "14.4MB / 14.4MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "32.8kB / 0B",
+          "CPUPerc": "1.31%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "1.94%",
+          "MemUsage": "19.84MiB / 1GiB",
+          "Name": "territory-load-generator",
+          "NetIO": "3.99MB / 86.5kB",
+          "PIDs": "6"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 18900, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 73904067}",
+      "queries": "{\"calls\" : 3462, \"exec_ms\" : 4894.730288999998}"
+    },
+    {
+      "time": 1792873629.4531975,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "7.21%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.57%",
+          "MemUsage": "84.82MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "4.87MB / 8.93MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "16.07%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.33%",
+          "MemUsage": "83.62MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "6.09MB / 10.6MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "0.01%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "13.77%",
+          "MemUsage": "70.51MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "127kB / 9.58MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "16.05%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.57%",
+          "MemUsage": "282.3MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "5.46MB / 11.2MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.21%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "5.06%",
+          "MemUsage": "6.48MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "14.6MB / 14.6MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "32.8kB / 0B",
+          "CPUPerc": "1.50%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "1.98%",
+          "MemUsage": "20.27MiB / 1GiB",
+          "Name": "territory-load-generator",
+          "NetIO": "4.24MB / 94kB",
+          "PIDs": "6"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 19149, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 73919516}",
+      "queries": "{\"calls\" : 3826, \"exec_ms\" : 5165.658549000001}"
+    },
+    {
+      "time": 1792873636.885525,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "1.94%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.50%",
+          "MemUsage": "84.47MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "4.94MB / 9.02MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "0.02%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.38%",
+          "MemUsage": "83.89MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "6.24MB / 10.9MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "4.03%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "14.00%",
+          "MemUsage": "71.7MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "127kB / 9.59MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "1.37%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.55%",
+          "MemUsage": "282.1MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "5.55MB / 11.4MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "4.50%",
+          "MemUsage": "5.754MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "14.9MB / 14.9MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "32.8kB / 0B",
+          "CPUPerc": "0.63%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "1.98%",
+          "MemUsage": "20.29MiB / 1GiB",
+          "Name": "territory-load-generator",
+          "NetIO": "4.49MB / 104kB",
+          "PIDs": "6"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 19546, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 73954134}",
+      "queries": "{\"calls\" : 4298, \"exec_ms\" : 5471.789381}"
+    },
+    {
+      "time": 1792873644.3152928,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "7.34%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.69%",
+          "MemUsage": "85.46MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "5.1MB / 9.32MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "1.50%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.46%",
+          "MemUsage": "84.25MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "6.39MB / 11.1MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "13.76%",
+          "MemUsage": "70.44MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "127kB / 9.59MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "5.80%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.54%",
+          "MemUsage": "282.1MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "5.67MB / 11.7MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.05%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "4.48%",
+          "MemUsage": "5.738MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "15.3MB / 15.4MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "32.8kB / 0B",
+          "CPUPerc": "0.72%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "1.96%",
+          "MemUsage": "20.05MiB / 1GiB",
+          "Name": "territory-load-generator",
+          "NetIO": "4.97MB / 115kB",
+          "PIDs": "6"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 19996, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 74003030}",
+      "queries": "{\"calls\" : 4966, \"exec_ms\" : 6079.4843630000005}"
+    },
+    {
+      "time": 1792873651.7461874,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "9.19%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.41%",
+          "MemUsage": "84.03MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "5.2MB / 9.51MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "13.42%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.12%",
+          "MemUsage": "82.56MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "6.52MB / 11.4MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "0.06%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "13.78%",
+          "MemUsage": "70.56MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "128kB / 9.6MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "13.20%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.59%",
+          "MemUsage": "282.5MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "5.75MB / 11.9MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.13%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "4.48%",
+          "MemUsage": "5.738MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "15.7MB / 15.7MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "32.8kB / 0B",
+          "CPUPerc": "0.76%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "1.97%",
+          "MemUsage": "20.19MiB / 1GiB",
+          "Name": "territory-load-generator",
+          "NetIO": "5.27MB / 123kB",
+          "PIDs": "6"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 20277, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 74037347}",
+      "queries": "{\"calls\" : 5394, \"exec_ms\" : 6421.280126999999}"
+    },
+    {
+      "time": 1792873659.1746268,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "19.73%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.70%",
+          "MemUsage": "85.52MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "5.32MB / 9.74MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "6.21%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.32%",
+          "MemUsage": "83.55MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "6.59MB / 11.5MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "13.78%",
+          "MemUsage": "70.57MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "135kB / 10.4MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "16.75%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.64%",
+          "MemUsage": "283MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "5.83MB / 12.1MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.24%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "4.82%",
+          "MemUsage": "6.172MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "16MB / 16MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "32.8kB / 0B",
+          "CPUPerc": "3.34%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "1.96%",
+          "MemUsage": "20.04MiB / 1GiB",
+          "Name": "territory-load-generator",
+          "NetIO": "6.38MB / 138kB",
+          "PIDs": "6"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 20577, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 74062987}",
+      "queries": "{\"calls\" : 5801, \"exec_ms\" : 6848.599386999999}"
+    },
+    {
+      "time": 1792873666.6071842,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "11.45%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.66%",
+          "MemUsage": "85.3MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "5.4MB / 9.88MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "0.05%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.35%",
+          "MemUsage": "83.69MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "6.68MB / 11.7MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "13.89%",
+          "MemUsage": "71.12MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "136kB / 10.4MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "0.68%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.70%",
+          "MemUsage": "283.6MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "5.89MB / 12.3MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.09%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "4.88%",
+          "MemUsage": "6.242MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "16.2MB / 16.3MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "32.8kB / 0B",
+          "CPUPerc": "1.79%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "1.97%",
+          "MemUsage": "20.2MiB / 1GiB",
+          "Name": "territory-load-generator",
+          "NetIO": "6.63MB / 146kB",
+          "PIDs": "6"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 20858, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 74088061}",
+      "queries": "{\"calls\" : 6157, \"exec_ms\" : 7132.375869999999}"
+    },
+    {
+      "time": 1792873674.0521188,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "4.62%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.57%",
+          "MemUsage": "84.83MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "5.5MB / 10.1MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "1.63%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.32%",
+          "MemUsage": "83.58MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "6.8MB / 11.9MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "13.89%",
+          "MemUsage": "71.11MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "136kB / 10.4MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "0.31%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.63%",
+          "MemUsage": "282.9MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "5.99MB / 12.5MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "4.49%",
+          "MemUsage": "5.746MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "16.6MB / 16.6MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "32.8kB / 0B",
+          "CPUPerc": "0.38%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "1.93%",
+          "MemUsage": "19.72MiB / 1GiB",
+          "Name": "territory-load-generator",
+          "NetIO": "6.97MB / 154kB",
+          "PIDs": "6"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 21196, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 74127203}",
+      "queries": "{\"calls\" : 6617, \"exec_ms\" : 7571.978653999999}"
+    },
+    {
+      "time": 1792873681.489562,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "25.98%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.95%",
+          "MemUsage": "86.81MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "5.65MB / 10.4MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "8.37%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.14%",
+          "MemUsage": "82.62MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "6.87MB / 12MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "13.88%",
+          "MemUsage": "71.09MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "137kB / 10.4MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "17.51%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.67%",
+          "MemUsage": "283.4MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "6.08MB / 12.7MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.21%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "4.86%",
+          "MemUsage": "6.219MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "16.9MB / 17MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "32.8kB / 0B",
+          "CPUPerc": "2.31%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "1.97%",
+          "MemUsage": "20.2MiB / 1GiB",
+          "Name": "territory-load-generator",
+          "NetIO": "7.32MB / 163kB",
+          "PIDs": "6"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 21493, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 74156844}",
+      "queries": "{\"calls\" : 7117, \"exec_ms\" : 7983.9934109999995}"
+    },
+    {
+      "time": 1792873688.9268568,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.53%",
+          "MemUsage": "84.62MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "5.73MB / 10.5MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "24.22%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.36%",
+          "MemUsage": "83.75MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "6.95MB / 12.2MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "5.73%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "13.91%",
+          "MemUsage": "71.24MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "137kB / 10.4MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "19.30%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.57%",
+          "MemUsage": "282.3MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "6.14MB / 12.9MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.16%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "4.86%",
+          "MemUsage": "6.215MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "17.2MB / 17.2MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "32.8kB / 0B",
+          "CPUPerc": "0.42%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "1.93%",
+          "MemUsage": "19.72MiB / 1GiB",
+          "Name": "territory-load-generator",
+          "NetIO": "7.46MB / 167kB",
+          "PIDs": "6"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 21743, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 74172173}",
+      "queries": "{\"calls\" : 7424, \"exec_ms\" : 8295.773197}"
+    },
+    {
+      "time": 1792873696.357685,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "2.11%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.35%",
+          "MemUsage": "83.69MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "5.74MB / 10.5MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "0.86%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.08%",
+          "MemUsage": "82.35MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "6.98MB / 12.2MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "13.91%",
+          "MemUsage": "71.24MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "138kB / 10.4MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "0.60%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.56%",
+          "MemUsage": "282.3MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "6.16MB / 12.9MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.02%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "4.45%",
+          "MemUsage": "5.699MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "17.2MB / 17.3MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "32.8kB / 0B",
+          "CPUPerc": "0.47%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "1.93%",
+          "MemUsage": "19.73MiB / 1GiB",
+          "Name": "territory-load-generator",
+          "NetIO": "7.62MB / 169kB",
+          "PIDs": "6"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 21880, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 74196591}",
+      "queries": "{\"calls\" : 7512, \"exec_ms\" : 8345.851852}"
+    },
+    {
+      "time": 1792873703.828866,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.42%",
+          "MemUsage": "84.07MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "5.75MB / 10.5MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.15%",
+          "MemUsage": "82.71MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "6.98MB / 12.2MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "13.91%",
+          "MemUsage": "71.24MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "138kB / 10.4MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "4.26%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.57%",
+          "MemUsage": "282.3MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "6.16MB / 12.9MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "4.45%",
+          "MemUsage": "5.691MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "17.2MB / 17.3MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "32.8kB / 0B",
+          "CPUPerc": "0.45%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "1.93%",
+          "MemUsage": "19.73MiB / 1GiB",
+          "Name": "territory-load-generator",
+          "NetIO": "7.62MB / 169kB",
+          "PIDs": "6"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 21935, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 74197285}",
+      "queries": "{\"calls\" : 7548, \"exec_ms\" : 8349.098816}"
+    },
+    {
+      "time": 1792873711.2447424,
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-api1-1",
+          "ID": "128765d7d73c",
+          "MemPerc": "16.47%",
+          "MemUsage": "84.34MiB / 512MiB",
+          "Name": "territory-load-api1-1",
+          "NetIO": "5.75MB / 10.5MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "4.1kB / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-api2-1",
+          "ID": "291c1efb4448",
+          "MemPerc": "16.09%",
+          "MemUsage": "82.39MiB / 512MiB",
+          "Name": "territory-load-api2-1",
+          "NetIO": "6.98MB / 12.2MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "14.7MB / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-admin-1",
+          "ID": "b4bfb281aaeb",
+          "MemPerc": "13.91%",
+          "MemUsage": "71.24MiB / 512MiB",
+          "Name": "territory-load-admin-1",
+          "NetIO": "138kB / 10.4MB",
+          "PIDs": "22"
+        },
+        {
+          "BlockIO": "23.8MB / 1.35GB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-db-1",
+          "ID": "06e2db5469a9",
+          "MemPerc": "27.54%",
+          "MemUsage": "282MiB / 1GiB",
+          "Name": "territory-load-db-1",
+          "NetIO": "6.17MB / 12.9MB",
+          "PIDs": "24"
+        },
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-proxy-1",
+          "ID": "960d2452f634",
+          "MemPerc": "4.34%",
+          "MemUsage": "5.551MiB / 128MiB",
+          "Name": "territory-load-proxy-1",
+          "NetIO": "17.2MB / 17.3MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-load-generator",
+          "ID": "1841ee2131f1",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-load-generator",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        }
+      ],
+      "db": "{\"connections\" : 19, \"commits\" : 21984, \"rollbacks\" : 0, \"disk_reads\" : 853, \"cache_hits\" : 74197942}",
+      "queries": "{\"calls\" : 7580, \"exec_ms\" : 8352.415347}"
+    }
+  ],
+  "api_commit": "dd285247650d3cad9e07b99bb114965ca8807119",
+  "admin_commit": "b0802144c16c3c5b20a3a364145683b685df63a8"
+}

@@ -4,9 +4,6 @@ import { config, headers } from './config.js';
 export const errors = new Rate('unexpected_errors');
 export const initial = new Trend('snapshot_ms', true);
 export const marking = new Trend('mark_ms', true);
-export const propagation = new Trend('propagation_ms', true);
-export const probes = new Counter('propagation_samples');
-export const missed = new Counter('propagation_missing');
 export const api1 = new Counter('api_upstream_a');
 export const api2 = new Counter('api_upstream_b');
 
