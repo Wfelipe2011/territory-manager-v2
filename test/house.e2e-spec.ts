@@ -215,7 +215,7 @@ describe('House Flow (e2e)', () => {
 
         // Should fail because signature is not found/valid for this user
         // SignatureIsValid throws NotFoundException (404) for "Assinatura inválida"
-        expect(responseNoSig.status).toBe(404);
+        expect(responseNoSig.status).toBe(403);
     });
 
     it('should return 403 for PUBLICADOR accessing unauthorized territory/block', async () => {
@@ -241,17 +241,19 @@ describe('House Flow (e2e)', () => {
         const token = createTestToken({
             tenantId: tenant.id,
             roles: [Role.PUBLICADOR],
+            round: 1,
             id: signature.key, // Use signature key as id
             territoryId: 999, // Different territory
             blockId: 999, // Different block
         });
 
+        await prisma.signature.update({ where: { id: signature.id }, data: { token } });
         const response = await request(app.getHttpServer())
             .get(`/v1/territories/${territory.id}/blocks/${block.id}?round=1`)
             .set('Authorization', `Bearer ${token}`);
 
         expect(response.status).toBe(403);
-        expect(response.body.message).toContain('não tem permissão para acessar esse território');
+        expect(response.body.message).toBe('Acesso não permitido');
     });
 
     it('should allow PUBLICADOR with valid signature and authorized access', async () => {
@@ -299,11 +301,13 @@ describe('House Flow (e2e)', () => {
         const token = createTestToken({
             tenantId: tenant.id,
             roles: [Role.PUBLICADOR],
+            round: 1,
             id: signature.key, // Use signature key as id
             territoryId: territory.id,
             blockId: block.id,
         });
 
+        await prisma.signature.update({ where: { id: signature.id }, data: { token } });
         const response = await request(app.getHttpServer())
             .get(`/v1/territories/${territory.id}/blocks/${block.id}?round=1`)
             .set('Authorization', `Bearer ${token}`);
@@ -357,6 +361,7 @@ describe('House Flow (e2e)', () => {
 
         const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
 
+        await prisma.signature.update({ where: { id: signature.id }, data: { token } });
         const response = await request(app.getHttpServer())
             .get(`/v1/territories/${territory.id}/blocks/${block.id}?round=1`)
             .set('Authorization', `Bearer ${token}`);

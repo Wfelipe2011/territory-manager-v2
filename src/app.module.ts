@@ -17,7 +17,9 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { RoundModule } from './modules/round/round.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { HouseModule } from './modules/house/house.module';
-import { EventsModule } from './modules/gateway/event.module';
+import { FieldModule } from './modules/field/field.module';
+import { ChangeRequestModule } from './modules/change-request/change-request.module';
+import { PaypalModule } from './modules/paypal/paypal.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AddressModule } from './modules/address/address.module';
 import { SkipCacheInterceptor } from './interceptors/skip-cache.interceptor';
@@ -102,6 +104,8 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
     }),
     HttpModule,
     PrismaModule,
+    FieldModule,
+    ChangeRequestModule,
     FirebaseModule,
     AuthModule,
     TerritoryModule,
@@ -109,7 +113,7 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
     HouseModule,
     RoundModule,
     SignatureModule,
-    EventsModule,
+    PaypalModule,
     AddressModule,
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),

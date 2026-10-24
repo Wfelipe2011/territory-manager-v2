@@ -14,7 +14,7 @@ export class DashboardService {
     const topLegends = await this.prisma.$queryRawUnsafe<{ legend: string; count: number }[]>(`
       SELECT legend, COUNT(*) as count
       FROM house
-      WHERE tenant_id = ${tenantId}
+      WHERE tenant_id = ${tenantId} AND registration_status='approved'
       GROUP BY legend
       ORDER BY count DESC
       LIMIT 4
@@ -51,7 +51,7 @@ export class DashboardService {
     const topTypes = await this.prisma.$queryRawUnsafe<{ legend: string; count: number }[]>(`
       SELECT legend, COUNT(*) as count
       FROM house
-      WHERE tenant_id = ${tenantId}
+      WHERE tenant_id = ${tenantId} AND registration_status='approved'
       GROUP BY legend
       ORDER BY count DESC
       LIMIT 4
@@ -69,7 +69,7 @@ export class DashboardService {
     FROM
       house h
     WHERE
-      h.tenant_id = ${tenantId}
+      h.tenant_id = ${tenantId} AND h.registration_status='approved'
     `).catch((err) => {
       this.logger.error('Erro ao buscar detalhes do território', err);
       return [{
@@ -130,7 +130,7 @@ export class DashboardService {
 
     // 2. Buscar as métricas filtradas apenas para estas congregações ativas
     const [houses, territories, users, financial, totalTenantsCount] = await Promise.all([
-      this.prisma.house.count({ where: { tenantId: { in: activeIds } } }),
+      this.prisma.house.count({ where: { tenantId: { in: activeIds }, registrationStatus: 'approved' } }),
       this.prisma.territory.count({ where: { tenantId: { in: activeIds } } }),
       this.prisma.user.count({ where: { tenantId: { in: activeIds } } }),
       this.prisma.financial_entry.aggregate({

@@ -1,5 +1,8 @@
-Dockerfile
-.dockerignore
 node_modules
-npm-debug.log
 dist
+.git
+.env*
+*.log
+load-tests/.runtime
+load-tests/results
+coverage

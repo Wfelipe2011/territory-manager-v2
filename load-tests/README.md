@@ -1,70 +1,107 @@
-# Testes de Carga com k6
+# Carga local: ruas, casas e marcações HTTP
 
-Scripts de teste de carga para o Territory Manager, focados no fluxo principal: navegação de endereços/ruas (REST) e marcação de casas em tempo real (WebSocket).
+Roteiro k6 reutilizável, sem WebSocket/SSE. Nunca executa contra produção ou o
+banco restaurado. Compose próprio (`territory-load`), PostgreSQL
+`territory_manager_load`, API no host **3301**, Admin **5800**. A sessão normal
+continua com API 3001/Admin 4800 e uma instância.
 
-## Estrutura
+## Preparar
 
-- `config.js`: Centraliza variáveis de ambiente e exposes `makeHeaders(token)`.
-- `api.js`: Encapsula todas as chamadas REST (assinatura, blocos, endereços, casas, toggle).
-- `main.js`: Cenário principal do VU com `setup()` dinâmico e fluxo completo REST + WebSocket.
+Docker Compose v2, Python 3 e espaço livre para imagens/base sintética são necessários.
+Não é necessário instalar k6 no host: imagem fixada em `grafana/k6:1.3.0`.
 
-## Como Executar
-
-O único parâmetro obrigatório é a `SIGNATURE_KEY` (UUID da assinatura do publicador). O script busca token, território, bloco, endereço e casa automaticamente.
-
-```bash
-k6 run \
-  -e SIGNATURE_KEY=c6b85860-76b2-4b0e-a8a4-66afc68d926c \
-  load-tests/main.js
+```sh
+docker compose -f load-tests/compose.yml build api1 admin
+python3 load-tests/matrix.py prepare
+python3 load-tests/matrix.py smoke
 ```
 
-Contra ambiente local:
-```bash
-k6 run \
-  -e API_URL=http://localhost:3000 \
-  -e WS_URL=ws://localhost:3000 \
-  -e SIGNATURE_KEY=<uuid> \
-  load-tests/main.js
+A preparação aplica migrations e gera **10 congregações, 50 territórios, 400
+quadras, 1.200 ruas, 60.000 casas e 480.000 participações**. É sintético e
+reproduzível; não lê dumps. Assinaturas temporárias ficam em `.runtime/fixture.json`
+(ignorado pelo Git). A preparação recusa banco diferente ou um seed parcial;
+para refazer exclusivamente esta base descartável:
+
+```sh
+docker compose -f load-tests/compose.yml down -v
+rm -f load-tests/.runtime/fixture.json
+python3 load-tests/matrix.py prepare
 ```
 
-## Variáveis de Ambiente
+## Recursos efetivos
 
-| Variável | Descrição | Padrão |
-|---|---|---|
-| `SIGNATURE_KEY` | UUID da assinatura (obrigatório) | `''` |
-| `API_URL` | URL base da API REST | `https://api.territory-manager.com.br` |
-| `WS_URL` | URL base do WebSocket | `wss://api.territory-manager.com.br` |
-| `USERNAME` | Nome do VU nos logs do servidor | `k6-load-tester` |
+| Serviço | CPU | Memória |
+|---|---:|---:|
+| Cada API (2) | 1 | 512 MiB |
+| Admin | 0,5 | 512 MiB |
+| PostgreSQL | 1 | 1 GiB |
+| Nginx | 0,25 | 128 MiB |
+| k6 | 1 | 1 GiB |
 
-## Fluxo por Iteração do VU
+API/Admin usam builds de produção; API tem pool de 10 conexões por instância e
+log em `warn`. PostgreSQL usa `shared_buffers=256MB` e `pg_stat_statements`.
+Limites são conferidos por `docker inspect`, incluídos nos resultados.
+O balanceador alterna instâncias sem afinidade. Timeout HTTP do proxy é 45s,
+do cliente k6 35s, espera longa da API 25s. `FIELD_POLL_CHECK_MS` altera apenas a
+verificação de revisões, não a duração máxima da requisição.
 
-1. `setup()` (executa uma única vez): busca token via assinatura → extrai `territoryId`/`round` do JWT → busca bloco → busca endereço → busca casa.
-2. Cada VU repete:
-   - `GET /v1/territories/:id/blocks/:id?round=N` — lista de ruas
-   - `GET /v1/territories/:id/blocks/:id/address/:id?round=N` — lista de casas
-   - Conexão WebSocket + `join` na sala `${territorio}-${bloco}-${endereco}-${round}`
-   - `PATCH` marcar casa (`status: true`) → servidor emite `update_house` no WS
-   - `PATCH` desmarcar casa (`status: false`) para não poluir dados reais
-   - Fechar WebSocket
+## Matriz e comparação
 
-## Escalando a Carga
-
-Para aumentar VUs sem alterar o código, sobrescreva pelo CLI:
-
-```bash
-# 50 usuários simultâneos por 2 minutos
-k6 run --vus 50 --duration 2m \
-  -e SIGNATURE_KEY=<uuid> \
-  load-tests/main.js
+```sh
+python3 load-tests/matrix.py matrix --label baseline
+# Depois de alterar, validar e commitar a otimização:
+LOAD_VARIANT=next docker compose -f load-tests/compose.yml build api1 admin
+python3 load-tests/matrix.py matrix --label next
 ```
 
-Ou edite os `stages` em `main.js` para ramp-up gradual:
+Ordem: **3, 5, 10, 15, 20, 25s**, cenários distribuído e concentrado numa quadra.
+Patamares **10,25,50,100,200,400,800,1600** por 120s, interrompidos na primeira
+falha. Refinamento por dois pontos entre aprovação/falha; confirmação por 600s
+no maior patamar aprovado. Também há 120s de usuários sem alterações.
+Os resultados já existentes são reutilizados para retomar uma matriz interrompida;
+use outro label para uma execução independente.
 
-```js
-stages: [
-  { duration: '1m',  target: 10  }, // sobe para 10 usuários em 1 min
-  { duration: '5m',  target: 50  }, // sobe para 50 usuários em 5 min
-  { duration: '2m',  target: 100 }, // pico: 100 usuários
-  { duration: '2m',  target: 0   }, // ramp-down
-]
+Cada usuário lógico é uma tela com exatamente um poll pendente. Cliques têm
+fluxo independente, equivalente a 20% dos usuários agindo a cada 10s, mais uma
+rajada de 5s a um clique/s por usuário ativo aos 60s. Escritas se distribuem
+somente entre quadras observadas e alternam casas/estado; antes de cada ensaio,
+a rodada ativa e a presença retornam à condição inicial. Uma casa fica reservada
+à medição de propagação. Entradas HTTP na página Next ocorrem à taxa de N/min;
+20% carregam também JS/CSS (navegador frio), 80% reutilizam esses assets.
+O teste HTTP não executa JavaScript nem substitui os testes Playwright de navegação.
+Tokens são preparados fora da carga; resolução pública de assinatura não é chamada
+repetidamente, para não medir o throttling público de 30 chamadas/min por IP.
+
+SLOs: snapshot inicial p95 <=1s, PATCH p95 <=500ms, erros inesperados <1%,
+sem OOM/reinícios e sem iterações de chegada descartadas. Respostas normais de
+poll sem mudança após 25s não entram no SLO de latência dos snapshots.
+Propagação mede o intervalo do ACK do PATCH até outro cliente enxergar o estado,
+com poll independente e cursor, e é relatada à parte: objetivo p95 <=5s.
+Intervalos mais altos podem aumentar capacidade enquanto atrasam atualizações.
+
+Resultados sanitizados em `results/<label>/*.json` e `summary.csv`: commits e
+imagens, limites, p95, erros, contagem de propagação, distribuição entre APIs,
+CPU/memória/rede dos containers e consultas/conexões do banco a cada ~5s.
+Logs brutos e fixture permanecem em `.runtime/`; não publicá-los.
+Falha/OOM do k6 invalida a medição; não representa limite da API.
+Sem saturação observada, reportar capacidade como limite inferior comprovado.
+
+Confirme comparações relevantes com três ensaios equivalentes:
+
+```sh
+python3 load-tests/matrix.py repeat --label next --intervals 3 --profiles hotspot --users 50 --repetitions 3
 ```
+
+Faça apenas uma matriz por vez. Não execute builds ou outras cargas simultâneas.
+Para evitar concorrência com servidores dev, pare somente API/Admin do workspace
+antes da matriz e restaure ao terminar; não pare serviços de outros projetos.
+
+```sh
+# na raiz do workspace:
+docker compose stop api admin
+# ao concluir:
+python3 territory-manager-v2/load-tests/matrix.py down
+docker compose up -d api admin
+```
+
+Sem push/deploy/DNS: este roteiro só modifica o ambiente local de carga.

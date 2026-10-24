@@ -1,4 +1,3 @@
-import { EventsGateway } from './../gateway/event.gateway';
 import {
   BadRequestException,
   Body,
@@ -42,7 +41,6 @@ export class HouseController {
 
   constructor(
     private houseService: HouseService,
-    private eventsGateway: EventsGateway,
     private nameResolver: NameResolverService
   ) {
     this.signatureIsValid = new SignatureIsValid(houseService.prisma);
@@ -146,22 +144,17 @@ export class HouseController {
       if (isNaN(+territoryId)) throw new BadRequestException('Território inválido');
       if (isNaN(+blockId)) throw new BadRequestException('Bloco inválido');
       if (isNaN(+addressId)) throw new BadRequestException('Endereço inválido');
-      if (body.status === undefined) throw new BadRequestException('Status são obrigatório');
+      if (typeof body.status !== 'boolean') throw new BadRequestException('Status são obrigatório');
       if (req.user.roles.includes(Role.PUBLICADOR)) await this.signatureIsValid.execute(req.user.id);
       if (!body.round || isNaN(+body.round)) throw new BadRequestException('Rodada inválida');
+      const owned = await this.houseService.prisma.house.findFirst({ where: {
+        id: +houseId, tenantId: req.user.tenantId, territoryId: +territoryId, blockId: +blockId, addressId: +addressId,
+      } });
+      if (!owned) throw new NotFoundException('Casa não encontrada');
       const isAdmin = req.user.roles.includes(Role.ADMIN);
 
       const result = await this.houseService.updateHouse(+houseId, body, isAdmin, +body.round);
       await this.houseService.invalidateHousesCache(+territoryId, +blockId, +addressId, +body.round);
-      setImmediate(() =>
-        this.eventsGateway.emitRoom(`${territoryId}-${blockId}-${addressId}-${body.round}`, {
-          type: 'update_house',
-          data: {
-            houseId: houseId,
-            completed: body.status,
-          },
-        })
-      );
       return result;
     } catch (error) {
       this.logger.error(error);
@@ -200,17 +193,6 @@ export class HouseController {
   async create(@Body() body: UpsertHouseInput) {
     try {
       const result = await this.houseService.create(body);
-      for (const roundNumber of result.openRoundNumbers) {
-        setImmediate(() =>
-          this.eventsGateway.emitRoom(`${body.territoryId}-${body.blockId}-${body.streetId}-${roundNumber}`, {
-            type: 'update_house',
-            data: {
-              houseId: result.id,
-              completed: false,
-            },
-          })
-        );
-      }
       return result;
     } catch (error) {
       this.logger.error(error);

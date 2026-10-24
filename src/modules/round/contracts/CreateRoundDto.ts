@@ -22,9 +22,9 @@ export class CreateRoundDto {
   @ApiProperty({
     description: 'Tema da rodada',
     example: ThemeMode.default,
-    enum: [ThemeMode.default, ThemeMode.campaign]
+    enum: [ThemeMode.default, ThemeMode.campaign, ThemeMode.letters]
   })
-  @IsIn([ThemeMode.default, ThemeMode.campaign], { message: 'O tema da rodada deve ser "normal" ou "campanha"' })
+  @IsIn([ThemeMode.default, ThemeMode.campaign, ThemeMode.letters], { message: 'O tema da rodada deve ser "normal" ou "campanha"' })
   @IsNotEmpty({ message: 'O tema da rodada é obrigatório' })
   theme: ThemeMode
 

@@ -44,7 +44,9 @@ describe('Porta 3 — Criação de Report: territoryBlockAddressId obrigatório 
             data: { name: 'Rua A', tenantId: tenant.id },
         });
 
-        const token = createTestToken({ tenantId: tenant.id, roles: [Role.PUBLICADOR] });
+        const tb = await prisma.territory_block.create({ data: { tenantId: tenant.id, territoryId: territory.id, blockId: block.id } });
+        await prisma.territory_block_address.create({ data: { tenantId: tenant.id, territoryBlockId: tb.id, addressId: address.id } });
+        const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
 
         const response = await request(app.getHttpServer())
             .post('/v1/reports')
@@ -69,7 +71,7 @@ describe('Porta 3 — Criação de Report: territoryBlockAddressId obrigatório 
         const tenant = await prisma.multitenancy.create({
             data: { name: 'Tenant Report 2', city: 'Cidade', state: 'UF' },
         });
-        const token = createTestToken({ tenantId: tenant.id, roles: [Role.PUBLICADOR] });
+        const token = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
 
         const response = await request(app.getHttpServer())
             .post('/v1/reports')

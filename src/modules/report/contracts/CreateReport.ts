@@ -1,12 +1,15 @@
-import { IsNotEmpty, IsOptional, IsEnum, IsString, IsNumber, IsInt } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsEnum, IsString, IsNumber, IsInt, IsBoolean } from 'class-validator';
 
-enum ReportType {
+export enum ReportType {
   add = 'add',
   remove = 'remove',
   update = 'update',
 }
 
 export class CreateReportDto {
+  @IsOptional()
+  @IsBoolean()
+  dontVisit?: boolean;
   @IsOptional()
   @IsNumber({}, { message: 'O campo "id" deve ser um número.' })
   id?: number;

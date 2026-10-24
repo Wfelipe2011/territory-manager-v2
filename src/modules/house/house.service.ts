@@ -7,7 +7,7 @@ import { BlockSignature } from './dtos/BlockSignature';
 import { RawHouse } from './dtos/RawHouse';
 import { Output, Round } from './dtos/Houses';
 import { LegengDTO } from './dtos/Legend';
-import dayjs from 'dayjs';
+import { housePermissions, unmarkHours } from './house-permissions';
 import { UpdateHouseOrder } from './contracts/UpdateHouseOrder';
 import { ParametersService } from '../parameters/parameters.service';
 import { AddressBlockService } from '../block/adress-block.service';
@@ -109,7 +109,7 @@ export class HouseService {
         INNER JOIN address a ON a.id = h.address_id
         INNER JOIN block b ON b.id = h.block_id
         INNER JOIN territory t ON t.id = h.territory_id
-        WHERE h.address_id = ${streetId}
+        WHERE h.registration_status='approved' AND h.address_id = ${streetId}
           AND h.block_id = ${blockId}
           AND h.territory_id = ${territoryId}
         ORDER BY 
@@ -159,20 +159,36 @@ export class HouseService {
   async updateHouse(houseId: number, body: { status: boolean }, isAdmin: boolean, roundNumber: number) {
     const [[round], house] = await Promise.all([
       this.prisma.$queryRaw<Round[]>`SELECT * FROM round WHERE house_id = ${houseId} AND round_number = ${roundNumber}`,
-      this.prisma.house.findUnique({ where: { id: houseId }, include: { territory: true, block: true } }),
+      this.prisma.house.findUnique({
+        where: { id: houseId },
+        include: { territory: true, block: true, territoryBlockAddress: { include: { territoryBlock: true } } },
+      }),
     ]);
     if (!round) throw new BadRequestException('Casa não encontrada');
     if (!house) throw new NotFoundException('Casa não encontrada');
+    const info = await this.prisma.round_info.findUnique({ where: { tenantId_roundNumber: { tenantId: house.tenantId, roundNumber } } });
+    const hours = unmarkHours(await this.parametersService.getValue(house.tenantId, 'SIGNATURE_EXPIRATION_HOURS'));
+    const permissions = housePermissions(
+      {
+        completed: round.completed,
+        completedDate: round.completed_date,
+        endDate: info?.status === 'closed' ? info.closedAt ?? new Date() : round.end_date,
+        dontVisit: house.dontVisit,
+        reportType: house.reportType,
+        published:
+          house.registrationStatus !== 'rejected' &&
+          (!house.territoryBlockAddress ||
+            (house.territoryBlockAddress.registrationStatus !== 'rejected' && house.territoryBlockAddress.territoryBlock.registrationStatus !== 'rejected')),
+      },
+      hours,
+      isAdmin
+    );
+    // Preserve idempotent writes, while validating the same rules used by the mobile response.
+    const blocked = permissions.blockedReason && !(body.status && permissions.blockedReason === 'unmark_window_expired');
+    if (blocked) throw new ForbiddenException('Casa indisponível para marcação');
+    // A repeated confirmation must not reopen the unmark window by changing completed_date.
+    if (body.status === round.completed) return { message: 'Casa atualizada com sucesso' };
     this.logger.log(`Verificando se a casa [${house?.territory.name}-${house?.block.name}-${house?.number}] pode ser atualizada`);
-
-    if (!isAdmin && round.completed_date && body.status === false) {
-      const now = dayjs();
-      const updateDate = dayjs(round.completed_date);
-      const customHours = await this.parametersService.getValue(house.tenantId, 'SIGNATURE_EXPIRATION_HOURS');
-      const hours = customHours ? parseInt(customHours) : 5;
-      if (now.diff(updateDate, 'hours') > hours)
-        throw new ForbiddenException(`Casa [${house?.territory.name}-${house?.block.name}-${house?.number}] não pode ser atualizada`);
-    }
 
     await this.prisma.$queryRaw`
       UPDATE round SET 
@@ -203,7 +219,7 @@ export class HouseService {
       INNER JOIN block b ON b.id = h.block_id
       LEFT JOIN territory_overseer to2 on to2.territory_id = t.id  and to2.finished = false 
       WHERE h.territory_id = ${territoryId} AND h.block_id = ${blockId} 
-        AND h.territory_block_address_id IS NOT NULL
+        AND h.registration_status='approved' AND h.territory_block_address_id IS NOT NULL
     `;
   }
 

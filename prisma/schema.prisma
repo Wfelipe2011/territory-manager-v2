@@ -51,6 +51,7 @@ enum ReportType {
 }
 
 model house {
+  registrationStatus RegistrationStatus @default(approved) @map("registration_status")
   id                      Int       @id @unique @default(autoincrement())
   number                  String
   dontVisit               Boolean   @default(false) @map("dont_visit")
@@ -87,6 +88,8 @@ model firebase {
 }
 
 model multitenancy {
+  requestsRevision BigInt @default(0) @map("requests_revision")
+  changeRequests change_request[]
   id    Int     @id @unique @default(autoincrement())
   name  String
   phone String?
@@ -141,6 +144,7 @@ model territory {
 }
 
 model territory_block {
+  registrationStatus RegistrationStatus @default(approved) @map("registration_status")
   id                      Int                       @id @unique @default(autoincrement())
   block                   block                     @relation(fields: [blockId], references: [id])
   blockId                 Int                       @map("block_id")
@@ -157,6 +161,7 @@ model territory_block {
 }
 
 model territory_block_address {
+  registrationStatus RegistrationStatus @default(approved) @map("registration_status")
   id               Int             @id @unique @default(autoincrement())
   territoryBlock   territory_block @relation(fields: [territoryBlockId], references: [id])
   territoryBlockId Int             @map("territory_block_id")
@@ -182,12 +187,16 @@ model territory_overseer {
   signatureId    Int?         @map("signature_id")
   multitenancy   multitenancy @relation(fields: [tenantId], references: [id])
   tenantId       Int          @map("tenant_id")
-  roundNumber    Int          @map("round_number")
+  roundNumber    Int?         @map("round_number")
 
   @@index([territoryId, roundNumber])
 }
 
 model round_info {
+  status RoundStatus @default(open)
+  typeIds Int[] @default([]) @map("type_ids")
+  startedAt DateTime? @default(now()) @map("started_at")
+  closedAt DateTime? @map("closed_at")
   id             Int       @id @unique @default(autoincrement())
   roundNumber    Int       @map("round_number")
   name           String
@@ -246,6 +255,7 @@ model user {
 }
 
 model signature {
+  canEditStructure Boolean @default(false) @map("can_edit_structure")
   id             Int          @id @unique @default(autoincrement())
   key            String       @unique
   expirationDate DateTime?    @map("expiration_date")
@@ -272,6 +282,36 @@ model socket {
 
   @@index([createdAt])
   @@index([tenantId, createdAt])
+}
+
+// Revision updates are enforced by SQL triggers, including bulk/admin changes.
+model field_revision {
+  tenantId    Int    @map("tenant_id")
+  territoryId Int    @map("territory_id")
+  roundNumber Int    @map("round_number")
+  blockId     Int    @default(0) @map("block_id")
+  revision    BigInt @default(1)
+
+  @@id([tenantId, territoryId, roundNumber, blockId])
+}
+
+model field_session {
+  id             Int       @id @default(autoincrement())
+  tenantId       Int       @map("tenant_id")
+  territoryId    Int       @map("territory_id")
+  roundNumber    Int       @map("round_number")
+  blockId        Int?      @map("block_id")
+  addressId      Int?      @map("address_id")
+  clientId       String    @map("client_id")
+  tabId          String    @map("tab_id")
+  signatureKey   String    @map("signature_key")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  lastSeenAt     DateTime  @default(now()) @map("last_seen_at") @db.Timestamptz(6)
+  disconnectedAt DateTime? @map("disconnected_at") @db.Timestamptz(6)
+
+  // Partial unique index for OPEN sessions is maintained in the SQL migration.
+  @@index([tenantId, territoryId, roundNumber, lastSeenAt], map: "field_session_presence_idx")
+  @@index([createdAt], map: "field_session_history_idx")
 }
 
 model paypal_transaction {
@@ -324,3 +364,67 @@ model financial_entry {
   @@index([tenantId, cycle])
 }
 
+
+
+enum RegistrationStatus {
+  pending
+  approved
+  rejected
+}
+enum RoundStatus {
+  open
+  closed
+  uninitialized
+}
+enum ChangeEntity {
+  house
+  street
+  block
+}
+enum ChangeAction {
+  create
+  update
+  delete
+}
+enum ChangeStatus {
+  pending
+  approved
+  rejected
+}
+
+model change_request {
+  id Int @id @default(autoincrement())
+  tenantId Int @map("tenant_id")
+  multitenancy multitenancy @relation(fields: [tenantId], references: [id])
+  entity ChangeEntity
+  action ChangeAction
+  status ChangeStatus @default(pending)
+  territoryId Int @map("territory_id")
+  blockId Int? @map("block_id")
+  addressId Int? @map("address_id")
+  targetId Int? @map("target_id")
+  parentRequestId Int? @map("parent_request_id")
+  parent change_request? @relation("RequestTree", fields: [parentRequestId], references: [id], onDelete: Restrict)
+  children change_request[] @relation("RequestTree")
+  beforeData Json? @map("before_data")
+  proposedData Json @map("proposed_data")
+  observations String
+  requestedByUserId Int? @map("requested_by_user_id")
+  requestedByName String? @map("requested_by_name")
+  sourceSignatureKey String? @map("source_signature_key")
+  requestedAt DateTime? @default(now()) @map("requested_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  version Int @default(1)
+  reviewedAt DateTime? @map("reviewed_at")
+  reviewerId Int? @map("reviewer_id")
+  reviewReason String? @map("review_reason")
+  isLegacy Boolean @default(false) @map("is_legacy")
+  legacyHouseId Int? @unique @map("legacy_house_id")
+  importedAt DateTime? @map("imported_at")
+  history Json @default("[]")
+
+  @@index([tenantId, status, updatedAt])
+  @@index([tenantId, territoryId, blockId])
+  @@index([tenantId, entity, targetId])
+  @@index([parentRequestId])
+}

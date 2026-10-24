@@ -3,7 +3,6 @@ import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { AddressBlockService } from '../block/adress-block.service';
 import ExcelJS from 'exceljs';
 import EventEmitter from 'events';
-import { UploadGateway } from '../gateway/upload.gateway';
 import { BulkImportRow, ImportReport } from './contracts/BulkImportInput';
 import { LegengDTO } from '../house/dtos/Legend';
 
@@ -24,7 +23,6 @@ export class UploadTerritoryUseCase {
   private eventEmitter: EventEmitter;
   constructor(
     readonly prisma: PrismaService,
-    private readonly uploadGateway: UploadGateway,
     private readonly addressBlockService: AddressBlockService,
   ) {
     this.eventEmitter = new EventEmitter();
@@ -90,7 +88,7 @@ export class UploadTerritoryUseCase {
       const progress = Math.round(((i + 1) / rows.length) * 100);
       if (progress > porcentagem) {
         porcentagem = progress;
-        this.uploadGateway.sendProgress(userId, progress);
+        this.eventEmitter.emit('progress', progress);
       }
     }
 

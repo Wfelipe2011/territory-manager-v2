@@ -48,3 +48,8 @@ cache
 dump-*.sql
 docker-compose.dump.yml
 
+
+# Local load fixtures contain temporary tokens. Results are sanitized summaries only.
+/load-tests/.runtime/
+
+__pycache__/

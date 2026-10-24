@@ -33,7 +33,7 @@ export class TraceMiddleware implements NestMiddleware {
             this.traceService.setContextBulk({
                 sessionId,
                 method: req.method,
-                url: req.url,
+                url: req.url.replace(/(\/signature\/)[^/?]+/, '$1[redacted]'),
                 clientSessionId,
             });
 

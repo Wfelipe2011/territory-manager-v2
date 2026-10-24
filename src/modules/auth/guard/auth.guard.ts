@@ -1,3 +1,5 @@
+import { FieldAccessService, FieldPrincipal } from '../../field/field-access.service';
+import { Role } from 'src/enum/role.enum';
 import { CanActivate, ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
@@ -10,12 +12,12 @@ import { UserToken } from '../contracts';
 @Injectable()
 export class AuthGuard implements CanActivate {
   logger = new Logger(AuthGuard.name);
-  constructor(private reflector: Reflector) { }
-  canActivate(context: ExecutionContext): boolean {
+  constructor(private reflector: Reflector, private readonly fieldAccess: FieldAccessService) { }
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [context.getHandler(), context.getClass()]);
     const request = context.switchToHttp().getRequest<RequestUser>();
     if (isPublic) {
-      this.logger.debug(`Rota pública - ${request.url} - ${request.method}`);
+      this.logger.debug(`Rota pública - ${request.method}`);
       return true;
     }
     const token = this.extractTokenFromHeader(request);
@@ -23,10 +25,13 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Não autorizado');
     }
 
-    this.logger.debug(`Rota privada - ${request.url} - ${request.method} - ${token}`);
+    this.logger.debug(`Rota privada - ${request.method}`);
 
     const payload = this.validateToken(token);
     request['user'] = payload;
+    if (payload.roles?.some(role => role === Role.DIRIGENTE || role === Role.PUBLICADOR)) {
+      await this.fieldAccess.request(payload as unknown as FieldPrincipal, request);
+    }
 
     return true;
   }
@@ -49,7 +54,7 @@ export class AuthGuard implements CanActivate {
       const payload = jwt.verify(token, envs.JWT_SECRET);
       return payload as UserToken;
     } catch (error) {
-      this.logger.error(`Token inválido: ${error.message} - Token: ${token}`);
+      this.logger.warn('Token inválido');
       throw new UnauthorizedException(`Token inválido: ${error.message}`);
     }
   }

@@ -347,10 +347,12 @@ describe('Territory Flow (e2e)', () => {
             const tokenAssigned = createTestToken({
                 tenantId: tenant.id,
                 roles: [Role.DIRIGENTE],
+                round: 1,
                 id: '123', // This is used as signatureId in the controller
                 territoryId: territory1.id,
             });
 
+            await prisma.signature.update({ where: { id: signature.id }, data: { token: tokenAssigned } });
             // Accessing territory1 (assigned)
             const responseOk = await request(app.getHttpServer())
                 .get(`/v1/territories/${territory1.id}?round=1`)

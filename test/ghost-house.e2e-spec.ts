@@ -194,7 +194,8 @@ describe('Ghost House Flow (e2e)', () => {
             data: { signatureId: signature.id }
         });
 
-        const overseerToken = createTestToken({ tenantId: tenant.id, roles: [Role.DIRIGENTE] });
+        const overseerToken = createTestToken({ id: signature.key, territoryId: territory.id, round: 1, tenantId: tenant.id, roles: [Role.DIRIGENTE] });
+        await prisma.signature.update({ where: { id: signature.id }, data: { token: overseerToken } });
 
         // Act: Access block details
         const response = await request(app.getHttpServer())

@@ -18,66 +18,16 @@ export class RoundService {
   ) { }
 
   async getRoundInfo(tenantId: number): Promise<any> {
-    const rounds = await this.prisma.$queryRaw`
-    SELECT 
-      ri.id,
-      ri.round_number,
-      ri.name,
-      ri.theme,
-      ri.tenant_id,
-      ri.color_primary,
-      ri.color_secondary,
-      ri.type,
-      MIN(r.start_date) AS start_date,
-      MAX(r.end_date) AS end_date,
-      CAST(SUM(CASE WHEN r.completed = TRUE THEN 1 ELSE 0 END) AS INT) AS completed,
-      CAST(SUM(CASE WHEN r.completed = FALSE THEN 1 ELSE 0 END) AS INT) AS not_completed
-    FROM 
-        round_info ri
-    INNER JOIN 
-        round r ON r.round_number = ri.round_number 
-                AND r.tenant_id = ri.tenant_id
-    WHERE 
-        r.tenant_id = ${tenantId}
-    GROUP BY 
-        ri.id, ri.round_number, ri.name, ri.theme, ri.tenant_id, 
-        ri.color_primary, ri.color_secondary, ri.type
-    ORDER BY 
-        ri.round_number;
-    `;
-    return rounds;
+    return this.prisma.$queryRaw`
+      SELECT ri.id,ri.round_number,ri.name,ri.theme,ri.tenant_id,ri.color_primary,ri.color_secondary,ri.type,ri.type_ids,ri.status,
+       COALESCE(MIN(r.start_date),ri.started_at) start_date,CASE WHEN ri.status='closed' THEN COALESCE(ri.closed_at,MAX(r.end_date)) ELSE NULL END end_date,
+       CAST(COUNT(r.id) FILTER(WHERE r.completed) AS INT) completed,CAST(COUNT(r.id) FILTER(WHERE NOT r.completed) AS INT) not_completed
+      FROM round_info ri LEFT JOIN round r ON r.tenant_id=ri.tenant_id AND r.round_number=ri.round_number
+       AND EXISTS(SELECT 1 FROM house h WHERE h.id=r.house_id AND h.registration_status='approved' AND h.number<>'ghost')
+      WHERE ri.tenant_id=${tenantId} GROUP BY ri.id ORDER BY ri.round_number`;
   }
-
   async getRoundInfoByRoundNumber(tenantId: number, roundNumber: number): Promise<any> {
-    const [round] = await this.prisma.$queryRaw<any[]>`
-    SELECT 
-      ri.id,
-      ri.round_number,
-      ri.name,
-      ri.theme,
-      ri.tenant_id,
-      ri.color_primary,
-      ri.color_secondary,
-      ri.type,
-      MIN(r.start_date) AS start_date,
-      MAX(r.end_date) AS end_date,
-      CAST(SUM(CASE WHEN r.completed = TRUE THEN 1 ELSE 0 END) AS INT) AS completed,
-      CAST(SUM(CASE WHEN r.completed = FALSE THEN 1 ELSE 0 END) AS INT) AS not_completed
-    FROM 
-        round_info ri
-    INNER JOIN 
-        round r ON r.round_number = ri.round_number 
-                AND r.tenant_id = ri.tenant_id
-    WHERE 
-        r.tenant_id = ${tenantId}
-        AND r.round_number = ${roundNumber}
-    GROUP BY 
-        ri.id, ri.round_number, ri.name, ri.theme, ri.tenant_id, 
-        ri.color_primary, ri.color_secondary
-    ORDER BY 
-        ri.round_number;
-    `;
-    return round;
+    return (await this.getRoundInfo(tenantId)).find((round:any)=>round.round_number===roundNumber);
   }
 
   async fixRoundInfo(): Promise<any> {
@@ -141,42 +91,32 @@ export class RoundService {
     return round;
   }
 
-  public async finish(tenantId: number, roundNumber: number): Promise<void> {
-    const territories = await this.prisma.round.findMany({
-      where: {
-        tenantId,
-        roundNumber,
-      },
-      select: {
-        territoryId: true,
-        multitenancy: true,
-      },
-      distinct: ['territoryId'],
+  public async finish(tenantId:number,roundNumber:number):Promise<void> {
+    const leaders=await this.prisma.territory_overseer.findMany({where:{tenantId,roundNumber,signatureId:{not:null}},select:{territoryId:true},distinct:['territoryId']});
+    await this.prisma.$transaction(async tx=>{
+      await tx.$queryRaw`SELECT id FROM multi_tenancy WHERE id=${tenantId} FOR UPDATE`;
+      const info=await tx.round_info.findUnique({where:{tenantId_roundNumber:{tenantId,roundNumber}}});
+      if(!info)throw new NotFoundException('Rodada não encontrada');
+      const closedAt=new Date();
+      await tx.round_info.update({where:{id:info.id},data:{status:'closed',closedAt}});
+      await tx.round.updateMany({where:{tenantId,roundNumber},data:{endDate:closedAt}});
     });
-
-    this.logger.log(`Finalizando rodada ${roundNumber} para congregação ${territories[0].multitenancy.name}`);
-    await Promise.allSettled(territories.map(async territory => this.signatureService.deleteTerritorySignature(territory.territoryId)));
-
-    await this.prisma.round.updateMany({
-      where: {
-        tenantId,
-        roundNumber,
-      },
-      data: {
-        endDate: new Date(),
-      },
-    });
-
-    this.logger.log(`Rodada ${roundNumber} para congregação ${territories[0].multitenancy.name} finalizada`);
+    await Promise.allSettled(leaders.map(leader=>this.signatureService.deleteTerritorySignature(leader.territoryId,tenantId,roundNumber)));
   }
 
   private async createRound(tenantId: number, rounds: any[], body: CreateRoundDto) {
     const roundStartDate = await this.getRoundStartDate(tenantId);
     await this.prisma.$transaction(async txt => {
       this.logger.log(`Iniciando criação da rodada para o inquilino ${tenantId}`);
+      await txt.$queryRaw`SELECT id FROM multi_tenancy WHERE id=${tenantId} FOR UPDATE`;
+      const type=await txt.type.findFirst({where:{id:+body.typeId,tenantId}});
+      if(!type)throw new NotFoundException('Tipo não encontrado');
       const houses = await txt.house.findMany({
         where: {
           tenantId,
+          registrationStatus: 'approved',
+          number: { not: 'ghost' },
+          territoryBlockAddress: {registrationStatus:'approved',territoryBlock:{registrationStatus:'approved'}},
           territory: {
             typeId: body.typeId
           },
@@ -202,19 +142,17 @@ export class RoundService {
           }
         },
       });
-      if (!houses.length) {
-        throw new NotFoundException("Nenhuma casa encontrada para a criação da rodada");
-      }
       this.logger.log(`Casas encontradas para o inquilino ${tenantId}: ${houses.length}`);
 
       const roundInfo = await txt.round_info.create({
         data: {
-          roundNumber: rounds.length + 1,
+          roundNumber: ((await txt.round_info.aggregate({where:{tenantId},_max:{roundNumber:true}}))._max.roundNumber??0)+1,
+          status:'open',typeIds:[type.id],startedAt:new Date(),
           name: body.name,
           theme: body.theme,
           colorPrimary: body.colorPrimary,
           colorSecondary: body.colorSecondary,
-          type: houses[0].territory.type.name,
+          type: type.name,
           tenantId,
         },
       });
@@ -237,7 +175,7 @@ export class RoundService {
         }),
       });
 
-      this.logger.log(`Rodada ${roundInfo.roundNumber} para congregação ${houses[0].multitenancy.name} iniciada`);
+      this.logger.log(`Rodada ${roundInfo.roundNumber} iniciada para tenant ${tenantId}`);
     }, { timeout: 120_000 });
   }
 

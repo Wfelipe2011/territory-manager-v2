@@ -66,9 +66,9 @@ export class TerritoryService {
             AND so.disconnected_at IS NULL
         ) as connections
       FROM territory t
-      LEFT JOIN territory_block tb ON tb.territory_id = t.id
+      LEFT JOIN territory_block tb ON tb.territory_id = t.id AND tb.registration_status='approved'
       LEFT JOIN block b ON b.id = tb.block_id
-      LEFT JOIN house h ON h.block_id = tb.block_id AND h.territory_id = tb.territory_id
+      LEFT JOIN house h ON h.block_id = tb.block_id AND h.territory_id = tb.territory_id AND h.registration_status='approved'
       INNER JOIN round ON round.house_id = h.id  AND round.round_number = ${+round} 
       left join territory_overseer tov on tov.territory_id = t.id AND tov.round_number = ${+round}
        left join signature s on s.id = tb.signature_id
@@ -98,7 +98,7 @@ export class TerritoryService {
   async findBlockByTerritoryId(territoryId: number) {
     const result = await this.prisma.territory_block.findMany({
       where: {
-        territoryId,
+        territoryId, registrationStatus: 'approved',
       },
       select: {
         block: true,
@@ -191,7 +191,7 @@ export class TerritoryService {
 
   async findEditById(query: TerritoryEditQuery, pagination: { page: number; pageSize: number }): Promise<TerritoryEditOutput> {
     const { streetName, houseNumber } = this.processStreetFilter(query.streetFilter);
-    const whereCondition = this.buildWhereCondition(query, streetName, houseNumber) as any;
+    const whereCondition = { ...this.buildWhereCondition(query, streetName, houseNumber), registrationStatus: 'approved' } as any;
 
     // Calcula os valores de skip e take para a paginação
     const skip = (pagination.page - 1) * pagination.pageSize;
@@ -208,6 +208,7 @@ export class TerritoryService {
           include: { address: true },
         },
         territory_block: {
+          where: { registrationStatus: 'approved' },
           include: { block: true },
         },
         type: true,
@@ -216,7 +217,7 @@ export class TerritoryService {
 
     const totalHousesByTerritory = await this.prisma.house.count({
       where: {
-        territoryId: query.territoryId,
+        territoryId: query.territoryId, registrationStatus: 'approved',
       },
     });
 
@@ -339,7 +340,7 @@ type TerritoryEditOutput = {
     initialDate: Date;
     expirationDate: Date | null;
     finished: boolean;
-    roundNumber: number;
+    roundNumber: number | null;
   }[];
   pagination: {
     totalHouses: number;

@@ -41,10 +41,10 @@ export class BlockService {
 
     async getTerritoryBlockDetails(blockId: number, territoryId: number, tenantId: number) {
         const rawData = await this.prisma.territory_block.findFirst({
-            where: { blockId, territoryId, tenantId },
+            where: { blockId, territoryId, tenantId, registrationStatus: 'approved' },
             include: {
                 block: true,
-                territory_block_address: { include: { address: true } },
+                territory_block_address: { where: { registrationStatus: 'approved' }, include: { address: true } },
             },
         });
 
@@ -61,10 +61,10 @@ export class BlockService {
 
     async getTerritoryBlocks(territoryId: number, tenantId: number) {
         const rawData = await this.prisma.territory_block.findMany({
-            where: { territoryId, tenantId },
+            where: { territoryId, tenantId, registrationStatus: 'approved' },
             include: {
                 block: true,
-                territory_block_address: { include: { address: true } },
+                territory_block_address: { where: { registrationStatus: 'approved' }, include: { address: true } },
             },
         });
 
@@ -82,7 +82,7 @@ export class BlockService {
     async deleteBlock(blockId: number, territoryId: number, tenantId: number) {
         return this.prisma.$transaction(async (prisma) => {
             this.logger.log('Iniciando deleteBlock');
-            const territoryBlock = await prisma.territory_block.findFirst({ where: { blockId, territoryId, tenantId }, include: { territory_block_address: true } });
+            const territoryBlock = await prisma.territory_block.findFirst({ where: { blockId, territoryId, tenantId, registrationStatus: 'approved' }, include: { territory_block_address: true } });
             if (!territoryBlock) {
                 this.logger.warn('Quadra não encontrada');
                 throw new NotFoundException('Quadra não encontrada');

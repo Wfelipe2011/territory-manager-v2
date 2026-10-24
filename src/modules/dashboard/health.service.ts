@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../infra/prisma/prisma.service';
-import { EventsGateway } from '../gateway/event.gateway';
+import { FieldService } from '../field/field.service';
 import * as os from 'os';
 import si from 'systeminformation';
 import { Prisma } from '@prisma/client';
@@ -11,7 +11,7 @@ export class HealthService {
 
     constructor(
         private readonly prismaService: PrismaService,
-        private readonly eventsGateway: EventsGateway,
+        private readonly fieldService: FieldService,
     ) { }
 
     async getHealthData() {
@@ -37,7 +37,8 @@ export class HealthService {
         return {
             message: `[${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}] - [${process.env.INSTANCE_ID}] - O servidor está em execução - Produção!`,
             signatures: countSignatures,
-            sockets,
+            sockets, // compatibility alias for older monitoring clients
+            activeSessions: sockets,
             database_info: {
                 active: +countActive.toString(),
                 idle: +countIdle.toString(),
@@ -77,7 +78,7 @@ export class HealthService {
             this.prismaService.$queryRaw`show max_connections` as Promise<{ max_connections: string }[]>,
             this.prismaService.$queryRaw`select count(1) from pg_stat_activity where state = 'active' and datname = ${process.env.POSTGRES_DB}` as Promise<{ count: BigInt }[]>,
             this.prismaService.$queryRaw`select count(1) from pg_stat_activity where state = 'idle' and datname = ${process.env.POSTGRES_DB}` as Promise<{ count: BigInt }[]>,
-            Promise.resolve(this.eventsGateway.getConnectedSocketCount()),
+            Promise.resolve(this.fieldService.getConnectedSessionCount()),
             this.prismaService.signature.count({
                 where: {
                     expirationDate: {
@@ -127,7 +128,7 @@ export class HealthService {
                 SELECT DISTINCT
                     date_trunc('hour', created_at)
                     + (FLOOR(EXTRACT(MINUTE FROM created_at) / 10) * INTERVAL '10 min') AS slot
-                FROM socket
+                FROM field_session_history
                 WHERE created_at >= NOW() - INTERVAL '24 hours'
             )
             SELECT
@@ -137,7 +138,7 @@ export class HealthService {
                                AND sk.disconnected_at IS NULL
                            THEN 1 END)::int AS active
             FROM slots sl
-            JOIN socket sk ON sk.created_at >= NOW() - INTERVAL '24 hours'
+            JOIN field_session_history sk ON sk.created_at >= NOW() - INTERVAL '24 hours'
             GROUP BY sl.slot
             HAVING COUNT(CASE WHEN sk.created_at >= sl.slot AND sk.created_at < sl.slot + INTERVAL '10 min' THEN 1 END) > 0
             ORDER BY sl.slot DESC
@@ -211,7 +212,7 @@ export class HealthService {
             this.prismaService.$queryRaw<{ slot: Date; started: number; active: number }[]>(Prisma.sql`
                 WITH slots AS (
                     SELECT DISTINCT ${slotNoAlias} AS slot
-                    FROM socket
+                    FROM field_session_history
                     WHERE ${whereCTE}
                 )
                 SELECT
@@ -219,7 +220,7 @@ export class HealthService {
                     COUNT(CASE WHEN sk.created_at >= sl.slot AND sk.created_at < sl.slot + ${intervalRaw} THEN 1 END)::int AS started,
                     COUNT(CASE WHEN sk.created_at < sl.slot + ${intervalRaw} AND sk.disconnected_at IS NULL THEN 1 END)::int AS active
                 FROM slots sl
-                JOIN socket sk ON ${whereJoin}
+                JOIN field_session_history sk ON ${whereJoin}
                 GROUP BY sl.slot
                 HAVING COUNT(CASE WHEN sk.created_at >= sl.slot AND sk.created_at < sl.slot + ${intervalRaw} THEN 1 END) > 0
                 ORDER BY sl.slot DESC
@@ -229,7 +230,7 @@ export class HealthService {
                     SELECT DISTINCT
                         ${slotWithAlias} AS slot,
                         s.tenant_id
-                    FROM socket s
+                    FROM field_session_history s
                     WHERE ${whereCTE_s}
                 )
                 SELECT
@@ -238,7 +239,7 @@ export class HealthService {
                     COUNT(CASE WHEN sk.created_at >= sl.slot AND sk.created_at < sl.slot + ${intervalRaw} THEN 1 END)::int AS started,
                     COUNT(CASE WHEN sk.created_at < sl.slot + ${intervalRaw} AND sk.disconnected_at IS NULL THEN 1 END)::int AS active
                 FROM slots sl
-                JOIN socket sk ON sk.tenant_id = sl.tenant_id AND ${whereJoin}
+                JOIN field_session_history sk ON sk.tenant_id = sl.tenant_id AND ${whereJoin}
                 JOIN multi_tenancy m ON m.id = sl.tenant_id
                 GROUP BY sl.slot, m.name
                 HAVING COUNT(CASE WHEN sk.created_at >= sl.slot AND sk.created_at < sl.slot + ${intervalRaw} THEN 1 END) > 0
@@ -272,7 +273,7 @@ export class HealthService {
                     date_trunc('hour', s.created_at)
                     + (FLOOR(EXTRACT(MINUTE FROM s.created_at) / 10) * INTERVAL '10 min') AS slot,
                     s.tenant_id
-                FROM socket s
+                FROM field_session_history s
                 WHERE s.created_at >= NOW() - INTERVAL '24 hours'
             )
             SELECT
@@ -283,7 +284,7 @@ export class HealthService {
                                AND sk.disconnected_at IS NULL
                            THEN 1 END)::int AS active
             FROM slots sl
-            JOIN socket sk ON sk.tenant_id = sl.tenant_id AND sk.created_at >= NOW() - INTERVAL '24 hours'
+            JOIN field_session_history sk ON sk.tenant_id = sl.tenant_id AND sk.created_at >= NOW() - INTERVAL '24 hours'
             JOIN multi_tenancy m ON m.id = sl.tenant_id
             GROUP BY sl.slot, m.name
             HAVING COUNT(CASE WHEN sk.created_at >= sl.slot AND sk.created_at < sl.slot + INTERVAL '10 min' THEN 1 END) > 0

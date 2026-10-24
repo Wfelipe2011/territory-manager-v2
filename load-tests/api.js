@@ -1,57 +1,33 @@
 import http from 'k6/http';
-import { check } from 'k6';
-import { config, makeHeaders } from './config.js';
+import { Rate, Trend, Counter } from 'k6/metrics';
+import { config, headers } from './config.js';
+export const errors = new Rate('unexpected_errors');
+export const initial = new Trend('snapshot_ms', true);
+export const marking = new Trend('mark_ms', true);
+export const propagation = new Trend('propagation_ms', true);
+export const probes = new Counter('propagation_samples');
+export const missed = new Counter('propagation_missing');
+export const api1 = new Counter('api_upstream_a');
+export const api2 = new Counter('api_upstream_b');
 
-// Obtém token JWT a partir da chave de assinatura UUID (rota pública)
-export function getSignature(signatureKey) {
-    const res = http.get(
-        `${config.API_URL}/v1/signature/${signatureKey}`,
-        { tags: { name: 'getSignature' } }
-    );
-    check(res, { 'getSignature status is 200': (r) => r.status === 200 });
-    return res.json();
+export function observe(res, kind) {
+  errors.add(res.status !== 200);
+  const host = res.headers['X-Load-Upstream'];
+  if (host) { (host===__ENV.API1_ADDRESS ? api1 : api2).add(1); }
+  if (kind === 'initial') initial.add(res.timings.duration);
+  if (kind === 'mark') marking.add(res.timings.duration);
+  return res;
 }
-
-// Lista blocos do território com o status de cada quadra
-export function getTerritoryBlocks(territoryId, round, token) {
-    const res = http.get(
-        `${config.API_URL}/v1/territories/${territoryId}?round=${round}`,
-        { headers: makeHeaders(token), tags: { name: 'getTerritoryBlocks' } }
-    );
-    check(res, { 'getTerritoryBlocks status is 200': (r) => r.status === 200 });
-    return res.json();
+export function pollUrl(block, identity, cursor) {
+  return `${config.API_URL}/v1/field/blocks/${block.blockId}/sync?clientId=load-client-${identity}&tabId=load-tab-id-${identity}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
 }
-
-// Lista endereços (ruas) de uma quadra  ← maior fluxo
-export function getAddresses(territoryId, blockId, round, token) {
-    const res = http.get(
-        `${config.API_URL}/v1/territories/${territoryId}/blocks/${blockId}?round=${round}`,
-        { headers: makeHeaders(token), tags: { name: 'getAddresses' } }
-    );
-    check(res, { 'getAddresses status is 200': (r) => r.status === 200 });
-    return res.json();
+export function params(block, name) { return { headers:headers(block), timeout:'35s', tags:{name}, responseType:'text' }; }
+export function snapshot(block, identity) {
+  const res=observe(http.get(pollUrl(block,identity),params(block,'snapshot')), 'initial');
+  if (res.status !== 200) return null;
+  try { return res.json(); } catch { errors.add(true); return null; }
 }
-
-// Lista casas de um endereço  ← maior fluxo
-export function getHouses(territoryId, blockId, addressId, round, token) {
-    const res = http.get(
-        `${config.API_URL}/v1/territories/${territoryId}/blocks/${blockId}/address/${addressId}?round=${round}`,
-        { headers: makeHeaders(token), tags: { name: 'getHouses' } }
-    );
-    check(res, { 'getHouses status is 200': (r) => r.status === 200 });
-    return res.json();
-}
-
-// Marca ou desmarca uma casa  ← maior fluxo (dispara update_house no WS)
-export function toggleHouse(territoryId, blockId, addressId, houseId, status, round, token) {
-    const payload = JSON.stringify({ status: status, round: round });
-    const res = http.patch(
-        `${config.API_URL}/v1/territories/${territoryId}/blocks/${blockId}/address/${addressId}/houses/${houseId}`,
-        payload,
-        { headers: makeHeaders(token), tags: { name: 'toggleHouse' } }
-    );
-    check(res, {
-        'toggleHouse status is 200 or 204': (r) => r.status === 200 || r.status === 204,
-    });
-    return res;
+export function mark(block, offset, status) {
+  const address=block.firstAddress+Math.floor(offset/50), house=block.firstHouse+offset;
+  return observe(http.patch(`${config.API_URL}/v1/territories/${block.territoryId}/blocks/${block.blockId}/address/${address}/houses/${house}`,JSON.stringify({round:8,status}),params(block,'mark')), 'mark');
 }

@@ -2,7 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { PrismaService } from '../src/infra/prisma/prisma.service';
 import { createTestApp } from './utils/app-helper';
-import { createTestToken } from './utils/auth-helper';
+import { createTestToken, createFieldTestToken } from './utils/auth-helper';
 import { Role } from '../src/enum/role.enum';
 import { cleanDatabase } from './utils/db-cleaner';
 
@@ -44,7 +44,10 @@ describe('Report Flow (e2e)', () => {
             data: { name: 'Street A', tenantId: tenant.id },
         });
 
-        const publisherToken = createTestToken({ tenantId: tenant.id, roles: [Role.PUBLICADOR] });
+        const link = await prisma.territory_block.create({ data: { tenantId: tenant.id, territoryId: territory.id, blockId: block.id } });
+        await prisma.territory_block_address.create({ data: { tenantId: tenant.id, territoryBlockId: link.id, addressId: address.id } });
+        await prisma.round_info.create({ data: { tenantId: tenant.id, roundNumber: 1, name: 'Rodada válida do link', theme: 'default', typeIds: [type.id] } });
+        const publisherToken = await createFieldTestToken(prisma, { tenantId: tenant.id, territoryId: territory.id, blockId: block.id, roles: [Role.PUBLICADOR] });
         const adminToken = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
 
         // 1. Create a report (suggest adding a house)

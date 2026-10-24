@@ -5,7 +5,6 @@ import { PrismaService } from '../src/infra/prisma/prisma.service';
 import { cleanDatabase } from './utils/db-cleaner';
 import { createTestToken } from './utils/auth-helper';
 import { Role } from '../src/enum/role.enum';
-import { EventsGateway } from '../src/modules/gateway/event.gateway';
 
 /**
  * REGRAS definidas para o POST /v1/houses (criar casa):
@@ -13,10 +12,9 @@ import { EventsGateway } from '../src/modules/gateway/event.gateway';
  * 2. Refresco: após o POST, a listagem (GET) reflete a casa nova imediatamente
  *    (caches invalidados e/ou não utilizados para essa listagem).
  * 3. Ghost: criar casa real no endereço de um ghost remove o ghost (house+rounds).
- * 4. Evento: o POST emite update_house no room
- *    `${territoryId}-${blockId}-${addressId}-${round}` (padrão do update).
+ * 4. Sincronização: o POST incrementa a revisão HTTP da quadra.
  */
-describe('House create (e2e) — duplicidade, refresh, ghost e evento', () => {
+describe('House create (e2e) — duplicidade, refresh, ghost e revisão HTTP', () => {
   let app: INestApplication;
   let prisma: PrismaService;
 
@@ -146,15 +144,16 @@ describe('House create (e2e) — duplicidade, refresh, ghost e evento', () => {
     expect(roundsGhost.length).toBe(0);
   });
 
-  it('POST deve emitir evento update_house no room da rodada aberta', async () => {
+  it('POST deve incrementar a revisão HTTP da quadra na rodada aberta', async () => {
     const { tenant, type, territory, block, address, tba, token } = await criarEstrutura('Evento');
     await criarRodadaAberta(tenant.id, { territoryId: territory.id, blockId: block.id, addressId: address.id, tbaId: tba.id });
 
-    const gateway = app.get(EventsGateway) as unknown as { emitRoom: jest.Mock };
+    const before = await prisma.$queryRaw<{ revision: bigint }[]>`SELECT revision FROM field_revision WHERE tenant_id = ${tenant.id} AND territory_id = ${territory.id} AND round_number = 1 AND block_id = ${block.id}`;
 
     const post = await postCasa(token, block.id, address.id, territory.id, '12');
     expect(post.status).toBe(201);
 
-    expect(gateway.emitRoom).toHaveBeenCalledWith(`${territory.id}-${block.id}-${address.id}-1`, expect.objectContaining({ type: 'update_house' }));
+    const after = await prisma.$queryRaw<{ revision: bigint }[]>`SELECT revision FROM field_revision WHERE tenant_id = ${tenant.id} AND territory_id = ${territory.id} AND round_number = 1 AND block_id = ${block.id}`;
+    expect(after[0].revision > before[0].revision).toBe(true);
   });
 });

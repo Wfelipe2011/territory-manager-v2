@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
@@ -152,6 +153,7 @@ describe('Signature Flow (e2e)', () => {
                     tenantId: tenant.id,
                 },
             });
+            await prisma.round_info.create({ data: { roundNumber: 1, name: 'Rodada válida', tenantId: tenant.id, theme: 'default' } });
             adminToken = createTestToken({ tenantId: tenant.id, roles: [Role.ADMIN] });
         });
 
@@ -283,24 +285,24 @@ describe('Signature Flow (e2e)', () => {
 
         it('should return 404 if round info is not found in findTokenById', async () => {
             // Create a signature manually with a round that doesn't exist in round_info
-            const uniqueId = 'test-key-no-round';
-            const token = createTestToken({ round: 999, tenantId: tenant.id });
+            const uniqueId = randomUUID();
+            const token = createTestToken({ id: uniqueId, round: 999, tenantId: tenant.id, territoryId: territory.id, blockId: block.id, roles: [Role.PUBLICADOR] });
             await prisma.signature.create({
-                data: { key: uniqueId, token, tenantId: tenant.id },
+                data: { key: uniqueId, token, tenantId: tenant.id, expirationDate: new Date(Date.now() + 60000) },
             });
 
             const response = await request(app.getHttpServer())
                 .get(`/v1/signature/${uniqueId}`);
 
             expect(response.status).toBe(404);
-            expect(response.body.message).toBe('Round não encontrado');
+            expect(response.body.message).toBe('Rodada não encontrada');
         });
 
         it('should return 404 if signature is not found in findTokenById', async () => {
             const response = await request(app.getHttpServer())
                 .get('/v1/signature/non-existent');
             expect(response.status).toBe(404);
-            expect(response.body.message).toBe('Assinatura não encontrada');
+            expect(response.body.message).toBe('Link inválido ou expirado');
         });
 
         it('should return 404 if territory block is not found in generateTerritoryBlock', async () => {

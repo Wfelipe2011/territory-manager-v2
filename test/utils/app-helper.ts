@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, VersioningType } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
 import { FirebaseService } from '../../src/infra/firebase.service';
-import { EventsGateway } from '../../src/modules/gateway/event.gateway';
 import cookieParser from 'cookie-parser';
 
 export async function createTestApp(): Promise<INestApplication> {
@@ -17,11 +16,6 @@ export async function createTestApp(): Promise<INestApplication> {
                 log: jest.fn(),
                 error: jest.fn(),
             },
-        })
-        .overrideProvider(EventsGateway)
-        .useValue({
-            emitRoom: jest.fn(),
-            getConnectedSocketCount: jest.fn().mockReturnValue(0),
         })
         .compile();
 
