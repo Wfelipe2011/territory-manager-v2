@@ -39,7 +39,7 @@ export class FieldController {
     req.once('aborted', cancel);
     res.once('close', cancel);
     try {
-      return await this.field.poll(req.user, query, abort.signal, fullBlock);
+      return await this.field.poll(req.user, query, abort.signal, fullBlock, req);
     } finally {
       req.off('aborted', cancel);
       res.off('close', cancel);

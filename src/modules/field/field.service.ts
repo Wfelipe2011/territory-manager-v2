@@ -1,7 +1,8 @@
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import * as jwt from 'jsonwebtoken';
 import { Prisma } from '@prisma/client';
+import { Request } from 'express';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { Role } from 'src/enum/role.enum';
 import { pairSuggestion } from './pair-suggestion';
@@ -22,6 +23,8 @@ type Scope = {
 
 @Injectable()
 export class FieldService {
+  private readonly diagnostics = process.env.FIELD_PERF_DIAGNOSTICS === '1';
+  private readonly logger = new Logger(FieldService.name);
   private readonly checkInterval = Math.max(100, Math.min(25000, Number(process.env.FIELD_POLL_CHECK_MS) || 2000));
   private readonly revisions = new Map<string, { expires: number; value: Promise<string> }>();
   constructor(
@@ -29,7 +32,7 @@ export class FieldService {
     private readonly access: FieldAccessService,
     private readonly rounds: CatalogRoundService
   ) {}
-  private async scope(user: FieldPrincipal, query: FieldQuery, fullBlock: boolean): Promise<Scope> {
+  private async scope(user: FieldPrincipal, query: FieldQuery, fullBlock: boolean, request?: Request): Promise<Scope> {
     const scope = query.scope ?? (user.roles.includes(Role.PUBLICADOR) ? 'block' : 'territory');
     if (!['territory', 'block', 'street'].includes(scope)) throw new BadRequestException('Escopo inválido');
     if (scope === 'territory' && user.roles.includes(Role.PUBLICADOR)) throw new ForbiddenException('Território não permitido');
@@ -37,11 +40,11 @@ export class FieldService {
       addressId = query.addressId === undefined ? undefined : Number(query.addressId);
     if (scope !== 'territory' && (!blockId || !Number.isSafeInteger(blockId) || blockId < 1)) throw new BadRequestException('Quadra inválida');
     if (scope === 'street' && (!addressId || !Number.isSafeInteger(addressId) || addressId < 1)) throw new BadRequestException('Rua inválida');
-    await this.access.scope(user, { blockId, addressId });
+    await this.access.scopeInRequest(user, { blockId, addressId }, request);
     const [info, setting, signature] = await Promise.all([
       this.rounds.resolve(user.tenantId, user.territoryId, user.round),
       this.prisma.parameter.findUnique({ where: { tenantId_key: { tenantId: user.tenantId, key: 'SIGNATURE_EXPIRATION_HOURS' } } }),
-      this.access.validate(user),
+      this.access.validatedRequest(user, request) ?? this.access.validate(user),
     ]);
     return {
       scope: scope as Scope['scope'],
@@ -64,11 +67,11 @@ export class FieldService {
   private currentRevision(user: FieldPrincipal, scope: Scope) {
     const key = `${user.tenantId}:${user.territoryId}:${scope.round ?? 0}:${scope.blockId ?? 0}:${scope.hours}:${scope.canEditStructure}`;
     const cached = this.revisions.get(key);
-    if (cached && cached.expires > Date.now()) return cached.value;
-    const value = this.revision(user, scope);
-    this.revisions.set(key, { value, expires: Date.now() + 1900 });
-    value.catch(() => this.revisions.delete(key));
-    return value;
+    if (cached && cached.expires > Date.now()) return { key, entry: cached };
+    const entry = { value: this.revision(user, scope), expires: Date.now() + Math.min(1900, this.checkInterval) };
+    this.revisions.set(key, entry);
+    entry.value.catch(() => { if (this.revisions.get(key) === entry) this.revisions.delete(key); });
+    return { key, entry };
   }
   private identity(query: FieldQuery) {
     const valid = (v?: string) => typeof v === 'string' && /^[a-zA-Z0-9-]{16,64}$/.test(v);
@@ -119,43 +122,61 @@ export class FieldService {
       streets: Object.fromEntries(Object.entries(streets).map(([k, s]) => [k, s.size])),
     };
   }
-  async poll(user: FieldPrincipal, query: FieldQuery, signal: AbortSignal, fullBlock = false) {
-    const scope = await this.scope(user, query, fullBlock);
-    await this.heartbeat(user, query, scope);
-    const deadline = Date.now() + 25000;
-    while (!signal.aborted) {
-      const signature = await this.access.validate(user);
-      scope.canEditStructure = user.roles.includes(Role.DIRIGENTE) && signature.canEditStructure;
-      const revision = await this.currentRevision(user, scope);
-      if (query.cursor === undefined || query.cursor !== revision) {
-        const snapshot = await this.prisma.$transaction(
-          async tx => {
-            const info = await this.rounds.resolve(user.tenantId, user.territoryId, user.round, tx);
-            const setting = await tx.parameter.findUnique({ where: { tenantId_key: { tenantId: user.tenantId, key: 'SIGNATURE_EXPIRATION_HOURS' } } });
-            scope.round = info?.roundNumber ?? null;
-            scope.hours = unmarkHours(setting?.value ?? null);
-            return { cursor: await this.revision(user, scope, tx), data: await this.snapshot(tx, user, scope, info) };
-          },
-          { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead }
-        );
-        await this.access.validate(user);
-        return { ...snapshot, changed: true, presence: await this.presence(user, scope) };
+  async poll(user: FieldPrincipal, query: FieldQuery, signal: AbortSignal, fullBlock = false, request?: Request) {
+    const started = performance.now();
+    const timing = { event: 'field_sync', preparationMs: 0, snapshotMs: 0, waitMs: 0, revisionChecks: 0, outcome: 'error' };
+    try {
+      const scope = await this.scope(user, query, fullBlock, request);
+      await this.heartbeat(user, query, scope);
+      timing.preparationMs = performance.now() - started;
+      const deadline = Date.now() + 25000;
+      while (!signal.aborted) {
+        const signature = await this.access.validate(user);
+        scope.canEditStructure = user.roles.includes(Role.DIRIGENTE) && signature.canEditStructure;
+        const { key, entry } = this.currentRevision(user, scope);
+        const revision = await entry.value;
+        timing.revisionChecks++;
+        if (query.cursor === undefined || query.cursor !== revision) {
+          const snapshotStarted = performance.now();
+          const snapshot = await this.prisma.$transaction(
+            async tx => {
+              const info = await this.rounds.resolve(user.tenantId, user.territoryId, user.round, tx);
+              const setting = await tx.parameter.findUnique({ where: { tenantId_key: { tenantId: user.tenantId, key: 'SIGNATURE_EXPIRATION_HOURS' } } });
+              scope.round = info?.roundNumber ?? null;
+              scope.hours = unmarkHours(setting?.value ?? null);
+              return { cursor: await this.revision(user, scope, tx), data: await this.snapshot(tx, user, scope, info) };
+            },
+            { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead }
+          );
+          timing.snapshotMs = performance.now() - snapshotStarted;
+          // A newer transactional snapshot must not be followed by the old cached revision.
+          if (snapshot.cursor !== revision && this.revisions.get(key) === entry) this.revisions.delete(key);
+          await this.access.validate(user);
+          const presence = await this.presence(user, scope);
+          timing.outcome = 'changed';
+          return { ...snapshot, changed: true, presence };
+        }
+        if (Date.now() >= deadline) {
+          timing.outcome = 'timeout';
+          return { cursor: revision, changed: false, presence: await this.presence(user, scope) };
+        }
+        const waitStarted = performance.now();
+        await new Promise<void>(resolve => {
+          const done = () => { clearTimeout(timer); signal.removeEventListener('abort', done); resolve(); };
+          const timer = setTimeout(done, Math.min(this.checkInterval, deadline - Date.now()));
+          signal.addEventListener('abort', done, { once: true });
+          if (signal.aborted) done();
+        });
+        timing.waitMs += performance.now() - waitStarted;
       }
-      if (Date.now() >= deadline) return { cursor: revision, changed: false, presence: await this.presence(user, scope) };
-      await new Promise<void>(resolve => {
-        const done = () => {
-          clearTimeout(timer);
-          signal.removeEventListener('abort', done);
-          resolve();
-        };
-        const timer = setTimeout(done, Math.min(this.checkInterval, deadline - Date.now()));
-        signal.addEventListener('abort', done, { once: true });
-        if (signal.aborted) done();
-      });
+      timing.outcome = 'aborted';
+      return undefined;
+    } finally {
+      if (this.diagnostics) this.logger.warn(JSON.stringify({ ...timing, elapsedMs: performance.now() - started }));
     }
-    return undefined;
   }
   private async snapshot(tx: Prisma.TransactionClient, user: FieldPrincipal, scope: Scope, info: Awaited<ReturnType<CatalogRoundService['resolve']>>) {
+    const snapshotStarted = performance.now();
     const [territory, tenancy, links, requests] = await Promise.all([
       tx.territory.findFirstOrThrow({ where: { id: user.territoryId, tenantId: user.tenantId }, select: { id: true, name: true, imageUrl: true } }),
       tx.multitenancy.findUniqueOrThrow({ where: { id: user.tenantId }, select: { name: true, city: true, state: true, phone: true } }),
@@ -178,6 +199,7 @@ export class FieldService {
         select: { id: true, entity: true, action: true, targetId: true },
       }),
     ]);
+    const metadataFinished = performance.now();
     const houses = await tx.house.findMany({
       where: {
         tenantId: user.tenantId,
@@ -202,6 +224,7 @@ export class FieldService {
         rounds: { where: { roundNumber: scope.round ?? -1 }, take: 1, select: { completed: true, completedDate: true, endDate: true, leaveLetter: true } },
       },
     });
+    const housesFinished = performance.now();
     const pending = new Map(requests.map(r => [`${r.entity}:${r.targetId}`, { id: r.id, action: r.action }]));
     const mapped = houses
       .map(h => {
@@ -249,6 +272,7 @@ export class FieldService {
           a.number.localeCompare(b.number, 'pt-BR', { numeric: true }) ||
           a.id - b.id
       );
+    const mappedFinished = performance.now();
     const blocks = links.map(link => {
       const rows = mapped.filter(h => h.blockId === link.blockId),
         work = rows.filter(h => h.hasRound),
@@ -322,6 +346,7 @@ export class FieldService {
       capabilities: { canEditStructure: scope.canEditStructure, canReportHouses: true },
       block: blocks.find(b => b.id === scope.blockId) ?? null,
     };
+    if (this.diagnostics) this.logger.warn(JSON.stringify({ event: 'field_snapshot', metadataMs: metadataFinished - snapshotStarted, housesMs: housesFinished - metadataFinished, mappingMs: mappedFinished - housesFinished, assemblyMs: performance.now() - mappedFinished, houses: houses.length, blocks: links.length }));
     if (scope.fullBlock) return { ...context, streets: streets.map(({ numbers, ...street }) => street) };
     return {
       ...context,

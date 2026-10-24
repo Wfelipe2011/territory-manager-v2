@@ -4,6 +4,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { Role } from 'src/enum/role.enum';
 import { Request } from 'express';
+import { signature as Signature } from '@prisma/client';
 import { CatalogRoundService } from '../round/catalog-round.service';
 
 export type FieldPrincipal = {
@@ -19,6 +20,24 @@ export type FieldPrincipal = {
 
 @Injectable()
 export class FieldAccessService {
+  private readonly contexts = new WeakMap<Request, { user: FieldPrincipal; signature: Signature; scopes: Set<string> }>();
+
+  validatedRequest(user: FieldPrincipal, request?: Request) {
+    const context = request && this.contexts.get(request);
+    return context?.user === user ? context.signature : undefined;
+  }
+
+  async scopeInRequest(user: FieldPrincipal, input: Parameters<FieldAccessService['scope']>[1], request?: Request) {
+    const fields = ['territoryId', 'blockId', 'addressId', 'houseId', 'round', 'territoryBlockAddressId'] as const;
+    const targets = fields.filter(key => input?.[key] !== undefined);
+    if (!targets.length) return;
+    const key = targets.map(field => `${field}:${Number(input[field])}`).join('|');
+    const context = request && this.contexts.get(request);
+    if (context?.user === user && context.scopes.has(key)) return;
+    await this.scope(user, input);
+    if (context?.user === user) context.scopes.add(key);
+  }
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly rounds: CatalogRoundService
@@ -130,10 +149,11 @@ export class FieldAccessService {
   }
 
   async request(user: FieldPrincipal, req: Request) {
-    await this.validate(user);
+    const signature = await this.validate(user);
+    this.contexts.set(req, { user, signature, scopes: new Set() });
     const body = req.body ?? {};
     // Check BOTH sources, rather than letting body/query overwrite path constraints.
-    for (const input of [req.params, req.query, body]) await this.scope(user, input);
-    if (req.path.startsWith('/v1/reports') && body.id !== undefined) await this.scope(user, { ...body, houseId: body.id });
+    for (const input of [req.params, req.query, body]) await this.scopeInRequest(user, input, req);
+    if (req.path.startsWith('/v1/reports') && body.id !== undefined) await this.scopeInRequest(user, { ...body, houseId: body.id }, req);
   }
 }
