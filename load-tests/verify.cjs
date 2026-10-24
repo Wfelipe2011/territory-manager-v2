@@ -1,6 +1,6 @@
 const fs=require('fs');
-const fixture=JSON.parse(fs.readFileSync('/load/.runtime/fixture.json'));
-if(fixture.name!=='territory-load-v1')throw Error('Fixture inválida');
+const fixture=JSON.parse(fs.readFileSync(process.env.DATABASE_URL?.includes('/territory_manager_peak_load')?'/load/.runtime/fixture-peak.json':'/load/.runtime/fixture.json'));
+if(!['territory-load-v1','territory-load-peak-v1'].includes(fixture.name))throw Error('Fixture inválida');
 const b=fixture.blocks[0];
 const identity='load-verification000000000';
 const headers={'Content-Type':'application/json',Authorization:`Bearer ${b.token}`};
