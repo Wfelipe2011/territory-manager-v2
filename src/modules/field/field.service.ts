@@ -23,6 +23,7 @@ type Scope = {
 
 @Injectable()
 export class FieldService {
+  private readonly numericCollator = new Intl.Collator('pt-BR', { numeric: true });
   private readonly diagnostics = process.env.FIELD_PERF_DIAGNOSTICS === '1';
   private readonly logger = new Logger(FieldService.name);
   private readonly checkInterval = Math.max(100, Math.min(25000, Number(process.env.FIELD_POLL_CHECK_MS) || 2000));
@@ -269,7 +270,7 @@ export class FieldService {
       .sort(
         (a, b) =>
           (a.order ?? Number.MAX_SAFE_INTEGER) - (b.order ?? Number.MAX_SAFE_INTEGER) ||
-          a.number.localeCompare(b.number, 'pt-BR', { numeric: true }) ||
+          this.numericCollator.compare(a.number, b.number) ||
           a.id - b.id
       );
     const mappedFinished = performance.now();
@@ -323,7 +324,7 @@ export class FieldService {
         const rows = byAddress.get(street.id) ?? [],
           work = rows.filter(h => h.hasRound),
           completed = work.filter(h => h.status).length,
-          numbers = rows.map(h => h.number).sort((a, b) => a.localeCompare(b, 'pt-BR', { numeric: true }));
+          numbers = rows.map(h => h.number).sort((a, b) => this.numericCollator.compare(a, b));
         return {
           ...street,
           completed,

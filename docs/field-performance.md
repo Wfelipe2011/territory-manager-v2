@@ -28,3 +28,12 @@ entregar o snapshot; não existe cache de autorização entre requisições.
 espera, verificações, duração total e resultado. Não contém IDs de casas, tokens
 ou endereços. Fica desabilitado nos ensaios de capacidade para evitar custo de log.
 Espera HTTP permanece 25s, presença 60s e padrão FIELD_POLL_CHECK_MS=2000.
+
+## Ordenação numérica
+
+O comparador `Intl.Collator('pt-BR', { numeric: true })` é reutilizado pelo serviço
+para ordenar números de casas e faixas da rua. Preserva ordem manual, desempate
+por ID, zeros à esquerda e complementos alfanuméricos. Não guarda dados de casas.
+O microbenchmark do mesmo container comparou três séries de vinte ordenações de
+150 números: localeCompare com opções 6,54–8,11ms, comparador reutilizado
+0,081–0,105ms, com saída idêntica. Isso é uma medição do trecho, não do endpoint.

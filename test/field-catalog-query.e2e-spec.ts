@@ -45,4 +45,12 @@ describe('Catálogo da quadra com consulta restrita ao escopo', () => {
     await ctx.prisma.house.create({ data: { ...common, number: '101', addressId: address.id, territoryBlockAddressId: rejected.id } });
     expect(rows(await read().expect(200)).map(house => house.id)).toEqual([ctx.house.id]);
   });
+  it('preserva ordem manual, desempate de zeros e faixas numéricas da rua', async () => {
+    for (const number of ['10', '2A', '2', '02', '1', '2-1', '3/1'])
+      await ctx.prisma.house.create({ data: { number, order: number === '10' ? 0 : null, tenantId: ctx.tenant.id, territoryId: ctx.territory.id, blockId: ctx.block.id, addressId: ctx.address.id } });
+    const response = await read().expect(200);
+    expect(rows(response).map(house => house.number)).toEqual(['10', '1', '2', '02', '2-1', '2A', '3/1', '12']);
+    expect(response.body.data.streets[0]).toMatchObject({ firstNumber: '1', lastNumber: '12' });
+  });
+
 });
