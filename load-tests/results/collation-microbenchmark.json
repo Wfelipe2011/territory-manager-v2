@@ -1,0 +1,34 @@
+{
+  "items": 150,
+  "iterations_per_run": 20,
+  "api_image": "sha256:aa97a02d5f2bdcad9aeca49f654185c1c69e5a60d58d0c221a2cba180144a4be",
+  "cpu": 1,
+  "memory_mib": 512,
+  "synthetic_input": "id=i,number=String(i%50+1),i=0..149",
+  "runs": [
+    {
+      "run": 1,
+      "ms_per_sort": {
+        "localeCompare": 8.1112323,
+        "sharedCollator": 0.1048153
+      },
+      "identical": true
+    },
+    {
+      "run": 2,
+      "ms_per_sort": {
+        "localeCompare": 6.8168722,
+        "sharedCollator": 0.0967451
+      },
+      "identical": true
+    },
+    {
+      "run": 3,
+      "ms_per_sort": {
+        "localeCompare": 6.53733675,
+        "sharedCollator": 0.08139035
+      },
+      "identical": true
+    }
+  ]
+}
