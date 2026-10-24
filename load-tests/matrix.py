@@ -134,7 +134,7 @@ def trial(label, seconds, profile, users, duration, kind='step', workload='mixed
     queries=json.loads(db("SELECT coalesce(json_agg(q),'[]'::json) FROM (SELECT query,calls,total_exec_time,mean_exec_time,rows,shared_blks_hit,shared_blks_read FROM pg_stat_statements ORDER BY total_exec_time DESC LIMIT 20) q"))
     data={'harness_version':2,'id':trial_id,'label':label,'interval_seconds':seconds,'profile':profile,'logical_users':users,'duration_seconds':duration,
       'kind':kind,'workload':workload,'wall_seconds':round(time.time()-started,2),'exit_code':code,
-      'passed':code==0 and threshold_ok and infrastructure_ok and generator_ok and not generator_bound and (workload=='idle' or (delivery['samples']>0 and not delivery['missing_sequences'])),'generator_valid':generator_ok and not generator_bound,'generator_bound':generator_bound,'infrastructure_valid':infrastructure_ok,
+      'passed':code==0 and threshold_ok and infrastructure_ok and generator_ok and not generator_bound and (workload=='idle' or (delivery['acknowledged_writes']==(users//10)*4 and delivery['samples']>0 and not delivery['missing_sequences'])),'generator_valid':generator_ok and not generator_bound,'generator_bound':generator_bound,'infrastructure_valid':infrastructure_ok,
       'snapshot_p95_ms':metric(summary,'snapshot_ms','p(95)'), 'mark_p95_ms':metric(summary,'mark_ms','p(95)'),
       'propagation_p95_ms':delivery['p95_ms'], 'propagation_samples':delivery['samples'],'delivery':delivery,
       'changed_poll_p95_ms':metric(summary,'changed_poll_ms','p(95)'), 'unchanged_poll_p95_ms':metric(summary,'unchanged_poll_ms','p(95)'),

@@ -34,7 +34,9 @@ export function observeScreen(){
   catch{errors.add(true);cursor=undefined;sleep(1);}
 }
 export function writeHouse(){
-  const i=exec.scenario.iterationInTest, owner=i%active, block=blockFor(owner*10);
+  const i=exec.scenario.iterationInTest;
+  if(i>=active*4)return; // Exclude k6 arrival exactly at the 120s boundary.
+  const owner=i%active, block=blockFor(owner*10);
   const offset=config.PROFILE==='hotspot'?i%150:Math.floor(i/active)%150;
   const status=config.PROFILE==='hotspot'?Math.floor(i/150)%2===0:Math.floor(i/(active*150))%2===0;
   const started=Date.now(),response=mark(block,offset,status);
