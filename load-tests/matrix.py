@@ -89,13 +89,15 @@ def propagation(log_path):
     seen=[e for e in events if e['event']=='seen']
     for e in events:
         if e['event']=='initial':seen.extend({'house':h,'status':status,'at':e['at'],'observer':e['observer']} for h,status in e['states'])
-    latencies=[];missing=[]
+    latencies=[];observer_latencies=[];missing=[]
     for i,w in enumerate(writes):
         following=next((n['started'] for n in writes[i+1:] if n['house']==w['house']),float('inf'))
         matches=[e for e in seen if e['house']==w['house'] and e['status']==w['status'] and e['observer']!=w['owner'] and w['started']<=e['at']<following]
-        if matches:latencies.append(max(0,min(e['at'] for e in matches)-w['at']))
+        if matches:
+            latencies.append(max(0,min(e['at'] for e in matches)-w['at']))
+            for observer in {e['observer'] for e in matches}:observer_latencies.append(max(0,min(e['at'] for e in matches if e['observer']==observer)-w['at']))
         else:missing.append(w['sequence'])
-    return {'p95_ms':percentile(latencies),'samples':len(latencies),'acknowledged_writes':len(writes),'missing_sequences':missing,'latencies_ms':latencies}
+    return {'p95_ms':percentile(latencies),'samples':len(latencies),'acknowledged_writes':len(writes),'missing_sequences':missing,'latencies_ms':latencies,'observer_p95_ms':percentile(observer_latencies),'observer_samples':len(observer_latencies),'observer_latencies_ms':observer_latencies}
 
 def warmup(profile):
     fixture=json.loads((RUNTIME/('fixture-peak.json' if ENV.get('LOAD_DATABASE')=='territory_manager_peak_load' else 'fixture.json')).read_text())['blocks'][0]

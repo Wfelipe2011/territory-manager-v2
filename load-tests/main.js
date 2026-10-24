@@ -15,7 +15,7 @@ export const options={discardResponseBodies:true,systemTags:['status','method','
     ...(!idle?{writers:{executor:'constant-arrival-rate',rate:active,timeUnit:'30s',startTime:`${config.PREP_SECONDS}s`,duration:config.DURATION,preAllocatedVUs:Math.max(2,Math.ceil(active/5)),maxVUs:Math.max(4,active),exec:'writeHouse',gracefulStop:'35s'}}:{})},
   thresholds:{...(!config.STAGED?{snapshot_ms:['p(95)<=1000']}:{initial_ready:[`count>=${users}`]}),initial_snapshots:[`count>=${users}`],...(!idle?{mark_ms:['p(95)<=500']} : {}),unexpected_errors:['rate<0.01'],...(config.STAGED?{measurement_errors:['rate<0.01']}:{}),dropped_iterations:['count==0']},
   summaryTrendStats:['avg','min','med','max','p(90)','p(95)','p(99)']};
-let cursor,previous,started=false;
+let cursor,previous,started=false,initialCounted=false;
 const logical=(Math.max(1,__VU)-1)%users, cohort=Math.floor(logical/10), nonce=String(__VU).padStart(12,'0');
 const sampled=sampledReader(logical);
 function remember(state,initial){
@@ -30,7 +30,7 @@ function remember(state,initial){
 export function observeScreen(){
   if(!started){started=true;if(logical===0)console.log('FIELD_EVENT '+JSON.stringify({event:'window',at:exec.scenario.startTime+config.PREP_SECONDS*1000}));if(config.STAGED)sleep(logical/users*30);}
   const block=blockFor(logical);
-  if(!cursor){const state=snapshot(block,nonce);cursor=state?.cursor;if(state){initialCount.add(1);if(config.STAGED && exec.instance.currentTestRunDuration<config.PREP_SECONDS*1000)readyCount.add(1);remember(state,true);}else sleep(1);return;}
+  if(!cursor){const state=snapshot(block,nonce);cursor=state?.cursor;if(state){if(!initialCounted){initialCounted=true;initialCount.add(1);if(config.STAGED && exec.instance.currentTestRunDuration<config.PREP_SECONDS*1000)readyCount.add(1);}remember(state,true);}else sleep(1);return;}
   const res=observe(http.get(pollUrl(block,nonce,cursor),params(block,'poll')));
   if(res.status!==200){cursor=undefined;sleep(1);return;}
   try{const state=res.json();cursor=state.cursor;if(state.changed){changedCount.add(1);changedTime.add(res.timings.duration);remember(state,false);}else{unchangedCount.add(1);unchangedTime.add(res.timings.duration);}}
