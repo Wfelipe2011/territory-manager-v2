@@ -185,7 +185,7 @@ export class FieldService {
         blockId: { in: links.map(l => l.blockId) },
         registrationStatus: { not: 'rejected' },
         number: { not: 'ghost' },
-        OR: [{ territoryBlockAddressId: null }, { territoryBlockAddress: { registrationStatus: { not: 'rejected' } } }],
+        OR: [{ territoryBlockAddressId: null }, { territoryBlockAddressId: { in: links.flatMap(link => link.territory_block_address.map(mapping => mapping.id)) } }],
       },
       select: {
         id: true,
