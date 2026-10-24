@@ -53,6 +53,7 @@ def prepare():
     peak=ENV.get('LOAD_DATABASE')=='territory_manager_peak_load'
     if not (RUNTIME/('fixture-peak.json' if peak else 'fixture.json')).exists():
         compose('run','--rm','-T','--user',f'{os.getuid()}:{os.getgid()}', '-v',f'{RUNTIME}:/output','--entrypoint','node','api1','/load/seed-peak.cjs' if peak else '/load/seed.cjs')
+    if peak:compose('run','--rm','-T','--entrypoint','node','api1','/load/normalize-peak.cjs')
     counts=json.loads(db("SELECT json_build_object('houses',(SELECT count(*) FROM house),'rounds',(SELECT count(*) FROM round),'tenants',(SELECT count(*) FROM multi_tenancy))"))
     if counts!={'houses':60000,'rounds':480000,'tenants':12 if peak else 10}:raise RuntimeError(f'Unexpected synthetic database: {counts}')
     db('ANALYZE house; ANALYZE round; ANALYZE territory_block; ANALYZE territory_block_address;')
