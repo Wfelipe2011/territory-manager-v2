@@ -37,7 +37,7 @@ def wait_http():
 
 def interval(seconds):
     ENV['FIELD_POLL_CHECK_MS']=str(seconds*1000)
-    compose('up','-d','--no-build','api1','api2','admin','proxy', stdout=subprocess.DEVNULL)
+    compose('up','-d','--no-build','--pull','never','api1','api2','admin','proxy', stdout=subprocess.DEVNULL)
     # Recreated API addresses require a fresh proxy DNS resolution.
     compose('restart','proxy', stdout=subprocess.DEVNULL)
     wait_http()
@@ -126,7 +126,7 @@ def main():
     parser.add_argument('--stable-seconds',type=int,default=600)
     parser.add_argument('--repetitions',type=int,default=3)
     args=parser.parse_args();os.chdir(ROOT)
-    ENV['LOAD_VARIANT']=args.label
+    ENV['LOAD_VARIANT']=os.getenv('LOAD_VARIANT', 'baseline' if args.command=='smoke' else args.label)
     RUNTIME.mkdir(mode=0o700,exist_ok=True);RESULTS.mkdir(exist_ok=True)
     if args.command=='down':compose('down');return
     if args.command=='prepare':prepare();return

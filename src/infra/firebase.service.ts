@@ -12,6 +12,10 @@ export class FirebaseService implements OnModuleInit {
     await this.prisma.connectToDatabase()
     this.logger.log('Conectado ao banco de dados');
     const firebase = await this.prisma.firebase.findFirst()
+    if (!firebase?.config) {
+      this.logger.warn('Firebase não configurado; uploads indisponíveis neste ambiente');
+      return;
+    }
     admin.initializeApp({
       credential: admin.credential.cert(firebase?.config as any),
       storageBucket: 'territorio-digital.appspot.com',

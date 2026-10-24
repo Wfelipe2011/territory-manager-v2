@@ -19,8 +19,8 @@ python3 load-tests/matrix.py smoke
 A preparação aplica migrations e gera **10 congregações, 50 territórios, 400
 quadras, 1.200 ruas, 60.000 casas e 480.000 participações**. É sintético e
 reproduzível; não lê dumps. Assinaturas temporárias ficam em `.runtime/fixture.json`
-(ignorado pelo Git). A preparação recusa banco diferente ou um seed parcial;
-para refazer exclusivamente esta base descartável:
+(ignorado pelo Git). A preparação recusa banco diferente e dados desconhecidos; um seed próprio parcial pode ser retomado.
+Para refazer exclusivamente esta base descartável:
 
 ```sh
 docker compose -f load-tests/compose.yml down -v
