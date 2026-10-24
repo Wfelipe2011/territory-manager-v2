@@ -200,7 +200,9 @@ def main():
             print(json.dumps({'interval':seconds,'profile':profile,'confirmed_users':last,'generator_limited':generator_limited,'upper_failure':first_failed}),flush=True)
     rows=[]
     for path in (RESULTS/args.label).glob('*.json'):
-        data=json.loads(path.read_text());rows.append({k:data[k] for k in ['id','interval_seconds','profile','logical_users','duration_seconds','passed','generator_valid','snapshot_p95_ms','mark_p95_ms','propagation_p95_ms','error_rate','active_users']})
+        data=json.loads(path.read_text())
+        if data.get('harness_version')!=2:continue
+        rows.append({k:data[k] for k in ['id','interval_seconds','profile','logical_users','duration_seconds','passed','generator_valid','snapshot_p95_ms','mark_p95_ms','propagation_p95_ms','error_rate','active_users']})
     if rows:
         with (RESULTS/args.label/'summary.csv').open('w') as file:
             writer=csv.DictWriter(file,fieldnames=list(rows[0]));writer.writeheader();writer.writerows(rows)
