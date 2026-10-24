@@ -14,7 +14,7 @@ export const options={discardResponseBodies:true,systemTags:['status','method','
   thresholds:{snapshot_ms:['p(95)<=1000'],initial_snapshots:[`count>=${users}`],...(!idle?{mark_ms:['p(95)<=500']} : {}),unexpected_errors:['rate<0.01'],dropped_iterations:['count==0']},
   summaryTrendStats:['avg','min','med','max','p(90)','p(95)','p(99)']};
 let cursor,previous;
-const logical=__VU-1, cohort=Math.floor(logical/10), nonce=String(__VU).padStart(12,'0');
+const logical=(__VU-1)%users, cohort=Math.floor(logical/10), nonce=String(__VU).padStart(12,'0');
 const sampled=logical%10===1 && (config.PROFILE!=='hotspot'||cohort<20);
 function remember(state,initial){
   if(!sampled||!state.data)return;
