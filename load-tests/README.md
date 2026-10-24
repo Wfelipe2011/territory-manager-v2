@@ -96,3 +96,42 @@ docker compose up -d api admin
 ```
 
 Não publicar imagens, fazer push/deploy ou alterar produção.
+
+## Perfil principal: doze tenants ativos
+
+Meta confirmada: 150–300 usuários simultâneos habituais e 1.000 no pico, no total
+somando doze tenants; normalmente 10–20 pessoas por quadra. O perfil `peak` usa uma
+segunda base sintética `territory_manager_peak_load`, com os mesmos 60 mil/480 mil
+registros. A base da comparação inicial permanece preservada. Nenhuma usa dumps.
+
+```sh
+LOAD_VARIANT=read-poll python3 load-tests/matrix.py prepare --label peak-poll --dataset peak
+LOAD_VARIANT=read-poll python3 load-tests/matrix.py target --label peak-poll --dataset peak --users 150,300,1000 --groups 10 --profiles distributed --repetitions 1
+LOAD_VARIANT=read-poll python3 load-tests/matrix.py target --label peak-poll --dataset peak --users 1000 --groups 20 --profiles distributed --repetitions 1
+```
+
+No cenário `target`, as telas entram gradualmente em 30s; a preparação total tem
+65s, e exige que todas tenham carregado antes de iniciar a janela de **120s** de
+medição. O encerramento aceita mais 35s para consultas pendentes. O tempo total
+inclui essa preparação: não é apresentado como uma execução inteira de 120s.
+CPU/memória do monitor são guardados completos; a média de CPU utiliza a janela
+medida, excluindo preparação e encerramento. As consultas acumuladas do PostgreSQL
+incluem preparação e encerramento e são identificadas como tal.
+
+A latência do carregamento inicial é registrada separadamente do resultado de
+permanência. Entrada lenta não significa incapacidade de manter usuários ativos;
+respostas/erros, marcações, presença e propagação continuam sendo verificadas.
+`initial_ready` exige todas as telas prontas no início da medição. `steady-idle`
+mede somente leitores. Cada cenário tem uma única consulta pendente por tela.
+
+A distribuição reparte primeiro os usuários entre os doze tenants e depois entre
+quadras: 150 usuários = grupos de 12–13 em 12 quadras; 300 = 12–13 em 24 quadras;
+1.000 = 10–11 em 96 quadras (preferência 10) ou 16–17 em 60 (preferência 20).
+Ativos também são repartidos entre todos os tenants; casas não colidem entre
+escritores do mesmo grupo. Duas telas leitoras por quadra observam as mudanças.
+Todos na mesma quadra usam apenas um tenant e representam estresse, não a meta.
+
+```sh
+node load-tests/distribution.test.mjs
+python3 load-tests/test_metrics.py
+```

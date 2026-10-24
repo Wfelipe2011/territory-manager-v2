@@ -10,8 +10,8 @@ x-api: &api
     NODE_ENV: production
     NODE_OPTIONS: --max-old-space-size=384
     PORT: 3000
-    DATABASE_URL: postgresql://load:load-local-only@db:5432/territory_manager_load?connection_limit=10&pool_timeout=20
-    DIRECT_URL: postgresql://load:load-local-only@db:5432/territory_manager_load
+    DATABASE_URL: postgresql://load:load-local-only@db:5432/${LOAD_DATABASE:-territory_manager_load}?connection_limit=10&pool_timeout=20
+    DIRECT_URL: postgresql://load:load-local-only@db:5432/${LOAD_DATABASE:-territory_manager_load}
     JWT_SECRET: load-test-isolated-secret
     API_KEY_SECRET: load-test-only
     NODEMAILER_USER: ""
