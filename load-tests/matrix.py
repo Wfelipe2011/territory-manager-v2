@@ -60,6 +60,10 @@ def prepare():
     limits={s['service']:(s['cpu'],s['memory']) for s in state()}
     expected={'api1':(1,512*1024**2),'api2':(1,512*1024**2),'admin':(.5,512*1024**2),'db':(1,1024**3),'proxy':(.25,128*1024**2)}
     if any(limits.get(name)!=limit for name,limit in expected.items()):raise RuntimeError(f'Unexpected limits: {limits}')
+    profile_path=RESULTS/'field-diagnostics.json'
+    if ENV.get('LOAD_VARIANT')=='read-poll' and not peak and not profile_path.exists():
+        profile=compose('exec','-T','api1','node','/load/profile.cjs',stdout=subprocess.PIPE).stdout
+        profile_path.write_text(json.dumps(json.loads(profile),indent=2)+'\n')
 
 def sample(stop, samples):
     while not stop.is_set():
