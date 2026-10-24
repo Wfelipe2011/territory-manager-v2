@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Reproducible, local-only k6 matrix. Raw fixtures/logs stay in .runtime/."""
-import argparse, csv, json, os, pathlib, subprocess, threading, time, urllib.request
+import argparse, csv, fcntl, json, os, pathlib, subprocess, threading, time, urllib.request
 ROOT = pathlib.Path(__file__).resolve().parent
 RUNTIME = ROOT / '.runtime'
 RESULTS = ROOT / 'results'
@@ -25,7 +25,7 @@ def state():
     raw=json.loads(capture(['docker','inspect',*ids]))
     return [{'service':c['Config']['Labels'].get('com.docker.compose.service'), 'id':c['Id'][:12], 'image':c['Image'],
       'cpu':c['HostConfig']['NanoCpus']/1e9,'memory':c['HostConfig']['Memory'], 'oom':c['State']['OOMKilled'],
-      'restarts':c['RestartCount'],'running':c['State']['Running']} for c in raw]
+      'restarts':c['RestartCount'],'running':c['State']['Running']} for c in raw if c['Config']['Labels'].get('com.docker.compose.service') in ['api1','api2','admin','db','proxy']]
 
 def wait_http():
     for _ in range(120):
@@ -128,6 +128,8 @@ def main():
     args=parser.parse_args();os.chdir(ROOT)
     ENV['LOAD_VARIANT']=os.getenv('LOAD_VARIANT', 'baseline' if args.command=='smoke' else args.label)
     RUNTIME.mkdir(mode=0o700,exist_ok=True);RESULTS.mkdir(exist_ok=True)
+    lock=(RUNTIME/'runner.lock').open('w')
+    fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     if args.command=='down':compose('down');return
     if args.command=='prepare':prepare();return
     if not (RUNTIME/'fixture.json').exists():raise RuntimeError('Run prepare first')
@@ -148,7 +150,7 @@ def main():
                 if not result['generator_valid']:generator_limited=True;break
                 if not result['passed']:first_failed=users;break
                 last=users
-            if first_failed and last:
+            if first_failed:
                 low,high=last,first_failed
                 for _ in range(2):
                     middle=(low+high)//2
@@ -160,7 +162,7 @@ def main():
             if last:
                 stable=trial(args.label,seconds,profile,last,args.stable_seconds,'stable')
                 if not stable['passed']:last=0
-                trial(args.label,seconds,profile,max(10,last),args.step_seconds,'idle','idle')
+                trial(args.label,seconds,profile,max(1,last),args.step_seconds,'idle','idle')
             print(json.dumps({'interval':seconds,'profile':profile,'confirmed_users':last,'generator_limited':generator_limited,'upper_failure':first_failed}),flush=True)
     rows=[]
     for path in (RESULTS/args.label).glob('*.json'):

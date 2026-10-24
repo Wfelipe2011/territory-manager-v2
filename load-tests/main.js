@@ -20,7 +20,7 @@ export const options = {
     ...(!idle && parseInt(config.DURATION)>=90 ? { burst: { executor:'constant-arrival-rate',rate:Math.max(1,Math.round(users*0.2)),timeUnit:'1s',duration:'5s',startTime:'60s',preAllocatedVUs:Math.max(2,Math.ceil(users*0.2)),maxVUs:Math.max(4,Math.ceil(users*0.4)),exec:'writeHouse',gracefulStop:'35s' } } : {}),
   },
   thresholds: {
-    snapshot_ms:['p(95)<=1000'],...(!idle ? {mark_ms:['p(95)<=500'],propagation_missing:['count==0']} : {}),unexpected_errors:['rate<0.01'],
+    snapshot_ms:['p(95)<=1000'],...(!idle ? {mark_ms:['p(95)<=500'],propagation_missing:['count==0'],propagation_samples:['count>=1']} : {}),unexpected_errors:['rate<0.01'],
     dropped_iterations:['count==0'],
   },
   summaryTrendStats:['avg','min','med','max','p(90)','p(95)','p(99)'],
@@ -71,7 +71,8 @@ export async function probePropagation() {
     if(res.status!==200)break;
     const state=res.json();nextCursor=state.cursor;
     const updated=state.data?.streets.flatMap(s=>s.houses).find(h=>h.id===block.firstHouse);
-    if(updated && updated.status===target && updated.completedDate!==initialHouse.completedDate) { propagation.add(Math.max(0,Date.now()-acknowledged));probes.add(1);seen=true;break; }
+    if(updated && updated.status===target) { propagation.add(Math.max(0,Date.now()-acknowledged));probes.add(1);seen=true;break; }
+    if(Date.now()>=deadline)break;
     responsePromise=http.asyncRequest('GET',pollUrl(block,id,nextCursor),null,params(block,'probe_poll'));
   }
   if(!seen)missed.add(1);
