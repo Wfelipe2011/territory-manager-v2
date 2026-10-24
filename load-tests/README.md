@@ -37,6 +37,12 @@ independente da espera máxima, configurado por FIELD_POLL_CHECK_MS.
 
 ## Perfil v2
 
+Antes de cada ensaio, quatro GETs autenticados aquecem as duas APIs via balanceador;
+aguardam-se dois segundos para expirar a revisão em memória, e presença/estatísticas
+são reinicializadas. Esse preparo não entra na carga medida. O snapshot inicial
+mede chegada simultânea de usuários a servidores aquecidos. Partidas frias ficam
+separadas em `results/exploratory/`, sem comparação direta de capacidade.
+
 Todos os ensaios duram **120s**, com até 35s de encerramento das requisições.
 Patamares: 10,20,50,100,200,400,800,1600 usuários; parada na primeira falha,
 até dois refinamentos em múltiplos de dez e ensaio separado somente de leitores.

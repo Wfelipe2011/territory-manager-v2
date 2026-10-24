@@ -91,6 +91,21 @@ def propagation(log_path):
         else:missing.append(w['sequence'])
     return {'p95_ms':percentile(latencies),'samples':len(latencies),'acknowledged_writes':len(writes),'missing_sequences':missing,'latencies_ms':latencies}
 
+def warmup(profile):
+    fixture=json.loads((RUNTIME/'fixture.json').read_text())['blocks'][0]
+    visited=set();durations=[]
+    for _ in range(6):
+        req=urllib.request.Request('http://localhost:3301/v1/field/blocks/'+str(fixture['blockId'])+'/sync?clientId=warmup-client-000000&tabId=warmup-tab-id-000000',headers={'Authorization':'Bearer '+fixture['token']})
+        started=time.perf_counter()
+        with urllib.request.urlopen(req,timeout=35) as response:
+            response.read();visited.add(response.headers.get('X-Load-Upstream'))
+        durations.append((time.perf_counter()-started)*1000)
+        if len(visited)==2 and len(durations)>=4:break
+    if None in visited or len(visited)!=2:raise RuntimeError('Warmup did not reach both APIs')
+    time.sleep(2)
+    db('TRUNCATE field_session; SELECT pg_stat_statements_reset();')
+    return {'requests':len(durations),'api_instances':len(visited),'request_ms':durations,'revision_cache_pause_seconds':2}
+
 def trial(label, seconds, profile, users, duration, kind='step', workload='mixed'):
     trial_id=f'{label}-{seconds}s-{profile}-{users}u-{kind}'
     target=RESULTS/label
@@ -99,6 +114,7 @@ def trial(label, seconds, profile, users, duration, kind='step', workload='mixed
     if path.exists():return json.loads(path.read_text())
     db("UPDATE round SET completed=false,completed_date=NULL,update_date=NULL WHERE round_number=8 AND (completed OR completed_date IS NOT NULL); TRUNCATE field_session; SELECT pg_stat_statements_reset();")
     if not all(s['running'] for s in state()):interval(seconds)
+    warmed=warmup(profile)
     before=state(); samples=[];stop=threading.Event()
     summary_path=RUNTIME/'summary.json'
     summary_path.unlink(missing_ok=True)
@@ -132,7 +148,7 @@ def trial(label, seconds, profile, users, duration, kind='step', workload='mixed
     sources_path=RESULTS/'image-sources.json'
     sources=json.loads(sources_path.read_text()).get(ENV['LOAD_VARIANT'],{}) if sources_path.exists() else {}
     queries=json.loads(db("SELECT coalesce(json_agg(q),'[]'::json) FROM (SELECT query,calls,total_exec_time,mean_exec_time,rows,shared_blks_hit,shared_blks_read FROM pg_stat_statements ORDER BY total_exec_time DESC LIMIT 20) q"))
-    data={'harness_version':2,'id':trial_id,'label':label,'interval_seconds':seconds,'profile':profile,'logical_users':users,'duration_seconds':duration,
+    data={'harness_version':2,'warmup':warmed,'id':trial_id,'label':label,'interval_seconds':seconds,'profile':profile,'logical_users':users,'duration_seconds':duration,
       'kind':kind,'workload':workload,'wall_seconds':round(time.time()-started,2),'exit_code':code,
       'passed':code==0 and threshold_ok and infrastructure_ok and generator_ok and not generator_bound and (workload=='idle' or (delivery['acknowledged_writes']==(users//10)*4 and delivery['samples']>0 and not delivery['missing_sequences'])),'generator_valid':generator_ok and not generator_bound,'generator_bound':generator_bound,'infrastructure_valid':infrastructure_ok,
       'snapshot_p95_ms':metric(summary,'snapshot_ms','p(95)'), 'mark_p95_ms':metric(summary,'mark_ms','p(95)'),
