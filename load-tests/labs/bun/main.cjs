@@ -18,6 +18,17 @@ async function main() {
   const rounds = new c.CatalogRoundService(db);
   const access = new c.FieldAccessService(db, rounds);
   const field = new c.FieldService(db, access, rounds);
+  if (process.env.LAB_SNAPSHOT_MODE === 'aggregate') {
+    field.presence = (user,scope) => db.$presenceSummary(user,scope);
+    const original = field.snapshot.bind(field);
+    field.snapshot = async (tx,user,scope,info) => {
+      if (scope.fullBlock) {
+        const data = await tx.$blockSnapshot(user,scope,info);
+        if (data !== undefined) return data;
+      }
+      return original(tx,user,scope,info);
+    };
+  }
   const timings = {};
   for (const [object,key,label] of [[field,'snapshot','snapshot'],[field,'revision','revision'],[access,'validate','validation']]) {
     const original = object[key].bind(object);

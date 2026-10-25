@@ -192,3 +192,37 @@ avança a mais usuários**. Resultados JSON sanitizados e monitoramento ficam em
 Contadores SQL incluem preparação/medição/drenagem; CPU média é filtrada para a
 janela de 120s. O novo encerramento e a sentinela diferem do harness histórico:
 usar como nova base, não atribuir qualquer diferença somente à stack.
+
+
+## Ajuste Bun por etapas (2026-10-25)
+
+`python3 load-tests/labs/tune.py --search` mede somente Bun, com os mesmos limites
+fixos. `--mode baseline|joined|aggregate` seleciona implementação; `--pools 1,2,5,10`,
+`--intervals 3000,5000,10000,15000,20000,25000`, `--groups 10,20`, `--idle` e
+`--repetitions 3` permitem comparações controladas. Todos os pontos têm 120s de
+medição, preparação de 65s e observação adicional de 90s. A propagação usada na
+aprovação é o p95 de observadores amostrados, além da contagem de ACKs observados.
+Não é uma promessa de entrega para todos os clientes.
+
+A primeira falha interrompe uma busca (`--search`); gerador/monitor inválido aborta
+a campanha e não estabelece capacidade. O runner recusa gerador já em execução,
+remove somente órfão parado e restaura os serviços normais que havia pausado.
+Resultados incluem pool, modo, intervalo, commit, IDs de imagem e limites efetivos.
+
+`joined` usa SQL específico para casas/endereço/uma participação e para vínculos
+com ruas e assinatura. Conserva o filtro compilado de tenant/escopo e a montagem
+original. `aggregate` transfere o snapshot completo de quadra para CTEs, agregação
+JSON e contagens SQL. O cursor e a leitura continuam na mesma conexão e transação
+RepeatableRead. Presença também é agrupada no PostgreSQL. Ordenação numérica,
+permissões temporais e validação da assinatura continuam nas regras compiladas.
+
+O modo agregado atende o snapshot completo da quadra; syncs genéricos mantêm o
+caminho equivalente com junções. Solicitações pendentes duplicadas para o mesmo
+alvo usam a montagem original, preservando a ordenação legada não especificada.
+Nenhum modo cria cache privado compartilhado nem altera arquivos da API principal.
+
+Para testar cada candidato antes da carga, reconstruir a imagem de tools/Nest
+(contém a suíte de paridade) e executar `LAB_SNAPSHOT_MODE=joined python3
+load-tests/labs/lab.py test bun`, repetindo com `aggregate`. A suíte inclui ordem
+manual, complementos numéricos e zeros à esquerda, além dos casos de segurança,
+provisórios, rodadas, revogação, presença e espera real já descritos.

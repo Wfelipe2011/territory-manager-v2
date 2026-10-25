@@ -102,6 +102,10 @@ def test(variants=("nest","bun")):
             'reports': reports, 'images': images, 'snapshotMode': ENV.get('LAB_SNAPSHOT_MODE','baseline'),
         }, indent=2) + '\n')
         print('Both variants matched the original API; sanitized evidence saved in labs/results/.')
+    except Exception:
+        with (RUNTIME/('equivalence-failed-'+ENV.get('LAB_SNAPSHOT_MODE','baseline')+'.log')).open('w') as log:
+            compose('logs','--no-color','bun','api',stdout=log,stderr=subprocess.STDOUT)
+        raise
     finally:
         compose('down')  # Deliberately no -v: retain synthetic data, never touch normal stack.
 

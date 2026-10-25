@@ -185,7 +185,7 @@ module.exports = function createAdapter(connectionString, models) {
     }
 
     const result = {};
-
+    if (mode === 'aggregate' && transactional) result.$blockSnapshot = (user,scope,info) => require('./aggregate-snapshot.cjs').snapshot(client,user,scope,info);
     for (const model of models) {
       result[model.name] = {};
       for (const method of ['findMany', 'findFirst', 'findUnique', 'findFirstOrThrow', 'findUniqueOrThrow']) {
@@ -217,6 +217,10 @@ module.exports = function createAdapter(connectionString, models) {
   }
 
   const root = adapter(observed(pool));
+  if (mode === 'aggregate') root.$presenceSummary = async (user,scope) => {
+    const rows=await observed(pool).query(`WITH active AS MATERIALIZED (SELECT DISTINCT fs.client_id,fs.block_id,fs.address_id FROM field_session fs JOIN signature s ON s.key=fs.signature_key AND s.tenant_id=fs.tenant_id WHERE fs.tenant_id=$1 AND fs.territory_id=$2 AND fs.round_number=$3 AND fs.last_seen_at>now()-interval '60 seconds' AND fs.disconnected_at IS NULL AND s.expiration_date>now() AND ($4::integer IS NULL OR fs.block_id=$4)), b AS (SELECT block_id,count(DISTINCT client_id)::int AS n FROM active WHERE block_id IS NOT NULL AND block_id<>0 GROUP BY block_id), a AS (SELECT block_id,address_id,count(DISTINCT client_id)::int AS n FROM active WHERE address_id IS NOT NULL AND address_id<>0 GROUP BY block_id,address_id) SELECT (SELECT count(DISTINCT client_id)::int FROM active) AS total, coalesce((SELECT json_object_agg(block_id,n) FROM b),'{}'::json) AS blocks,coalesce((SELECT json_object_agg(coalesce(block_id::text,'null')||':'||address_id::text,n) FROM a),'{}'::json) AS streets`,[user.tenantId,user.territoryId,scope.round??0,user.roles.includes('publisher')?user.blockId:null]);
+    return rows.rows[0];
+  };
   root.$stats = () => ({ ...counters, poolTotal: pool.totalCount, poolIdle: pool.idleCount, poolWaiting: pool.waitingCount });
   root.$transaction = async (work, options = {}) => {
     const isolation = options.isolationLevel || 'ReadCommitted';
