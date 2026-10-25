@@ -52,6 +52,9 @@ def state(variant):
             item['batchValidation']=meta.get('batchValidation',False)
     expected = {'db': (1, 2 * 1024**3), 'api': (.4, 2 * 1024**3),
                 variant: (.5, 2 * 1024**3), 'proxy': (.1, 128 * 1024**2)}
+    if ENV.get('FIELD_CANDIDATE') == 'cpu':
+        expected['db'] = (.8, 2 * 1024**3)
+        expected[variant] = (.7, 2 * 1024**3)
     actual = {item['service']: (item['cpuLimit'], item['memoryLimit']) for item in result}
     if actual != expected or any(item['oom'] or item['restarts'] for item in result):
         raise RuntimeError('Unexpected active containers, limits, OOM or restarts: ' + str(result))

@@ -100,8 +100,9 @@ def trial(variant, users, repeat, out, pool=10, interval=3000, group=10, mode="b
     generator = 'territory-field-lab-generator'
     args = lab.COMPOSE + ['run', '-T', '--no-deps', '--name', generator, '--user', f'{os.getuid()}:{os.getgid()}',
         '-e', f'USERS={users}', '-e', f'GROUP_SIZE={group}', '-e', f'IDLE_ONLY={int(idle)}', '-e', 'STAGED_READERS=1', '-e', 'FIXTURE_PATH=./.runtime/fixture-peak.json',
+        '-e', 'LAB_OBSERVER_TAIL='+lab.ENV.get('LAB_OBSERVER_TAIL','90'),
         'generator', 'run', '--quiet', '--log-format', 'raw', 'labs/load.js']
-    print(name + ': starting 65s preparation + 120s measurement + 90s observer tail', flush=True)
+    print(name + ': starting 65s preparation + 120s measurement + '+lab.ENV.get('LAB_OBSERVER_TAIL','90')+'s observer tail', flush=True)
     start = time.time()
     stop, samples = threading.Event(), []
     with log_path.open('w') as log:
@@ -150,7 +151,7 @@ def trial(variant, users, repeat, out, pool=10, interval=3000, group=10, mode="b
     actual_max=max((n+g-1)//g for n,g in zip(populations,groups_per_tenant))
     result = {'actualGroupMin':actual_min,'actualGroupMax':actual_max,'expectedBlocks':sum(groups_per_tenant),'id': name, 'variant': variant, 'logicalUsers': users, 'repeat': repeat, 'groupPreference': group, 'snapshotMode': mode, 'idleOnly': idle, 'batchValidation':batch,
         'checkIntervalMs': interval, 'poolSize': pool, 'measurementSeconds': 120, 'preparationSeconds': 65,
-        'observerTailSeconds': 90, 'writerMaxDurationSeconds': 155, 'wallSeconds': time.time() - start,
+        'observerTailSeconds': int(lab.ENV.get('LAB_OBSERVER_TAIL','90')), 'writerMaxDurationSeconds': 155, 'wallSeconds': time.time() - start,
         'windowStartMs': window, 'exitCode': code, 'passed': passed, 'capacityPassedWithoutPropagationGoal':capacity_passed, 'functionalSteadyPassed': functional,
         'generatorValid': generator_valid, 'generatorBound':generator_bound, 'monitoringValid': monitoring_valid, 'infrastructureValid': infrastructure,
         'sourceCommit': build_commit,

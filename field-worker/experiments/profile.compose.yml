@@ -1,0 +1,5 @@
+services:
+  bun:
+    command: [bun, --cpu-prof, --cpu-prof-dir=/profiles, /app/field-worker/experiments/candidate-bootstrap.cjs]
+    volumes:
+      - ${CANDIDATE_PROFILE_DIR:?Set isolated profile output}:/profiles

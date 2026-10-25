@@ -1,0 +1,8 @@
+services:
+  bun:
+    cpus: ${CANDIDATE_WORKER_CPU:-0.5}
+    command: [bun, /app/field-worker/experiments/candidate-bootstrap.cjs]
+    environment:
+      FIELD_CANDIDATE: ${FIELD_CANDIDATE:?Select candidate}
+  db:
+    cpus: ${CANDIDATE_DB_CPU:-1.0}

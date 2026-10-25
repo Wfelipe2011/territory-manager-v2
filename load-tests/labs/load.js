@@ -7,7 +7,8 @@ import { config, blockFor, writerOwner, sampledReader, headers } from '../config
 // Separate writer shutdown from observer shutdown. Writes start only inside the
 // 120-second window; observers continue another 60 seconds for late ACK delivery.
 const idle = __ENV.IDLE_ONLY === '1';
-const users = config.USERS, active = idle ? 0 : users / 10, prep = 65, duration = 120, tail = 90;
+const users = config.USERS, active = idle ? 0 : users / 10, prep = 65, duration = 120, tail = Number(__ENV.LAB_OBSERVER_TAIL || 90);
+if (![30,90].includes(tail)) throw Error('Unsupported observer tail');
 if (!config.STAGED || users < 120 || users % 10) throw Error('Staged synthetic peak workload required');
 const ready = new Counter('initial_ready'), entries = new Trend('snapshot_ms', true);
 const marks = new Trend('mark_ms', true), sentinel = new Trend('principal_snapshot_ms', true);

@@ -23,8 +23,15 @@ def main():
     workload.add_argument('--load-users', type=int, help='One synthetic 120s measurement after mandatory parity; not a maximum-capacity search')
     parser.add_argument('--check-ms', type=int, default=1000)
     parser.add_argument('--experiment', choices=['baseline', 'grouped', 'notify', 'reference', 'expanded', 'sql', 'readmodel'], default='baseline')
+    parser.add_argument('--candidate', choices=['control','copies','roundtrips','native','cpu'])
+    parser.add_argument('--cpu-profile-dir', type=Path, help='Separate diagnostic run, never comparable with unprofiled trials')
+    parser.add_argument('--observer-tail', type=int, choices=[30,90], default=90)
     args = parser.parse_args()
     users = 300 if args.load_300 else args.load_users
+    if args.candidate and args.experiment != 'baseline':
+        parser.error('Candidates must start from the promoted baseline')
+    if args.cpu_profile_dir and not args.candidate:
+        parser.error('CPU profiling requires an isolated candidate')
     if users is not None and (users < 120 or users % 10):
         parser.error('Use at least 120 logical users in multiples of ten')
     if not 100 <= args.check_ms <= 25000:
@@ -39,9 +46,19 @@ def main():
     frozen = 'territory-field-worker:verify-' + image_id.split(':')[1][:16]
     subprocess.run(['docker', 'image', 'tag', image_id, frozen], check=True)
     lab.ENV.update(LAB_BUN_IMAGE=frozen, LAB_SKIP_BUILD='1', LAB_POOL_SIZE='2',
-                   LAB_SNAPSHOT_MODE='aggregate', LAB_BATCH_VALIDATION='1', FIELD_POLL_CHECK_MS=str(args.check_ms))
+                   LAB_SNAPSHOT_MODE='aggregate', LAB_BATCH_VALIDATION='1', FIELD_POLL_CHECK_MS=str(args.check_ms),LAB_OBSERVER_TAIL=str(args.observer_tail))
     lab.ENV['FIELD_PROXY_TEMPLATE'] = str(WORKSPACE / 'dev/nginx-api.conf.template')
     lab.COMPOSE[4:4] = ['-f', str(Path(__file__).with_name('compose.verify.yml'))]
+    if args.candidate:
+        lab.ENV.update(FIELD_CANDIDATE=args.candidate,CANDIDATE_WORKER_CPU='0.7' if args.candidate=='cpu' else '0.5',CANDIDATE_DB_CPU='0.8' if args.candidate=='cpu' else '1.0')
+        lab.COMPOSE[6:6] = ['-f', str(API / 'field-worker/experiments/candidates.compose.yml')]
+        if args.cpu_profile_dir:
+            profile_dir = args.cpu_profile_dir.resolve()
+            if not profile_dir.is_relative_to(API / 'field-worker/results'):
+                parser.error('Profiles must remain under field-worker/results')
+            profile_dir.mkdir(parents=True,exist_ok=True)
+            lab.ENV['CANDIDATE_PROFILE_DIR'] = str(profile_dir)
+            lab.COMPOSE[8:8] = ['-f', str(API / 'field-worker/experiments/profile.compose.yml')]
     if args.experiment != 'baseline':
         lab.ENV['FIELD_EXPERIMENT'] = args.experiment
         if args.experiment in ['reference', 'expanded', 'sql', 'readmodel']:
@@ -75,14 +92,29 @@ def main():
         if args.experiment == 'baseline':
             checked = lab.compose('exec', '-T', 'bun', 'bun', '/app/field-worker/tests/read-model.integration.cjs', stdout=subprocess.PIPE).stdout
             (results / 'read-model-integration.json').write_text(json.dumps(json.loads(checked), indent=2) + '\n')
+        if args.candidate == 'native':
+            checked = lab.compose('exec', '-T', 'bun', 'bun', '/app/field-worker/tests/native.integration.cjs', stdout=subprocess.PIPE).stdout
+            (results / 'native-integration.json').write_text(json.dumps(json.loads(checked), indent=2) + '\n')
     lab.up = up
+    original_warmup = compare.warmup
+    def clean_warmup():
+        # Called after compare.trial resets the business fixture. Raw catalog starts
+        # empty every trial; persisted revisions need not have identical numbers.
+        if compare.db('SELECT current_database()') != 'territory_manager_peak_load':
+            raise RuntimeError('Synthetic database required')
+        compare.db('TRUNCATE field_read_model;')
+        original_warmup()
+    if args.candidate:
+        compare.warmup = clean_warmup
     command = ['docker', 'compose', '-f', str(WORKSPACE / 'docker-compose.yml')]
     results = API / 'field-worker/results' / ('integration-' + time.strftime('%Y%m%d-%H%M%S', time.gmtime()))
     results.mkdir(parents=True)
     paused = []
     summary = {'imageId': image_id, 'image': frozen, 'scope': 'local integration; synthetic data only',
                'loadRequested': users is not None, 'logicalUsers': users, 'checkIntervalMs': args.check_ms,
-                'experiment': args.experiment, 'dedicatedListenerExpected': int(args.experiment in ['baseline', 'notify', 'readmodel'])}
+                 'experiment': args.experiment, 'dedicatedListenerExpected': int(args.experiment in ['baseline', 'notify', 'readmodel'])}
+    summary['candidate'] = args.candidate
+    summary['profiled'] = bool(args.cpu_profile_dir)
     lab.RUNTIME.mkdir(mode=0o700, exist_ok=True)
     lockdir = API / 'load-tests/.runtime'
     lockdir.mkdir(mode=0o700, exist_ok=True)
@@ -109,6 +141,8 @@ def main():
                     if not samples or not samples[-1]['readModel']['hits'] or not samples[-1]['notifications']['notifications']:
                         raise RuntimeError('Promoted read model / notifications did not execute')
                     summary['workerStats'] = samples[-1]
+                    if args.candidate and samples[-1].get('candidate',{}).get('variant') != args.candidate:
+                        raise RuntimeError('Candidate identity/instrumentation mismatch')
                     summary['readModelHealthy'] = not any(samples[-1]['readModel'][key] for key in ['storeFailures','backgroundFailures','pruneFailures'])
                     if not summary['readModelHealthy']:
                         raise RuntimeError('Derived-data maintenance failed; investigate before promoting the image')
