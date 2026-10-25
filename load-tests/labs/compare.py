@@ -28,6 +28,7 @@ def db(sql):
 
 
 def monitor(stop, samples, generator):
+    tick = 0
     while not stop.is_set():
         try:
             # docker stats can discard the entire response when any requested
@@ -40,7 +41,14 @@ def monitor(stop, samples, generator):
                                     text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
             with urllib.request.urlopen('http://localhost:3400/healthz',timeout=3) as health:
                 worker_stats=json.loads(health.read()).get('stats',{})
-            samples.append({'time': time.time(), 'workerStats':worker_stats, 'hostLoad': os.getloadavg(),
+            pressure={}
+            if tick%3==0:
+                for service in ['bun','nest','db','api']:
+                    if 'territory-field-labs-'+service+'-1' not in names: continue
+                    pressure[service]=lab.compose('exec','-T',service,'cat','/sys/fs/cgroup/cpu.stat','/sys/fs/cgroup/memory.events',stdout=subprocess.PIPE,stderr=subprocess.DEVNULL).stdout
+            tick+=1
+            statement_totals=json.loads(db("SELECT json_build_object('calls',coalesce(sum(calls),0),'executionMs',coalesce(sum(total_exec_time),0)) FROM pg_stat_statements"))
+            samples.append({'time': time.time(), 'workerStats':worker_stats, 'cgroups':pressure,'sqlTotals':statement_totals, 'hostLoad': os.getloadavg(),
                 'containers': [json.loads(line) for line in result.stdout.splitlines() if line.startswith('{')],
                 'database': json.loads(db("SELECT json_build_object('active',count(*) FILTER(WHERE state='active'),"
                     "'idleInTransaction',count(*) FILTER(WHERE state='idle in transaction'),'connections',count(*),"
@@ -48,7 +56,14 @@ def monitor(stop, samples, generator):
         except Exception as error:
             with urllib.request.urlopen('http://localhost:3400/healthz',timeout=3) as health:
                 worker_stats=json.loads(health.read()).get('stats',{})
-            samples.append({'time': time.time(), 'workerStats':worker_stats, 'error': str(type(error).__name__)})
+            pressure={}
+            if tick%3==0:
+                for service in ['bun','nest','db','api']:
+                    if 'territory-field-labs-'+service+'-1' not in names: continue
+                    pressure[service]=lab.compose('exec','-T',service,'cat','/sys/fs/cgroup/cpu.stat','/sys/fs/cgroup/memory.events',stdout=subprocess.PIPE,stderr=subprocess.DEVNULL).stdout
+            tick+=1
+            statement_totals=json.loads(db("SELECT json_build_object('calls',coalesce(sum(calls),0),'executionMs',coalesce(sum(total_exec_time),0)) FROM pg_stat_statements"))
+            samples.append({'time': time.time(), 'workerStats':worker_stats, 'cgroups':pressure,'sqlTotals':statement_totals, 'error': str(type(error).__name__)})
         stop.wait(4)
 
 
@@ -126,12 +141,13 @@ def trial(variant, users, repeat, out, pool=10, interval=3000, group=10, mode="b
     monitoring_valid = bool(generator_cpu)
     generator_valid = not inspection['State']['OOMKilled'] and inspection['State']['ExitCode'] not in [137, 139] and bool(generator_cpu) and not (statistics.mean(generator_cpu) >= 90 and metric('writer_start_lateness_ms', 'p(95)') > 500)
     functional = infrastructure and generator_valid and metric('initial_ready', 'count') == users and metric('started_in_window_errors', 'rate', 1) < .01 and metric('unexpected_errors', 'rate', 1) < .01 and metric('principal_snapshot_errors', 'rate', 1) < .01 and metric('dropped_iterations', 'count') == 0 and delivery['acknowledged_writes'] == (0 if idle else users // 10 * 4) and not delivery['missing_sequences'] and (idle or metric('writer_start_lateness_ms', 'p(95)', 1e9) <= 500)
-    passed = functional and metric('snapshot_ms', 'p(95)', 1e9) <= 1000 and (idle or metric('mark_ms', 'p(95)', 1e9) <= 500) and (idle or (delivery['observer_p95_ms'] is not None and delivery['observer_p95_ms'] <= 5000))
+    capacity_passed = functional and metric('snapshot_ms', 'p(95)', 1e9) <= 1000 and (idle or metric('mark_ms', 'p(95)', 1e9) <= 500) 
+    passed = capacity_passed and (idle or (delivery['observer_p95_ms'] is not None and delivery['observer_p95_ms'] <= 5000))
     queries = json.loads(db("SELECT coalesce(json_agg(q),'[]'::json) FROM (SELECT query,calls,total_exec_time,mean_exec_time,rows FROM pg_stat_statements ORDER BY total_exec_time DESC LIMIT 25) q"))
     result = {'id': name, 'variant': variant, 'logicalUsers': users, 'repeat': repeat, 'groupPreference': group, 'snapshotMode': mode, 'idleOnly': idle,
         'checkIntervalMs': interval, 'poolSize': pool, 'measurementSeconds': 120, 'preparationSeconds': 65,
         'observerTailSeconds': 90, 'writerMaxDurationSeconds': 155, 'wallSeconds': time.time() - start,
-        'windowStartMs': window, 'exitCode': code, 'passed': passed, 'functionalSteadyPassed': functional,
+        'windowStartMs': window, 'exitCode': code, 'passed': passed, 'capacityPassedWithoutPropagationGoal':capacity_passed, 'functionalSteadyPassed': functional,
         'generatorValid': generator_valid, 'monitoringValid': monitoring_valid, 'infrastructureValid': infrastructure,
         'sourceCommit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
         'ready': metric('initial_ready', 'count'), 'snapshotP95Ms': metric('snapshot_ms', 'p(95)'),
