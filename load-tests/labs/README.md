@@ -209,6 +209,13 @@ a campanha e não estabelece capacidade. O runner recusa gerador já em execuç�
 remove somente órfão parado e restaura os serviços normais que havia pausado.
 Resultados incluem pool, modo, intervalo, commit, IDs de imagem e limites efetivos.
 
+Por padrão, `--search-criterion responsive` exige também propagação p95 ≤5s.
+Para comparar a capacidade dos intervalos mais lentos separadamente de sua demora
+de atualização, usar `--search-criterion capacity`: entrada, marcação, integridade,
+gerador e recursos continuam obrigatórios; ambos os resultados permanecem no JSON.
+`capacity.json` registra o critério. O relatório mostra as aprovações de capacidade
+e as que também atendem à meta de propagação em colunas distintas.
+
 `joined` usa SQL específico para casas/endereço/uma participação e para vínculos
 com ruas e assinatura. Conserva o filtro compilado de tenant/escopo e a montagem
 original. `aggregate` transfere o snapshot completo de quadra para CTEs, agregação

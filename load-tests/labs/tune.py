@@ -23,6 +23,8 @@ def main():
     p.add_argument('--idle', action='store_true')
     p.add_argument('--batch-validation',action='store_true')
     p.add_argument('--search', action='store_true')
+    p.add_argument('--search-criterion', choices=['responsive','capacity'], default='responsive',
+        help='responsive also requires propagation <=5s; capacity brackets entry/marks/integrity and reports propagation separately')
     p.add_argument('--refinements',type=int,default=3)
     p.add_argument('--out', type=Path)
     args = p.parse_args()
@@ -86,7 +88,8 @@ def main():
                                 if not row['monitoringValid'] or not row['generatorValid'] or not row['infrastructureValid']:
                                     raise RuntimeError('Invalid generator/infrastructure measurement; investigate before escalating')
                 if args.search:
-                    if all(r['passed'] for r in stage): low=n
+                    gate = 'passed' if args.search_criterion == 'responsive' else 'capacityPassedWithoutPropagationGoal'
+                    if all(r[gate] for r in stage): low=n
                     else: high=n
                     if high is not None:
                         queue=[]
@@ -95,7 +98,7 @@ def main():
                             mid=((low+high)//20)*10
                             if low<mid<high:queue=[mid];refined+=1
                     elif not queue and n<fixture_max:queue=[min(n+500,fixture_max)]
-                    conclusion={'largestExploratoryPass':low,'firstFailingBound':high,'fixtureMaximum':fixture_max,'refinements':refined,'lowerBoundOnly':high is None}
+                    conclusion={'criterion':args.search_criterion,'largestExploratoryPass':low,'firstFailingBound':high,'fixtureMaximum':fixture_max,'refinements':refined,'lowerBoundOnly':high is None}
                     (out/'capacity.json').write_text(json.dumps(conclusion,indent=2)+'\n')
         finally:
             subprocess.run(['docker','rm','-f','territory-field-lab-generator'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
