@@ -1,0 +1,20 @@
+{
+  "valid": [
+    "nest-150u-g10-3s-r2.json",
+    "nest-150u-g10-3s-r3.json",
+    "bun-150u-g10-3s-r1.json",
+    "bun-150u-g10-3s-r2.json"
+  ],
+  "excluded": [
+    "nest-150u-g10-3s-r1.json"
+  ],
+  "counts": {
+    "nest": 2,
+    "bun": 2
+  },
+  "shortenedByUser": true,
+  "restoration": {
+    "api": 200,
+    "admin": 200
+  }
+}

@@ -1,0 +1,118 @@
+name: territory-field-labs
+x-environment: &environment
+  NODE_ENV: production
+  TZ: America/Sao_Paulo
+  DATABASE_URL: postgresql://load:load-local-only@db:5432/territory_manager_peak_load?connection_limit=${LAB_POOL_SIZE:-10}&pool_timeout=20
+  DIRECT_URL: postgresql://load:load-local-only@db:5432/territory_manager_peak_load
+  JWT_SECRET: load-test-isolated-secret
+  API_KEY_SECRET: load-test-only
+  NODEMAILER_USER: ""
+  NODEMAILER_APP_PASS: ""
+  LOGTAIL_API_KEY: ""
+  LOG_LEVEL: warn
+  FIELD_POLL_CHECK_MS: ${FIELD_POLL_CHECK_MS:-3000}
+x-worker: &worker
+  cpus: 0.5
+  mem_limit: 2g
+  init: true
+  stop_grace_period: 40s
+  depends_on:
+    db: { condition: service_healthy }
+  logging:
+    driver: json-file
+    options: { max-size: 10m, max-file: "2" }
+services:
+  db:
+    image: postgres:16-alpine
+    cpus: 1.0
+    mem_limit: 2g
+    command: [postgres, -c, shared_preload_libraries=pg_stat_statements, -c, shared_buffers=256MB, -c, max_connections=100]
+    environment:
+      POSTGRES_USER: load
+      POSTGRES_PASSWORD: load-local-only
+      POSTGRES_DB: territory_manager_peak_load
+    volumes: [lab-db:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U load -d territory_manager_peak_load]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  api:
+    image: ${LAB_API_IMAGE:-territory-load-api:read-collation}
+    cpus: 0.4
+    mem_limit: 2g
+    environment:
+      <<: *environment
+      NODE_OPTIONS: --max-old-space-size=1536
+      PORT: 3000
+    depends_on:
+      db: { condition: service_healthy }
+    ports: ["127.0.0.1:3401:3000"]
+  bun:
+    <<: *worker
+    profiles: [bun]
+    image: territory-field-lab-bun:local
+    build:
+      context: .
+      target: bun
+      args: { API_IMAGE: "${LAB_API_IMAGE:-territory-load-api:read-collation}" }
+    environment:
+      <<: *environment
+      PORT: 3402
+    ports: ["127.0.0.1:3402:3402"]
+    healthcheck:
+      test: [CMD, bun, -e, "if (!(await fetch('http://localhost:3402/healthz')).ok) process.exit(1)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  nest:
+    <<: *worker
+    profiles: [nest]
+    image: territory-field-lab-nest:local
+    build:
+      context: .
+      target: nest
+      args: { API_IMAGE: "${LAB_API_IMAGE:-territory-load-api:read-collation}" }
+    environment:
+      <<: *environment
+      NODE_OPTIONS: --max-old-space-size=1536
+      PORT: 3403
+    ports: ["127.0.0.1:3403:3403"]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://localhost:3403/healthz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  proxy:
+    image: nginx:1.28-alpine
+    cpus: 0.1
+    mem_limit: 128m
+    environment:
+      SNAPSHOT_UPSTREAM: ${SNAPSHOT_UPSTREAM:-bun:3402}
+      NGINX_ENVSUBST_FILTER: SNAPSHOT_UPSTREAM
+    volumes: [./nginx.conf.template:/etc/nginx/templates/default.conf.template:ro]
+    # This is a complete nginx.conf, not a server snippet.
+    command: [/bin/sh, -c, "envsubst '$$SNAPSHOT_UPSTREAM' < /etc/nginx/templates/default.conf.template > /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'"]
+    ports: ["127.0.0.1:3400:8080"]
+  tools:
+    image: territory-field-lab-nest:local
+    profiles: [tools]
+    environment: *environment
+    volumes:
+      - ../:/load:ro
+      - ./.runtime:/load/.runtime:ro
+      - ./.runtime:/output
+    entrypoint: [node]
+  generator:
+    image: grafana/k6:1.3.0
+    profiles: [tools]
+    cpus: 1.0
+    mem_limit: 1g
+    environment: { GOMAXPROCS: "1" }
+    volumes:
+      - ../:/load:ro
+      - ./.runtime:/load/.runtime:ro
+      - ./.runtime:/output
+    working_dir: /load
+volumes:
+  lab-db:

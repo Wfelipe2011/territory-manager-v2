@@ -1,0 +1,4903 @@
+{
+  "id": "bun-150u-g10-3s-r1",
+  "variant": "bun",
+  "logicalUsers": 150,
+  "repeat": 1,
+  "groupPreference": 10,
+  "checkIntervalMs": 3000,
+  "poolSize": 10,
+  "measurementSeconds": 120,
+  "preparationSeconds": 65,
+  "observerTailSeconds": 90,
+  "writerMaxDurationSeconds": 155,
+  "wallSeconds": 303.69513630867004,
+  "windowStartMs": 1792923902005,
+  "exitCode": 0,
+  "passed": true,
+  "functionalSteadyPassed": true,
+  "generatorValid": true,
+  "infrastructureValid": true,
+  "ready": 150,
+  "snapshotP95Ms": 252.7259388499999,
+  "markP95Ms": 175.87674739999997,
+  "principalSnapshotP95Ms": 352.09234309999965,
+  "errorRateStartedInWindow": 0,
+  "errorRateAllPhases": 0,
+  "propagation": {
+    "p95_ms": 3360.4499999999994,
+    "samples": 60,
+    "acknowledged_writes": 60,
+    "missing_sequences": [],
+    "latencies_ms": [
+      1681,
+      3173,
+      3253,
+      2650,
+      1812,
+      2289,
+      1680,
+      2148,
+      3353,
+      1920,
+      2913,
+      1761,
+      2245,
+      1593,
+      1095,
+      2471,
+      1672,
+      1325,
+      1669,
+      2702,
+      3942,
+      1861,
+      270,
+      1724,
+      3502,
+      1103,
+      2597,
+      85,
+      1772,
+      1469,
+      270,
+      1860,
+      1521,
+      3099,
+      1067,
+      2601,
+      1401,
+      1964,
+      785,
+      1790,
+      2560,
+      3787,
+      533,
+      2084,
+      1681,
+      697,
+      2172,
+      2076,
+      1526,
+      2262,
+      704,
+      1541,
+      145,
+      1248,
+      182,
+      661,
+      1901,
+      1793,
+      2315,
+      334
+    ],
+    "observer_p95_ms": 3950.1499999999996,
+    "observer_samples": 120,
+    "observer_latencies_ms": [
+      1681,
+      2267,
+      3173,
+      3694,
+      4360,
+      3253,
+      2650,
+      3428,
+      1812,
+      3738,
+      3226,
+      2289,
+      1680,
+      3614,
+      3052,
+      2148,
+      3353,
+      4105,
+      1920,
+      2515,
+      2913,
+      3570,
+      4207,
+      1761,
+      2245,
+      2781,
+      3930,
+      1593,
+      1898,
+      1095,
+      2471,
+      2887,
+      4203,
+      1672,
+      2241,
+      1325,
+      1669,
+      1784,
+      2902,
+      2702,
+      4367,
+      3942,
+      3033,
+      1861,
+      1211,
+      270,
+      1724,
+      2427,
+      3502,
+      3637,
+      1103,
+      1801,
+      2597,
+      2819,
+      2541,
+      85,
+      1772,
+      2185,
+      2762,
+      1469,
+      2673,
+      270,
+      1860,
+      2572,
+      2814,
+      1521,
+      3099,
+      3193,
+      1385,
+      1067,
+      3127,
+      2601,
+      1401,
+      3421,
+      2376,
+      1964,
+      3111,
+      785,
+      1790,
+      2197,
+      2560,
+      3330,
+      3787,
+      4394,
+      2762,
+      533,
+      2084,
+      2969,
+      3072,
+      1681,
+      2845,
+      697,
+      2172,
+      3076,
+      3213,
+      2076,
+      1526,
+      1697,
+      2722,
+      2262,
+      1468,
+      704,
+      2601,
+      1541,
+      516,
+      145,
+      1248,
+      2007,
+      182,
+      512,
+      661,
+      1531,
+      1901,
+      2571,
+      3077,
+      1793,
+      2315,
+      3270,
+      334,
+      2195
+    ]
+  },
+  "cpuAveragePercent": {
+    "territory-field-labs-api-1": 4.067368421052632,
+    "territory-field-labs-db-1": 33.974736842105266,
+    "territory-field-labs-proxy-1": 1.188421052631579,
+    "territory-field-labs-bun-1": 39.65210526315789,
+    "territory-field-labs-nest-1": 0.0,
+    "territory-field-lab-generator": 4.95578947368421
+  },
+  "cpuMaxPercent": {
+    "territory-field-labs-api-1": 16.64,
+    "territory-field-labs-db-1": 54.63,
+    "territory-field-labs-proxy-1": 2.35,
+    "territory-field-labs-bun-1": 52.0,
+    "territory-field-labs-nest-1": 0.0,
+    "territory-field-lab-generator": 11.24
+  },
+  "sampledMemoryUsage": {
+    "territory-field-labs-api-1": [
+      "73.9MiB / 2GiB",
+      "73.8MiB / 2GiB",
+      "74.54MiB / 2GiB",
+      "75.43MiB / 2GiB",
+      "75.46MiB / 2GiB",
+      "74.54MiB / 2GiB",
+      "75.49MiB / 2GiB",
+      "74.82MiB / 2GiB",
+      "75.12MiB / 2GiB",
+      "75.68MiB / 2GiB",
+      "76.45MiB / 2GiB",
+      "75.84MiB / 2GiB",
+      "76.83MiB / 2GiB",
+      "76.15MiB / 2GiB",
+      "76.53MiB / 2GiB",
+      "76.6MiB / 2GiB",
+      "76.75MiB / 2GiB",
+      "78.52MiB / 2GiB",
+      "78.35MiB / 2GiB"
+    ],
+    "territory-field-labs-db-1": [
+      "111.2MiB / 2GiB",
+      "112.3MiB / 2GiB",
+      "113.3MiB / 2GiB",
+      "113.2MiB / 2GiB",
+      "114.9MiB / 2GiB",
+      "114.4MiB / 2GiB",
+      "114.8MiB / 2GiB",
+      "113.9MiB / 2GiB",
+      "114MiB / 2GiB",
+      "112.3MiB / 2GiB",
+      "115.1MiB / 2GiB",
+      "114.3MiB / 2GiB",
+      "114.7MiB / 2GiB",
+      "114.9MiB / 2GiB",
+      "114.8MiB / 2GiB",
+      "114.4MiB / 2GiB",
+      "115.4MiB / 2GiB",
+      "112.8MiB / 2GiB",
+      "114.1MiB / 2GiB"
+    ],
+    "territory-field-labs-proxy-1": [
+      "6.941MiB / 128MiB",
+      "6.996MiB / 128MiB",
+      "6.848MiB / 128MiB",
+      "7.516MiB / 128MiB",
+      "7.203MiB / 128MiB",
+      "6.953MiB / 128MiB",
+      "7.395MiB / 128MiB",
+      "6.789MiB / 128MiB",
+      "7.438MiB / 128MiB",
+      "6.789MiB / 128MiB",
+      "7.277MiB / 128MiB",
+      "7.434MiB / 128MiB",
+      "7.262MiB / 128MiB",
+      "7.391MiB / 128MiB",
+      "7.039MiB / 128MiB",
+      "6.793MiB / 128MiB",
+      "7.199MiB / 128MiB",
+      "7.504MiB / 128MiB",
+      "7.223MiB / 128MiB"
+    ],
+    "territory-field-labs-bun-1": [
+      "100.7MiB / 2GiB",
+      "111.2MiB / 2GiB",
+      "107.3MiB / 2GiB",
+      "104.4MiB / 2GiB",
+      "113.7MiB / 2GiB",
+      "121MiB / 2GiB",
+      "108.5MiB / 2GiB",
+      "105.3MiB / 2GiB",
+      "111.6MiB / 2GiB",
+      "109MiB / 2GiB",
+      "112.3MiB / 2GiB",
+      "111.8MiB / 2GiB",
+      "112.1MiB / 2GiB",
+      "108.5MiB / 2GiB",
+      "111.5MiB / 2GiB",
+      "110.7MiB / 2GiB",
+      "111.4MiB / 2GiB",
+      "104.8MiB / 2GiB",
+      "108.3MiB / 2GiB"
+    ],
+    "territory-field-labs-nest-1": [
+      "0B / 0B",
+      "0B / 0B",
+      "0B / 0B",
+      "0B / 0B",
+      "0B / 0B",
+      "0B / 0B",
+      "0B / 0B",
+      "0B / 0B",
+      "0B / 0B",
+      "0B / 0B",
+      "0B / 0B",
+      "0B / 0B",
+      "0B / 0B",
+      "0B / 0B",
+      "0B / 0B",
+      "0B / 0B",
+      "0B / 0B",
+      "0B / 0B",
+      "0B / 0B"
+    ],
+    "territory-field-lab-generator": [
+      "84.24MiB / 1GiB",
+      "84.64MiB / 1GiB",
+      "90.29MiB / 1GiB",
+      "90.02MiB / 1GiB",
+      "90.15MiB / 1GiB",
+      "90.46MiB / 1GiB",
+      "90.23MiB / 1GiB",
+      "90.16MiB / 1GiB",
+      "90.4MiB / 1GiB",
+      "90.27MiB / 1GiB",
+      "90.82MiB / 1GiB",
+      "90.88MiB / 1GiB",
+      "90.4MiB / 1GiB",
+      "90.44MiB / 1GiB",
+      "90.48MiB / 1GiB",
+      "90.25MiB / 1GiB",
+      "91.11MiB / 1GiB",
+      "90.99MiB / 1GiB",
+      "90.54MiB / 1GiB"
+    ]
+  },
+  "before": [
+    {
+      "service": "api",
+      "imageId": "sha256:93f0f200bc3e5c6ae9b7273653a300b4486746fb5a08e92b0215731735918a85",
+      "cpuLimit": 0.4,
+      "memoryLimit": 2147483648,
+      "oom": false,
+      "restarts": 0,
+      "running": true
+    },
+    {
+      "service": "bun",
+      "imageId": "sha256:c83574d2acfb7840843985f28ffe1e3aec09c3734cdfa1143aae0c384cd67199",
+      "cpuLimit": 0.5,
+      "memoryLimit": 2147483648,
+      "oom": false,
+      "restarts": 0,
+      "running": true
+    },
+    {
+      "service": "db",
+      "imageId": "sha256:81bd698b4594e751a3269e4dcd3e03a4a0ec0daf7b72e7aa1abd43cce9887542",
+      "cpuLimit": 1.0,
+      "memoryLimit": 2147483648,
+      "oom": false,
+      "restarts": 0,
+      "running": true
+    },
+    {
+      "service": "proxy",
+      "imageId": "sha256:dc73b49f5124cf2ee538dfbdfbd121f0b4ccdcb20fea30f3a81bd477c02e2bb5",
+      "cpuLimit": 0.1,
+      "memoryLimit": 134217728,
+      "oom": false,
+      "restarts": 0,
+      "running": true
+    }
+  ],
+  "after": [
+    {
+      "service": "api",
+      "imageId": "sha256:93f0f200bc3e5c6ae9b7273653a300b4486746fb5a08e92b0215731735918a85",
+      "cpuLimit": 0.4,
+      "memoryLimit": 2147483648,
+      "oom": false,
+      "restarts": 0,
+      "running": true
+    },
+    {
+      "service": "bun",
+      "imageId": "sha256:c83574d2acfb7840843985f28ffe1e3aec09c3734cdfa1143aae0c384cd67199",
+      "cpuLimit": 0.5,
+      "memoryLimit": 2147483648,
+      "oom": false,
+      "restarts": 0,
+      "running": true
+    },
+    {
+      "service": "db",
+      "imageId": "sha256:81bd698b4594e751a3269e4dcd3e03a4a0ec0daf7b72e7aa1abd43cce9887542",
+      "cpuLimit": 1.0,
+      "memoryLimit": 2147483648,
+      "oom": false,
+      "restarts": 0,
+      "running": true
+    },
+    {
+      "service": "proxy",
+      "imageId": "sha256:dc73b49f5124cf2ee538dfbdfbd121f0b4ccdcb20fea30f3a81bd477c02e2bb5",
+      "cpuLimit": 0.1,
+      "memoryLimit": 134217728,
+      "oom": false,
+      "restarts": 0,
+      "running": true
+    }
+  ],
+  "metrics": {
+    "http_req_waiting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 17819.697751935808,
+        "min": 28.66015,
+        "med": 25020.61243,
+        "max": 25816.855894,
+        "p(90)": 25073.854471,
+        "p(95)": 25109.764413,
+        "p(99)": 25288.47133876
+      }
+    },
+    "http_reqs": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 2305,
+        "rate": 7.687614744388396
+      }
+    },
+    "http_req_receiving": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.33455115010845987,
+        "min": 0.041345,
+        "med": 0.148481,
+        "max": 5.411541,
+        "p(90)": 0.8346562,
+        "p(95)": 0.9344679999999996,
+        "p(99)": 1.1096566400000003
+      }
+    },
+    "started_in_window_errors": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 1235
+      },
+      "thresholds": {
+        "rate<0.01": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_tls_handshaking": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0,
+        "min": 0,
+        "med": 0,
+        "max": 0,
+        "p(90)": 0,
+        "p(95)": 0,
+        "p(99)": 0
+      }
+    },
+    "changed_snapshots": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 756,
+        "rate": 2.521404228528255
+      }
+    },
+    "http_req_blocked": {
+      "values": {
+        "med": 0.015854,
+        "max": 7.98776,
+        "p(90)": 0.028731999999999976,
+        "p(95)": 0.461053,
+        "p(99)": 0.5593228400000001,
+        "avg": 0.0644898286334052,
+        "min": 0.007542
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "data_sent": {
+      "values": {
+        "count": 1223740,
+        "rate": 4081.406363252866
+      },
+      "type": "counter",
+      "contains": "data"
+    },
+    "mark_ms": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 328.9203394699997,
+        "avg": 81.96407846666668,
+        "min": 31.709851,
+        "med": 76.0380965,
+        "max": 379.811065,
+        "p(90)": 93.57074990000001,
+        "p(95)": 175.87674739999997
+      },
+      "thresholds": {
+        "p(95)<=500": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_connecting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0,
+        "p(95)": 0.35689479999999996,
+        "p(99)": 0.43547808000000005,
+        "avg": 0.032781865943600844,
+        "min": 0,
+        "med": 0,
+        "max": 5.255921
+      }
+    },
+    "initial_snapshots": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 150,
+        "rate": 0.5002786167714791
+      }
+    },
+    "iterations": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "rate": 7.687614744388396,
+        "count": 2305
+      }
+    },
+    "principal_snapshot_ms": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 195.44569,
+        "max": 584.152189,
+        "p(90)": 214.4186973,
+        "p(95)": 352.09234309999965,
+        "p(99)": 536.2752999899999,
+        "avg": 200.6589054166667,
+        "min": 95.409476
+      }
+    },
+    "dropped_iterations": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count==0": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_sending": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.11625499999999996,
+        "p(99)": 0.1738847200000002,
+        "avg": 0.06334651409978324,
+        "min": 0.016273,
+        "med": 0.042812,
+        "max": 4.891031,
+        "p(90)": 0.09376699999999996
+      }
+    },
+    "vus": {
+      "contains": "default",
+      "values": {
+        "value": 3,
+        "min": 3,
+        "max": 166
+      },
+      "type": "gauge"
+    },
+    "snapshot_ms": {
+      "contains": "time",
+      "values": {
+        "min": 29.162298,
+        "med": 58.5271305,
+        "max": 850.43204,
+        "p(90)": 160.88292089999996,
+        "p(95)": 252.7259388499999,
+        "p(99)": 604.5424465799991,
+        "avg": 91.19167044666668
+      },
+      "thresholds": {
+        "p(95)<=1000": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "http_req_failed": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "passes": 0,
+        "fails": 2305,
+        "rate": 0
+      }
+    },
+    "iteration_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 29997.307657840003,
+        "avg": 19518.670042888047,
+        "min": 43.252199,
+        "med": 25022.405606,
+        "max": 30106.720264,
+        "p(90)": 25093.939153799998,
+        "p(95)": 25213.7259852
+      }
+    },
+    "principal_snapshot_errors": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "passes": 0,
+        "fails": 24,
+        "rate": 0
+      },
+      "thresholds": {
+        "rate<0.01": {
+          "ok": true
+        }
+      }
+    },
+    "vus_max": {
+      "contains": "default",
+      "values": {
+        "value": 166,
+        "min": 166,
+        "max": 166
+      },
+      "type": "gauge"
+    },
+    "http_req_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 29.162298,
+        "med": 25020.832891,
+        "max": 25817.045159,
+        "p(90)": 25074.0529148,
+        "p(95)": 25109.957688399998,
+        "p(99)": 25288.63022736,
+        "avg": 17820.0956496
+      }
+    },
+    "http_req_duration{expected_response:true}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 29.162298,
+        "med": 25020.832891,
+        "max": 25817.045159,
+        "p(90)": 25074.0529148,
+        "p(95)": 25109.957688399998,
+        "p(99)": 25288.63022736,
+        "avg": 17820.0956496
+      }
+    },
+    "writer_start_lateness_ms": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 1,
+        "p(99)": 1.4099999999999966,
+        "avg": 0.75,
+        "min": 0,
+        "med": 1,
+        "max": 2,
+        "p(90)": 1
+      },
+      "thresholds": {
+        "p(95)<=500": {
+          "ok": true
+        }
+      }
+    },
+    "data_received": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 44315624,
+        "rate": 147801.06050723308
+      }
+    },
+    "initial_ready": {
+      "contains": "default",
+      "values": {
+        "count": 150,
+        "rate": 0.5002786167714791
+      },
+      "thresholds": {
+        "count>=150": {
+          "ok": true
+        }
+      },
+      "type": "counter"
+    },
+    "unexpected_errors": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 2305
+      },
+      "thresholds": {
+        "rate<0.01": {
+          "ok": true
+        }
+      }
+    }
+  },
+  "monitor": [
+    {
+      "time": 1792923838.494224,
+      "hostLoad": [
+        3.82861328125,
+        3.02099609375,
+        2.32177734375
+      ],
+      "containers": [],
+      "database": {
+        "active": 2,
+        "idleInTransaction": 0,
+        "connections": 7,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923844.744904,
+      "hostLoad": [
+        3.76220703125,
+        3.0205078125,
+        2.32568359375
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "4.52%",
+          "MemUsage": "92.55MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "56.6kB / 10kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "39.8MB / 1.32MB",
+          "CPUPerc": "14.74%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "4.47%",
+          "MemUsage": "91.45MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "12.1MB / 27.6MB",
+          "PIDs": "14"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.76%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "3.92%",
+          "MemUsage": "5.02MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "4.32MB / 4.26MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "39.26%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.09%",
+          "MemUsage": "104.2MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "2.84MB / 5.82MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "12.13%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "6.25%",
+          "MemUsage": "64.02MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "1.63MB / 73.1kB",
+          "PIDs": "6"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 2,
+        "connections": 9,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923851.0100682,
+      "hostLoad": [
+        3.62060546875,
+        3.00341796875,
+        2.32373046875
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "4.44%",
+          "MemUsage": "90.83MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "57.3kB / 10kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "39.8MB / 1.32MB",
+          "CPUPerc": "20.14%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "4.97%",
+          "MemUsage": "101.9MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "13MB / 28.9MB",
+          "PIDs": "18"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "1.11%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "4.40%",
+          "MemUsage": "5.637MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "6.01MB / 5.94MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "35.62%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "4.95%",
+          "MemUsage": "101.3MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "4.15MB / 8.31MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "4.26%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "6.59%",
+          "MemUsage": "67.45MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "3.12MB / 139kB",
+          "PIDs": "6"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 13,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923857.279723,
+      "hostLoad": [
+        3.60546875,
+        3.01953125,
+        2.3369140625
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "4.44%",
+          "MemUsage": "90.83MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "57.3kB / 10kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "39.8MB / 1.32MB",
+          "CPUPerc": "21.79%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "4.85%",
+          "MemUsage": "99.23MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "13.9MB / 30.1MB",
+          "PIDs": "17"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "1.12%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.02%",
+          "MemUsage": "6.43MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "7.35MB / 7.26MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "46.03%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.42%",
+          "MemUsage": "111MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "5.5MB / 10.8MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "3.91%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "6.85%",
+          "MemUsage": "70.13MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "4.85MB / 217kB",
+          "PIDs": "6"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 12,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923863.5315304,
+      "hostLoad": [
+        3.4765625,
+        3.00244140625,
+        2.3349609375
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "4.44%",
+          "MemUsage": "90.83MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "57.3kB / 10kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "39.8MB / 1.32MB",
+          "CPUPerc": "35.26%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.23%",
+          "MemUsage": "107.1MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "15MB / 31.5MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "1.71%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.39%",
+          "MemUsage": "6.895MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "9.25MB / 9.15MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "50.03%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.48%",
+          "MemUsage": "112.3MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "6.97MB / 13.4MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "3.45%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "7.18%",
+          "MemUsage": "73.55MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "6.1MB / 274kB",
+          "PIDs": "6"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923869.798538,
+      "hostLoad": [
+        3.19775390625,
+        2.9521484375,
+        2.322265625
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "4.44%",
+          "MemUsage": "90.83MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "57.3kB / 10kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 1.45MB",
+          "CPUPerc": "13.46%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.27%",
+          "MemUsage": "107.9MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "16MB / 32.6MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.18%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.43%",
+          "MemUsage": "6.949MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "10.2MB / 10.1MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "32.97%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.48%",
+          "MemUsage": "112.2MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "8.07MB / 15.2MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "1.07%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "7.34%",
+          "MemUsage": "75.13MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "7.22MB / 344kB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923876.052239,
+      "hostLoad": [
+        3.021484375,
+        2.91943359375,
+        2.31494140625
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "4.44%",
+          "MemUsage": "90.86MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "57.6kB / 10.3kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 1.45MB",
+          "CPUPerc": "16.50%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.24%",
+          "MemUsage": "107.3MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "16.7MB / 33.2MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.19%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.43%",
+          "MemUsage": "6.953MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "10.2MB / 10.1MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "26.34%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.06%",
+          "MemUsage": "103.6MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "8.74MB / 16MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "1.24%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "7.34%",
+          "MemUsage": "75.14MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "7.24MB / 361kB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923882.3239784,
+      "hostLoad": [
+        2.79052734375,
+        2.8720703125,
+        2.3056640625
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "4.44%",
+          "MemUsage": "90.86MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "57.7kB / 10.3kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 1.45MB",
+          "CPUPerc": "15.97%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.26%",
+          "MemUsage": "107.7MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "17.4MB / 33.7MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.22%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.62%",
+          "MemUsage": "7.195MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "10.2MB / 10.1MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "23.81%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.08%",
+          "MemUsage": "104.1MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "9.33MB / 16.6MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "1.35%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "7.36%",
+          "MemUsage": "75.39MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "7.26MB / 379kB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 13,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923888.577792,
+      "hostLoad": [
+        2.56689453125,
+        2.82421875,
+        2.29296875
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "18.92%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.58%",
+          "MemUsage": "73.22MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "57.7kB / 10.3kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 1.47MB",
+          "CPUPerc": "24.26%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "4.89%",
+          "MemUsage": "100.2MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "18.1MB / 34.3MB",
+          "PIDs": "17"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.43%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.82%",
+          "MemUsage": "7.445MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "10.3MB / 10.2MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "26.95%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.13%",
+          "MemUsage": "105.1MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "9.82MB / 17.2MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "2.25%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "7.34%",
+          "MemUsage": "75.14MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "7.28MB / 407kB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 11,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923894.846673,
+      "hostLoad": [
+        2.44140625,
+        2.79345703125,
+        2.28564453125
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.50%",
+          "MemUsage": "71.62MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "57.7kB / 10.3kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 1.47MB",
+          "CPUPerc": "13.42%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "4.74%",
+          "MemUsage": "97.06MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "18.8MB / 35MB",
+          "PIDs": "16"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.18%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.62%",
+          "MemUsage": "7.188MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "10.3MB / 10.2MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "22.72%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.17%",
+          "MemUsage": "106MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "10.6MB / 18.2MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "1.04%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "7.32%",
+          "MemUsage": "74.91MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "7.31MB / 434kB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 2,
+        "idleInTransaction": 0,
+        "connections": 11,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923901.1451051,
+      "hostLoad": [
+        2.24560546875,
+        2.7470703125,
+        2.27294921875
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.51%",
+          "MemUsage": "71.8MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "57.9kB / 10.6kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 1.48MB",
+          "CPUPerc": "16.83%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "4.75%",
+          "MemUsage": "97.34MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "19.5MB / 35.6MB",
+          "PIDs": "16"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.16%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.44%",
+          "MemUsage": "6.957MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "10.4MB / 10.3MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "25.59%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.20%",
+          "MemUsage": "106.5MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "11.2MB / 18.9MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "1.36%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "7.34%",
+          "MemUsage": "75.16MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "7.33MB / 455kB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 11,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923907.4092884,
+      "hostLoad": [
+        2.201171875,
+        2.72216796875,
+        2.26953125
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.07%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.61%",
+          "MemUsage": "73.9MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "118kB / 107kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 1.5MB",
+          "CPUPerc": "23.47%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.43%",
+          "MemUsage": "111.2MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "20.6MB / 36.8MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "1.20%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.42%",
+          "MemUsage": "6.941MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "11.3MB / 11.2MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "34.72%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "4.92%",
+          "MemUsage": "100.7MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "12.5MB / 21MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "6.46%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.23%",
+          "MemUsage": "84.24MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "8.49MB / 501kB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923913.6530337,
+      "hostLoad": [
+        2.10498046875,
+        2.693359375,
+        2.2626953125
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "4.31%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.60%",
+          "MemUsage": "73.8MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "162kB / 181kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 1.5MB",
+          "CPUPerc": "40.75%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.48%",
+          "MemUsage": "112.3MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "21.8MB / 38.5MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "1.03%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.47%",
+          "MemUsage": "6.996MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "13.5MB / 13.3MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "42.46%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.43%",
+          "MemUsage": "111.2MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "14.2MB / 24.1MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "3.63%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.27%",
+          "MemUsage": "84.64MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "10.4MB / 566kB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923919.9050322,
+      "hostLoad": [
+        1.93603515625,
+        2.6484375,
+        2.25048828125
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.03%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.64%",
+          "MemUsage": "74.54MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "232kB / 308kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 1.5MB",
+          "CPUPerc": "31.71%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.53%",
+          "MemUsage": "113.3MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "23.1MB / 40.3MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.68%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.35%",
+          "MemUsage": "6.848MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "15.6MB / 15.4MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "40.54%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.24%",
+          "MemUsage": "107.3MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "16MB / 27.4MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "6.61%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.82%",
+          "MemUsage": "90.29MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "12.2MB / 620kB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923926.1578035,
+      "hostLoad": [
+        2.021484375,
+        2.654296875,
+        2.2548828125
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "3.56%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.68%",
+          "MemUsage": "75.43MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "276kB / 381kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 1.5MB",
+          "CPUPerc": "35.67%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.53%",
+          "MemUsage": "113.2MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "24.2MB / 41.9MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.94%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.87%",
+          "MemUsage": "7.516MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "17.5MB / 17.3MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "37.81%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.10%",
+          "MemUsage": "104.4MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "17.6MB / 30.4MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "2.93%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.79%",
+          "MemUsage": "90.02MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "14MB / 668kB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923932.4115756,
+      "hostLoad": [
+        2.1044921875,
+        2.6494140625,
+        2.2578125
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "2.67%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.68%",
+          "MemUsage": "75.46MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "320kB / 454kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 1.5MB",
+          "CPUPerc": "39.75%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.61%",
+          "MemUsage": "114.9MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "25.4MB / 43.7MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "1.50%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.63%",
+          "MemUsage": "7.203MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "20MB / 19.7MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "40.20%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.55%",
+          "MemUsage": "113.7MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "19MB / 33.1MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "6.20%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.80%",
+          "MemUsage": "90.15MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "16.7MB / 743kB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923938.6750877,
+      "hostLoad": [
+        2.25634765625,
+        2.671875,
+        2.267578125
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "4.40%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.64%",
+          "MemUsage": "74.54MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "359kB / 520kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 1.5MB",
+          "CPUPerc": "25.10%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.59%",
+          "MemUsage": "114.4MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "26.3MB / 44.8MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "2.35%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.43%",
+          "MemUsage": "6.953MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "21.9MB / 21.6MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "52.00%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.91%",
+          "MemUsage": "121MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "21.1MB / 37MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "8.27%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.83%",
+          "MemUsage": "90.46MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "18.6MB / 812kB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 4,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923944.945074,
+      "hostLoad": [
+        2.2353515625,
+        2.66064453125,
+        2.26611328125
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "16.64%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.69%",
+          "MemUsage": "75.49MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "425kB / 642kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 1.5MB",
+          "CPUPerc": "45.84%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.60%",
+          "MemUsage": "114.8MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "28MB / 47MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "1.89%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.78%",
+          "MemUsage": "7.395MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "23.7MB / 23.4MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "42.11%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.30%",
+          "MemUsage": "108.5MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "22.8MB / 40.1MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "4.57%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.81%",
+          "MemUsage": "90.23MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "19.8MB / 868kB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923951.1973114,
+      "hostLoad": [
+        2.21630859375,
+        2.6494140625,
+        2.2646484375
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.03%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.65%",
+          "MemUsage": "74.82MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "465kB / 708kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 1.5MB",
+          "CPUPerc": "33.29%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.56%",
+          "MemUsage": "113.9MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "29.4MB / 48.9MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.88%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.30%",
+          "MemUsage": "6.789MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "25.8MB / 25.4MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "39.24%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.14%",
+          "MemUsage": "105.3MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "24.4MB / 42.9MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "3.97%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.80%",
+          "MemUsage": "90.16MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "22.4MB / 970kB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923957.469851,
+      "hostLoad": [
+        2.349609375,
+        2.6611328125,
+        2.27294921875
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "4.52%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.67%",
+          "MemUsage": "75.12MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "504kB / 774kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 1.5MB",
+          "CPUPerc": "37.43%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.56%",
+          "MemUsage": "114MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "30.5MB / 50.5MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "1.15%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.81%",
+          "MemUsage": "7.438MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "27.7MB / 27.3MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "39.03%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.45%",
+          "MemUsage": "111.6MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "26.3MB / 46.4MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "4.08%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.83%",
+          "MemUsage": "90.4MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "24.3MB / 1.03MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923963.747107,
+      "hostLoad": [
+        2.40185546875,
+        2.6669921875,
+        2.27685546875
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "3.52%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.70%",
+          "MemUsage": "75.68MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "543kB / 841kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 1.5MB",
+          "CPUPerc": "19.33%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.48%",
+          "MemUsage": "112.3MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "31.6MB / 52.1MB",
+          "PIDs": "19"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.52%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.30%",
+          "MemUsage": "6.789MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "29.8MB / 29.3MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "25.91%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.32%",
+          "MemUsage": "109MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "27.9MB / 49.5MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "1.95%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.82%",
+          "MemUsage": "90.27MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "26.3MB / 1.09MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 14,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923970.0262244,
+      "hostLoad": [
+        2.9306640625,
+        2.7724609375,
+        2.31298828125
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.20%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.73%",
+          "MemUsage": "76.45MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "583kB / 908kB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 1.5MB",
+          "CPUPerc": "27.91%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.62%",
+          "MemUsage": "115.1MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "32.8MB / 53.7MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.62%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.69%",
+          "MemUsage": "7.277MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "31.6MB / 31.1MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "32.25%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.48%",
+          "MemUsage": "112.3MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "29.6MB / 52.5MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "4.45%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.87%",
+          "MemUsage": "90.82MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "28MB / 1.15MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923976.3229673,
+      "hostLoad": [
+        2.85595703125,
+        2.75927734375,
+        2.31103515625
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "12.42%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.70%",
+          "MemUsage": "75.84MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "652kB / 1.03MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 1.5MB",
+          "CPUPerc": "54.63%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.58%",
+          "MemUsage": "114.3MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "34.4MB / 55.8MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "2.16%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.81%",
+          "MemUsage": "7.434MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "34.1MB / 33.5MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "43.76%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.46%",
+          "MemUsage": "111.8MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "31.7MB / 56.3MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "5.39%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.87%",
+          "MemUsage": "90.88MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "29.7MB / 1.23MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923982.6522553,
+      "hostLoad": [
+        3.53466796875,
+        2.9140625,
+        2.3662109375
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "3.59%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.75%",
+          "MemUsage": "76.83MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "692kB / 1.1MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 2.13MB",
+          "CPUPerc": "46.17%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.60%",
+          "MemUsage": "114.7MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "35.7MB / 57.5MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.65%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.67%",
+          "MemUsage": "7.262MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "35.5MB / 34.9MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "50.52%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.47%",
+          "MemUsage": "112.1MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "33.5MB / 59.5MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "5.72%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.83%",
+          "MemUsage": "90.4MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "32.3MB / 1.33MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923988.9507594,
+      "hostLoad": [
+        3.41162109375,
+        2.8984375,
+        2.36376953125
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "4.99%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.72%",
+          "MemUsage": "76.15MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "731kB / 1.17MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 2.51MB",
+          "CPUPerc": "39.02%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.61%",
+          "MemUsage": "114.9MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "36.8MB / 59MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "1.54%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.77%",
+          "MemUsage": "7.391MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "37.9MB / 37.3MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "39.36%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.30%",
+          "MemUsage": "108.5MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "35MB / 62.4MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "3.45%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.83%",
+          "MemUsage": "90.44MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "33.7MB / 1.37MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 2,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792923995.2331922,
+      "hostLoad": [
+        3.29833984375,
+        2.88330078125,
+        2.361328125
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.03%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.74%",
+          "MemUsage": "76.53MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "770kB / 1.23MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 2.91MB",
+          "CPUPerc": "30.83%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.60%",
+          "MemUsage": "114.8MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "37.8MB / 60.6MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "1.19%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.50%",
+          "MemUsage": "7.039MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "39.9MB / 39.2MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "37.09%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.44%",
+          "MemUsage": "111.5MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "36.6MB / 65.3MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "1.32%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.84%",
+          "MemUsage": "90.48MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "35.7MB / 1.43MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924001.5177925,
+      "hostLoad": [
+        3.9609375,
+        3.0361328125,
+        2.4169921875
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "8.71%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.74%",
+          "MemUsage": "76.6MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "809kB / 1.3MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 3.72MB",
+          "CPUPerc": "40.86%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.58%",
+          "MemUsage": "114.4MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "39.2MB / 62.4MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "1.38%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.31%",
+          "MemUsage": "6.793MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "41.7MB / 41MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "45.01%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.40%",
+          "MemUsage": "110.7MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "38.4MB / 68.5MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "5.68%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.81%",
+          "MemUsage": "90.25MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "37.9MB / 1.52MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924007.8004577,
+      "hostLoad": [
+        3.6435546875,
+        2.9853515625,
+        2.40380859375
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.04%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.75%",
+          "MemUsage": "76.75MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "875kB / 1.42MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 4.54MB",
+          "CPUPerc": "33.60%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.63%",
+          "MemUsage": "115.4MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "40.7MB / 64.5MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "1.39%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.62%",
+          "MemUsage": "7.199MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "44.3MB / 43.6MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "40.28%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.44%",
+          "MemUsage": "111.4MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "40.2MB / 71.9MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "11.24%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.90%",
+          "MemUsage": "91.11MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "40.5MB / 1.61MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924014.057376,
+      "hostLoad": [
+        3.591796875,
+        2.98583984375,
+        2.4072265625
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "2.80%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.83%",
+          "MemUsage": "78.52MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "917kB / 1.49MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 5.12MB",
+          "CPUPerc": "21.41%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.51%",
+          "MemUsage": "112.8MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "42MB / 66.1MB",
+          "PIDs": "19"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.72%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.86%",
+          "MemUsage": "7.504MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "46.2MB / 45.4MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "30.96%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.12%",
+          "MemUsage": "104.8MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "42.2MB / 75.5MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "3.56%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.89%",
+          "MemUsage": "90.99MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "42MB / 1.67MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 14,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924020.3381882,
+      "hostLoad": [
+        3.3837890625,
+        2.95263671875,
+        2.3994140625
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "4.75%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.83%",
+          "MemUsage": "78.35MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "958kB / 1.56MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 5.46MB",
+          "CPUPerc": "18.75%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.57%",
+          "MemUsage": "114.1MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "42.9MB / 67.5MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.79%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.64%",
+          "MemUsage": "7.223MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "47.8MB / 47MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "40.14%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.29%",
+          "MemUsage": "108.3MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "43.4MB / 77.6MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "4.68%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.84%",
+          "MemUsage": "90.54MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "43.6MB / 1.72MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924026.6028154,
+      "hostLoad": [
+        3.103515625,
+        2.9052734375,
+        2.3896484375
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.09%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.84%",
+          "MemUsage": "78.67MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "985kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 5.75MB",
+          "CPUPerc": "17.10%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.59%",
+          "MemUsage": "114.4MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "43.8MB / 68.6MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.28%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.30%",
+          "MemUsage": "6.789MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "48.9MB / 48.1MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "24.24%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.13%",
+          "MemUsage": "105MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "44.7MB / 79.9MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.86%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.82%",
+          "MemUsage": "90.27MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "44.9MB / 1.76MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924032.8620603,
+      "hostLoad": [
+        3.09521484375,
+        2.9072265625,
+        2.39306640625
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.84%",
+          "MemUsage": "78.67MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "985kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 6.2MB",
+          "CPUPerc": "14.84%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.58%",
+          "MemUsage": "114.3MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "44.6MB / 69.3MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.24%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.49%",
+          "MemUsage": "7.027MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "49MB / 48.2MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "24.52%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.24%",
+          "MemUsage": "107.3MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "45.4MB / 80.8MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "2.24%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.84%",
+          "MemUsage": "90.54MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "45MB / 1.79MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924039.1133626,
+      "hostLoad": [
+        2.84716796875,
+        2.85888671875,
+        2.3798828125
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.84%",
+          "MemUsage": "78.67MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "985kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 6.53MB",
+          "CPUPerc": "12.40%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.63%",
+          "MemUsage": "115.2MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "45.3MB / 69.8MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.12%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.49%",
+          "MemUsage": "7.027MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "49MB / 48.2MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "18.61%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.28%",
+          "MemUsage": "108.1MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "46MB / 81.5MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "1.26%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.86%",
+          "MemUsage": "90.78MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "45MB / 1.81MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924045.3817132,
+      "hostLoad": [
+        2.69921875,
+        2.82763671875,
+        2.3720703125
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.84%",
+          "MemUsage": "78.67MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "985kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 6.83MB",
+          "CPUPerc": "13.47%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.61%",
+          "MemUsage": "114.9MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "46MB / 70.4MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.12%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.86%",
+          "MemUsage": "7.496MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "49.1MB / 48.2MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "22.51%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.31%",
+          "MemUsage": "108.8MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "46.6MB / 82.2MB",
+          "PIDs": "5"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "1.78%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.84%",
+          "MemUsage": "90.53MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "45MB / 1.83MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924051.6395657,
+      "hostLoad": [
+        2.43115234375,
+        2.7666015625,
+        2.3564453125
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.85%",
+          "MemUsage": "78.79MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "986kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 7.11MB",
+          "CPUPerc": "15.31%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.50%",
+          "MemUsage": "112.7MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "46.6MB / 71MB",
+          "PIDs": "19"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.26%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.70%",
+          "MemUsage": "7.301MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "49.1MB / 48.3MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "22.41%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.41%",
+          "MemUsage": "110.8MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "47.2MB / 82.9MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.92%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.82%",
+          "MemUsage": "90.28MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "45MB / 1.85MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 14,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924057.8953748,
+      "hostLoad": [
+        2.396484375,
+        2.75341796875,
+        2.3544921875
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.85%",
+          "MemUsage": "78.79MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "986kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 7.58MB",
+          "CPUPerc": "14.11%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.36%",
+          "MemUsage": "109.8MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "47.4MB / 71.7MB",
+          "PIDs": "18"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.20%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.30%",
+          "MemUsage": "6.789MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "49.2MB / 48.3MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "24.11%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.39%",
+          "MemUsage": "110.4MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "47.9MB / 83.7MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "1.50%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.82%",
+          "MemUsage": "90.29MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "45.1MB / 1.88MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 13,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924064.149815,
+      "hostLoad": [
+        2.2841796875,
+        2.72412109375,
+        2.34716796875
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.85%",
+          "MemUsage": "78.79MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "986kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 7.89MB",
+          "CPUPerc": "18.36%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.24%",
+          "MemUsage": "107.4MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "48MB / 72.2MB",
+          "PIDs": "17"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.14%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.49%",
+          "MemUsage": "7.027MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "49.2MB / 48.4MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "21.77%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.09%",
+          "MemUsage": "104.2MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "48.5MB / 84.4MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "1.06%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.84%",
+          "MemUsage": "90.54MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "45.1MB / 1.91MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 12,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924070.4063241,
+      "hostLoad": [
+        2.10107421875,
+        2.6787109375,
+        2.33447265625
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.85%",
+          "MemUsage": "78.79MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "986kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 8.21MB",
+          "CPUPerc": "19.60%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.23%",
+          "MemUsage": "107.1MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "48.7MB / 72.7MB",
+          "PIDs": "17"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.15%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.69%",
+          "MemUsage": "7.285MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "49.2MB / 48.4MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "28.65%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.13%",
+          "MemUsage": "105.1MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "49.1MB / 85.1MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.98%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.87%",
+          "MemUsage": "90.79MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "45.1MB / 1.93MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 13,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924076.6679802,
+      "hostLoad": [
+        2.33203125,
+        2.7060546875,
+        2.34716796875
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.85%",
+          "MemUsage": "78.79MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "986kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 8.91MB",
+          "CPUPerc": "22.03%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.36%",
+          "MemUsage": "109.7MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "49.4MB / 73.4MB",
+          "PIDs": "18"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.09%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.29%",
+          "MemUsage": "6.77MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "49.3MB / 48.4MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "27.85%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.15%",
+          "MemUsage": "105.5MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "49.7MB / 85.8MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "1.69%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.84%",
+          "MemUsage": "90.53MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "45.1MB / 1.94MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 13,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924082.978277,
+      "hostLoad": [
+        2.30517578125,
+        2.69384765625,
+        2.34521484375
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.85%",
+          "MemUsage": "78.92MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "986kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 9.67MB",
+          "CPUPerc": "20.26%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.54%",
+          "MemUsage": "113.5MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "50.3MB / 74.1MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.23%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.47%",
+          "MemUsage": "7.004MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "49.3MB / 48.5MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "39.79%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.19%",
+          "MemUsage": "106.3MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "50.3MB / 86.5MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "1.31%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.84%",
+          "MemUsage": "90.52MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "45.1MB / 1.98MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924089.2462277,
+      "hostLoad": [
+        2.2001953125,
+        2.66552734375,
+        2.337890625
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.85%",
+          "MemUsage": "78.92MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "986kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 10MB",
+          "CPUPerc": "19.96%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.55%",
+          "MemUsage": "113.8MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "50.9MB / 74.7MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.18%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.47%",
+          "MemUsage": "6.996MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "49.4MB / 48.6MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "21.91%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "4.98%",
+          "MemUsage": "101.9MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "51MB / 87.3MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "1.47%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.86%",
+          "MemUsage": "90.76MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "45.2MB / 2MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924095.5165186,
+      "hostLoad": [
+        2.18408203125,
+        2.654296875,
+        2.3359375
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.02%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.85%",
+          "MemUsage": "78.92MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "986kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 10.3MB",
+          "CPUPerc": "19.50%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.55%",
+          "MemUsage": "113.7MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "51.6MB / 75.2MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.17%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.65%",
+          "MemUsage": "7.227MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "49.4MB / 48.6MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "35.40%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.03%",
+          "MemUsage": "103MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "51.5MB / 87.9MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "1.28%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.84%",
+          "MemUsage": "90.5MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "45.2MB / 2.02MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 13,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924101.7945206,
+      "hostLoad": [
+        2.00146484375,
+        2.59912109375,
+        2.3212890625
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.85%",
+          "MemUsage": "78.92MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "986kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 10.6MB",
+          "CPUPerc": "20.65%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.07%",
+          "MemUsage": "103.8MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "52.3MB / 75.8MB",
+          "PIDs": "16"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.03%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.26%",
+          "MemUsage": "6.727MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "49.4MB / 48.6MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "34.08%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.03%",
+          "MemUsage": "103MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "52.2MB / 88.7MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "1.58%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.84%",
+          "MemUsage": "90.5MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "45.2MB / 2.04MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 11,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924108.0807652,
+      "hostLoad": [
+        2.0009765625,
+        2.5888671875,
+        2.3193359375
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.85%",
+          "MemUsage": "78.92MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "986kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 11.1MB",
+          "CPUPerc": "23.94%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.41%",
+          "MemUsage": "110.8MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "53.1MB / 76.5MB",
+          "PIDs": "19"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.30%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.45%",
+          "MemUsage": "6.977MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "49.5MB / 48.7MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "24.37%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.08%",
+          "MemUsage": "103.9MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "52.9MB / 89.5MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "10.37%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.89%",
+          "MemUsage": "91MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "45.2MB / 2.06MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 14,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924114.3677192,
+      "hostLoad": [
+        1.84033203125,
+        2.54541015625,
+        2.306640625
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.82%",
+          "MemUsage": "78.17MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "987kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 11.3MB",
+          "CPUPerc": "16.58%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.53%",
+          "MemUsage": "113.3MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "53.7MB / 77MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.06%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.45%",
+          "MemUsage": "6.977MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "49.5MB / 48.7MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "23.98%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.12%",
+          "MemUsage": "104.9MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "53.5MB / 90.2MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "1.23%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.84%",
+          "MemUsage": "90.52MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "45.3MB / 2.08MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 15,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924120.637946,
+      "hostLoad": [
+        1.77294921875,
+        2.51953125,
+        2.29931640625
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.82%",
+          "MemUsage": "78.17MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "987kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 11.3MB",
+          "CPUPerc": "16.00%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.43%",
+          "MemUsage": "111.2MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "54.1MB / 77.4MB",
+          "PIDs": "20"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.15%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.46%",
+          "MemUsage": "6.988MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "49.6MB / 48.8MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "16.76%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "5.14%",
+          "MemUsage": "105.3MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "53.9MB / 90.6MB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "1.34%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.89%",
+          "MemUsage": "91.05MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "45.3MB / 2.08MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 12,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924126.9183137,
+      "hostLoad": [
+        1.734375,
+        2.48583984375,
+        2.2900390625
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.82%",
+          "MemUsage": "78.17MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "987kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 11.3MB",
+          "CPUPerc": "13.24%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.29%",
+          "MemUsage": "108.4MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "54.5MB / 77.7MB",
+          "PIDs": "18"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.13%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.65%",
+          "MemUsage": "7.227MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "49.6MB / 48.8MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "22.15%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "4.84%",
+          "MemUsage": "99.06MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "54.2MB / 91MB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.67%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.82%",
+          "MemUsage": "90.27MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "45.3MB / 2.09MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 13,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924133.2137132,
+      "hostLoad": [
+        1.67529296875,
+        2.4609375,
+        2.28271484375
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.82%",
+          "MemUsage": "78.17MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "987kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 11.3MB",
+          "CPUPerc": "8.23%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "5.18%",
+          "MemUsage": "106MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "54.7MB / 78MB",
+          "PIDs": "17"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.05%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "5.71%",
+          "MemUsage": "7.309MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "49.6MB / 48.8MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "21.40%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "4.81%",
+          "MemUsage": "98.57MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "54.4MB / 91.2MB",
+          "PIDs": "5"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.90%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "8.84%",
+          "MemUsage": "90.52MiB / 1GiB",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "45.3MB / 2.09MB",
+          "PIDs": "7"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 12,
+        "lockWaits": 0
+      }
+    },
+    {
+      "time": 1792924139.4641054,
+      "hostLoad": [
+        1.62109375,
+        2.4365234375,
+        2.275390625
+      ],
+      "containers": [
+        {
+          "BlockIO": "0B / 4.1kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-api-1",
+          "ID": "0c032eec77d7",
+          "MemPerc": "3.82%",
+          "MemUsage": "78.17MiB / 2GiB",
+          "Name": "territory-field-labs-api-1",
+          "NetIO": "987kB / 1.61MB",
+          "PIDs": "32"
+        },
+        {
+          "BlockIO": "44.6MB / 11.3MB",
+          "CPUPerc": "4.28%",
+          "Container": "territory-field-labs-db-1",
+          "ID": "71222f7a6f9e",
+          "MemPerc": "4.93%",
+          "MemUsage": "100.9MiB / 2GiB",
+          "Name": "territory-field-labs-db-1",
+          "NetIO": "54.8MB / 78MB",
+          "PIDs": "15"
+        },
+        {
+          "BlockIO": "0B / 8.19kB",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-proxy-1",
+          "ID": "d1ea48eb0df5",
+          "MemPerc": "3.50%",
+          "MemUsage": "4.48MiB / 128MiB",
+          "Name": "territory-field-labs-proxy-1",
+          "NetIO": "49.6MB / 48.8MB",
+          "PIDs": "2"
+        },
+        {
+          "BlockIO": "25.6MB / 0B",
+          "CPUPerc": "0.27%",
+          "Container": "territory-field-labs-bun-1",
+          "ID": "869f9efae199",
+          "MemPerc": "4.80%",
+          "MemUsage": "98.38MiB / 2GiB",
+          "Name": "territory-field-labs-bun-1",
+          "NetIO": "54.5MB / 91.3MB",
+          "PIDs": "5"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-labs-nest-1",
+          "ID": "c0da4c1d10ee",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-labs-nest-1",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "territory-field-lab-generator",
+          "ID": "35773e6d409c",
+          "MemPerc": "0.00%",
+          "MemUsage": "0B / 0B",
+          "Name": "territory-field-lab-generator",
+          "NetIO": "0B / 0B",
+          "PIDs": "0"
+        }
+      ],
+      "database": {
+        "active": 1,
+        "idleInTransaction": 0,
+        "connections": 10,
+        "lockWaits": 0
+      }
+    }
+  ],
+  "topQueriesAllPhases": [
+    {
+      "query": "SELECT \"t\".\"can_edit_structure\" AS \"canEditStructure\",\"t\".\"id\" AS \"id\",\"t\".\"key\" AS \"key\",\"t\".\"expiration_date\" AS \"expirationDate\",\"t\".\"token\" AS \"token\",\"t\".\"tenant_id\" AS \"tenantId\" FROM \"signature\" AS \"t\" WHERE \"t\".\"key\"=$1 AND \"t\".\"tenant_id\"=$2 AND \"t\".\"expiration_date\">$3 LIMIT $4",
+      "calls": 19833,
+      "total_exec_time": 1521.8887279999951,
+      "mean_exec_time": 0.0767351751121866,
+      "rows": 19833
+    },
+    {
+      "query": "SELECT \"t\".\"registration_status\" AS \"registrationStatus\",\"t\".\"id\" AS \"id\",\"t\".\"block_id\" AS \"blockId\",\"t\".\"territory_id\" AS \"territoryId\",\"t\".\"signature_id\" AS \"signatureId\",\"t\".\"tenant_id\" AS \"tenantId\" FROM \"territory_block\" AS \"t\" WHERE \"t\".\"tenant_id\"=$1 AND \"t\".\"territory_id\"=$2 AND \"t\".\"block_id\"=$3 AND \"t\".\"registration_status\" <> $4 LIMIT $5",
+      "calls": 22054,
+      "total_exec_time": 1507.4739019999993,
+      "mean_exec_time": 0.06835376358030339,
+      "rows": 22054
+    },
+    {
+      "query": "SELECT \"t\".\"completed\" AS \"completed\",\"t\".\"completed_date\" AS \"completedDate\",\"t\".\"end_date\" AS \"endDate\",\"t\".\"leave_letter\" AS \"leaveLetter\",\"t\".\"house_id\" AS \"houseId\",\"t\".\"id\" AS \"id\" FROM \"round\" AS \"t\" WHERE (\"t\".\"round_number\"=$1 AND \"t\".\"house_id\" IN ($2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$60,$61,$62,$63,$64,$65,$66,$67,$68,$69,$70,$71,$72,$73,$74,$75,$76,$77,$78,$79,$80,$81,$82,$83,$84,$85,$86,$87,$88,$89,$90,$91,$92,$93,$94,$95,$96,$97,$98,$99,$100,$101,$102,$103,$104,$105,$106,$107,$108,$109,$110,$111,$112,$113,$114,$115,$116,$117,$118,$119,$120,$121,$122,$123,$124,$125,$126,$127,$128,$129,$130,$131,$132,$133,$134,$135,$136,$137,$138,$139,$140,$141,$142,$143,$144,$145,$146,$147,$148,$149,$150,$151)) ORDER BY \"t\".\"id\" ASC",
+      "calls": 906,
+      "total_exec_time": 738.9577379999997,
+      "mean_exec_time": 0.8156266423841044,
+      "rows": 135900
+    },
+    {
+      "query": "SELECT \"t\".\"id\" AS \"id\",\"t\".\"name\" AS \"name\",\"t\".\"tenant_id\" AS \"tenantId\",\"t\".\"type_id\" AS \"typeId\",\"t\".\"image_url\" AS \"imageUrl\" FROM \"territory\" AS \"t\" WHERE \"t\".\"id\"=$1 AND \"t\".\"tenant_id\"=$2 LIMIT $3",
+      "calls": 22960,
+      "total_exec_time": 659.4835620000018,
+      "mean_exec_time": 0.02872315165505219,
+      "rows": 22960
+    },
+    {
+      "query": "SELECT DISTINCT fs.client_id,fs.block_id,fs.address_id FROM field_session fs JOIN signature s ON s.key=fs.signature_key AND s.tenant_id=fs.tenant_id WHERE fs.tenant_id=$1 AND fs.territory_id=$2 AND fs.round_number=$3 AND fs.last_seen_at>now()-interval $5 AND fs.disconnected_at IS NULL AND s.expiration_date>now() AND fs.block_id=$4",
+      "calls": 2221,
+      "total_exec_time": 631.3173490000005,
+      "mean_exec_time": 0.28424914407924384,
+      "rows": 27041
+    },
+    {
+      "query": "INSERT INTO field_session(tenant_id,territory_id,round_number,block_id,address_id,client_id,tab_id,signature_key) VALUES($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT(tenant_id,client_id,tab_id) WHERE disconnected_at IS NULL DO UPDATE SET last_seen_at=now()",
+      "calls": 2221,
+      "total_exec_time": 457.13183600000076,
+      "mean_exec_time": 0.20582252859072495,
+      "rows": 2221
+    },
+    {
+      "query": "SELECT \"t\".\"id\" AS \"id\",\"t\".\"number\" AS \"number\",\"t\".\"legend\" AS \"legend\",\"t\".\"dont_visit\" AS \"dontVisit\",\"t\".\"complement\" AS \"complement\",\"t\".\"order\" AS \"order\",\"t\".\"address_id\" AS \"addressId\",\"t\".\"block_id\" AS \"blockId\",\"t\".\"registration_status\" AS \"registrationStatus\",\"t\".\"territory_block_address_id\" AS \"territoryBlockAddressId\" FROM \"house\" AS \"t\" WHERE \"t\".\"tenant_id\"=$1 AND \"t\".\"territory_id\"=$2 AND \"t\".\"block_id\" IN ($3) AND \"t\".\"registration_status\" <> $4 AND \"t\".\"number\" <> $5 AND (\"t\".\"territory_block_address_id\" IS NULL OR \"t\".\"territory_block_address_id\" IN ($6,$7,$8))",
+      "calls": 906,
+      "total_exec_time": 447.1525229999999,
+      "mean_exec_time": 0.4935458311258279,
+      "rows": 135900
+    },
+    {
+      "query": "SELECT round_number,revision FROM field_revision WHERE tenant_id=$1 AND territory_id=$2 AND block_id=$3 AND round_number IN ($5,$4)",
+      "calls": 2460,
+      "total_exec_time": 244.10058099999947,
+      "mean_exec_time": 0.09922787845528454,
+      "rows": 4920
+    },
+    {
+      "query": "SELECT \"t\".\"status\" AS \"status\",\"t\".\"type_ids\" AS \"typeIds\",\"t\".\"started_at\" AS \"startedAt\",\"t\".\"closed_at\" AS \"closedAt\",\"t\".\"id\" AS \"id\",\"t\".\"round_number\" AS \"roundNumber\",\"t\".\"name\" AS \"name\",\"t\".\"theme\" AS \"theme\",\"t\".\"tenant_id\" AS \"tenantId\",\"t\".\"color_primary\" AS \"colorPrimary\",\"t\".\"color_secondary\" AS \"colorSecondary\",\"t\".\"type\" AS \"type\" FROM \"round_info\" AS \"t\" WHERE \"t\".\"tenant_id\"=$1 AND \"t\".\"round_number\"=$2 LIMIT $3",
+      "calls": 3127,
+      "total_exec_time": 186.727947,
+      "mean_exec_time": 0.05971472561560605,
+      "rows": 3127
+    },
+    {
+      "query": "SELECT \"t\".\"registration_status\" AS \"registrationStatus\",\"t\".\"id\" AS \"id\",\"t\".\"block_id\" AS \"blockId\",\"t\".\"territory_id\" AS \"territoryId\",\"t\".\"signature_id\" AS \"signatureId\",\"t\".\"tenant_id\" AS \"tenantId\" FROM \"territory_block\" AS \"t\" WHERE \"t\".\"tenant_id\"=$1 AND \"t\".\"territory_id\"=$2 AND \"t\".\"registration_status\" <> $3 AND \"t\".\"block_id\"=$4 ORDER BY (SELECT \"o\".\"name\" FROM \"block\" AS \"o\" WHERE \"o\".\"id\"=\"t\".\"block_id\") ASC",
+      "calls": 906,
+      "total_exec_time": 161.34765300000004,
+      "mean_exec_time": 0.178087917218543,
+      "rows": 906
+    },
+    {
+      "query": "UPDATE field_session SET disconnected_at=LEAST(now(),last_seen_at+interval $8) WHERE tenant_id=$1 AND client_id=$2 AND tab_id=$3 AND disconnected_at IS NULL AND (last_seen_at<=now()-interval $9 OR signature_key<>$4 OR block_id IS DISTINCT FROM $5::integer OR address_id IS DISTINCT FROM $6::integer OR round_number<>$7)",
+      "calls": 2221,
+      "total_exec_time": 159.1177299999999,
+      "mean_exec_time": 0.07164238180999549,
+      "rows": 0
+    },
+    {
+      "query": "UPDATE round SET \n        update_date = $1, \n        completed = $2, \n        completed_date = $3 \n      WHERE house_id = $4 AND round_number = $5",
+      "calls": 60,
+      "total_exec_time": 86.037716,
+      "mean_exec_time": 1.4339619333333333,
+      "rows": 60
+    },
+    {
+      "query": "SELECT \"t\".\"name\" AS \"name\",\"t\".\"id\" AS \"id\" FROM \"address\" AS \"t\" WHERE ($4 AND \"t\".\"id\" IN ($1,$2,$3))",
+      "calls": 906,
+      "total_exec_time": 79.31134300000001,
+      "mean_exec_time": 0.08754011368653421,
+      "rows": 2718
+    },
+    {
+      "query": "SELECT \"t\".\"id\" AS \"id\",\"t\".\"name\" AS \"name\",\"t\".\"tenant_id\" AS \"tenantId\" FROM \"type\" AS \"t\" WHERE ($2 AND \"t\".\"id\" IN ($1))",
+      "calls": 3127,
+      "total_exec_time": 78.04649199999993,
+      "mean_exec_time": 0.02495890374160538,
+      "rows": 3127
+    },
+    {
+      "query": "SELECT \"t\".\"id\" AS \"id\",\"t\".\"name\" AS \"name\",\"t\".\"tenant_id\" AS \"tenantId\",\"t\".\"zip_code\" AS \"zipCode\" FROM \"address\" AS \"t\" WHERE ($4 AND \"t\".\"id\" IN ($1,$2,$3))",
+      "calls": 906,
+      "total_exec_time": 76.38319399999988,
+      "mean_exec_time": 0.0843081611479029,
+      "rows": 2718
+    },
+    {
+      "query": "SELECT \"t\".\"key\" AS \"key\",\"t\".\"expiration_date\" AS \"expirationDate\",\"t\".\"token\" AS \"token\",\"t\".\"id\" AS \"id\" FROM \"signature\" AS \"t\" WHERE ($2 AND \"t\".\"id\" IN ($1))",
+      "calls": 906,
+      "total_exec_time": 74.89816799999998,
+      "mean_exec_time": 0.0826690596026491,
+      "rows": 906
+    },
+    {
+      "query": "SELECT \"t\".\"id\" AS \"id\",\"t\".\"name\" AS \"name\" FROM \"block\" AS \"t\" WHERE ($2 AND \"t\".\"id\" IN ($1))",
+      "calls": 906,
+      "total_exec_time": 73.88523700000005,
+      "mean_exec_time": 0.08155103421633547,
+      "rows": 906
+    },
+    {
+      "query": "SELECT \"t\".\"registration_status\" AS \"registrationStatus\",\"t\".\"id\" AS \"id\",\"t\".\"territory_block_id\" AS \"territoryBlockId\",\"t\".\"address_id\" AS \"addressId\",\"t\".\"tenant_id\" AS \"tenantId\" FROM \"territory_block_address\" AS \"t\" WHERE (\"t\".\"registration_status\" <> $1 AND \"t\".\"territory_block_id\" IN ($2))",
+      "calls": 906,
+      "total_exec_time": 41.564066000000025,
+      "mean_exec_time": 0.04587645253863132,
+      "rows": 2718
+    },
+    {
+      "query": "SELECT \"t\".\"id\" AS \"id\",\"t\".\"key\" AS \"key\",\"t\".\"value\" AS \"value\",\"t\".\"description\" AS \"description\",\"t\".\"tenant_id\" AS \"tenantId\" FROM \"parameter\" AS \"t\" WHERE \"t\".\"tenant_id\"=$1 AND \"t\".\"key\"=$2 LIMIT $3",
+      "calls": 3127,
+      "total_exec_time": 38.571485000000145,
+      "mean_exec_time": 0.012334980812280166,
+      "rows": 0
+    },
+    {
+      "query": "BEGIN ISOLATION LEVEL READ COMMITTED",
+      "calls": 2221,
+      "total_exec_time": 29.030359999999973,
+      "mean_exec_time": 0.013070850968032417,
+      "rows": 0
+    },
+    {
+      "query": "SELECT \"public\".\"territory_block\".\"id\", \"public\".\"territory_block\".\"registration_status\", \"public\".\"territory_block\".\"block_id\", \"public\".\"territory_block\".\"territory_id\", \"public\".\"territory_block\".\"signature_id\", \"public\".\"territory_block\".\"tenant_id\" FROM \"public\".\"territory_block\" WHERE (\"public\".\"territory_block\".\"tenant_id\" = $1 AND \"public\".\"territory_block\".\"territory_id\" = $2 AND \"public\".\"territory_block\".\"block_id\" = $3 AND \"public\".\"territory_block\".\"registration_status\" <> $4) LIMIT $5 OFFSET $6",
+      "calls": 276,
+      "total_exec_time": 25.388178999999987,
+      "mean_exec_time": 0.09198615579710144,
+      "rows": 276
+    },
+    {
+      "query": "SELECT \"t\".\"name\" AS \"name\",\"t\".\"city\" AS \"city\",\"t\".\"state\" AS \"state\",\"t\".\"phone\" AS \"phone\",\"t\".\"id\" AS \"id\" FROM \"multi_tenancy\" AS \"t\" WHERE \"t\".\"id\"=$1 LIMIT $2",
+      "calls": 906,
+      "total_exec_time": 24.167853000000004,
+      "mean_exec_time": 0.026675334437086102,
+      "rows": 906
+    },
+    {
+      "query": "SELECT \"t\".\"id\" AS \"id\",\"t\".\"name\" AS \"name\",\"t\".\"image_url\" AS \"imageUrl\" FROM \"territory\" AS \"t\" WHERE \"t\".\"id\"=$1 AND \"t\".\"tenant_id\"=$2 LIMIT $3",
+      "calls": 906,
+      "total_exec_time": 24.16550500000001,
+      "mean_exec_time": 0.02667274282560706,
+      "rows": 906
+    },
+    {
+      "query": "SELECT \"public\".\"round\".\"id\", \"public\".\"round\".\"completed\", \"public\".\"round\".\"completed_date\", \"public\".\"round\".\"end_date\", \"public\".\"round\".\"leave_letter\", \"public\".\"round\".\"house_id\" FROM \"public\".\"round\" WHERE (\"public\".\"round\".\"round_number\" = $1 AND \"public\".\"round\".\"house_id\" IN ($2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$60,$61,$62,$63,$64,$65,$66,$67,$68,$69,$70,$71,$72,$73,$74,$75,$76,$77,$78,$79,$80,$81,$82,$83,$84,$85,$86,$87,$88,$89,$90,$91,$92,$93,$94,$95,$96,$97,$98,$99,$100,$101,$102,$103,$104,$105,$106,$107,$108,$109,$110,$111,$112,$113,$114,$115,$116,$117,$118,$119,$120,$121,$122,$123,$124,$125,$126,$127,$128,$129,$130,$131,$132,$133,$134,$135,$136,$137,$138,$139,$140,$141,$142,$143,$144,$145,$146,$147,$148,$149,$150,$151)) ORDER BY \"public\".\"round\".\"id\" ASC OFFSET $152",
+      "calls": 24,
+      "total_exec_time": 17.532598,
+      "mean_exec_time": 0.7305249166666666,
+      "rows": 3600
+    },
+    {
+      "query": "SELECT json_build_object($1,count(*) FILTER(WHERE state=$2),$3,count(*) FILTER(WHERE state=$4),$5,count(*),$6,count(*) FILTER(WHERE wait_event_type=$7)) FROM pg_stat_activity WHERE datname=current_database()",
+      "calls": 49,
+      "total_exec_time": 16.034122999999997,
+      "mean_exec_time": 0.32722699999999993,
+      "rows": 49
+    }
+  ],
+  "limitations": [
+    "Shared host; generator has its own 1CPU/1GiB budget outside the 2CPU target stack.",
+    "Propagation measures sampled observers, not every screen.",
+    "SQL counters span preparation, measurement and drain.",
+    "Principal sentinel is a full snapshot directly on the synthetic API every >=5s, not an administrative workload."
+  ]
+}

@@ -1,0 +1,674 @@
+{
+  "scope": "functional equivalence, NOT capacity certification",
+  "reports": [
+    {
+      "variant": "nest",
+      "checkedAt": "2026-10-25T10:05:41.210Z",
+      "passed": 48,
+      "cases": [
+        {
+          "name": "publisher tenant 1",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 2",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 3",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 4",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 5",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 6",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 7",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 8",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 9",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 10",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 11",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 12",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "initial snapshot",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "missing JWT",
+          "status": 401,
+          "equal": true
+        },
+        {
+          "name": "malformed JWT",
+          "status": 401,
+          "equal": true
+        },
+        {
+          "name": "expired JWT",
+          "status": 401,
+          "equal": true
+        },
+        {
+          "name": "bad JWT signature",
+          "status": 401,
+          "equal": true
+        },
+        {
+          "name": "unauthorized role",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "grant claims mismatch",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "other tenant block",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "path scope cannot be overwritten",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "invalid identifier",
+          "status": 400,
+          "equal": true
+        },
+        {
+          "name": "unsafe identifier",
+          "status": 400,
+          "equal": true
+        },
+        {
+          "name": "missing session",
+          "status": 400,
+          "equal": true
+        },
+        {
+          "name": "duplicate query identity",
+          "status": 400,
+          "equal": true
+        },
+        {
+          "name": "valid address query scope",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "forbidden address scope",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "cookie authentication",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "HTML unauthorized error view",
+          "status": 401,
+          "equal": true
+        },
+        {
+          "name": "generic field sync",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher territory forbidden",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "overseer permissions",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "catalog resolves current round",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "closed round permissions",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "provisional parents house and pending request",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "legacy house without normalized mapping",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "rejected house excluded",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "rejected block denies signature",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "empty round catalog retained",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "expired database signature",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "revoked signature",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "unchanged preparation",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "25-second unchanged timeout",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "revocation during long polling",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "before mutation",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "mutation wakes long polling with consistent snapshot",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "client disconnect accepted",
+          "equal": true,
+          "limitation": "Client cancellation tested; not a server-side leak proof"
+        },
+        {
+          "name": "explicit session leave",
+          "status": 200,
+          "equal": true
+        }
+      ],
+      "source": {
+        "modules/field/field.service.js": "ee163b944bc5f3de0b5f5fa07774bbd49efc8efb2dbcabcf2772059c34e997a2",
+        "modules/field/field-access.service.js": "7195210288c3896b82205153d300c7914db5d6c8c76498b4279da43754429495",
+        "modules/field/field.controller.js": "bb1274f2ba61d1230065ab7585fedbd6b5ba3a443549e1d720db78ac1cf6f1aa",
+        "modules/round/catalog-round.service.js": "9abc86c6dc4270a8b0ed261687997c3b0e8e45be8f8a603d2efc3a7b6b1b21da",
+        "modules/house/house-permissions.js": "ca4fe4ad0c621e0e78d1cee1386e5c32474d5589b2d0b0f34bde5c2744aba259",
+        "modules/field/pair-suggestion.js": "ac773dfea82324e0b0a61e5da2536b640ef33ad9da2d6c2a0c862587900512c3",
+        "modules/auth/guard/auth.guard.js": "5872b01ccf7488247384a60924f41ffd416402afeff5836c466ae749f735a424",
+        "modules/auth/guard/roles.guard.js": "c6f086f230c393ef2153db5a84201598b6255dd56b148720c7d8fd18bebe16b6",
+        "middleware/all-exceptions.filter.js": "58e8aac7c198759d8f7a1946772eb6386b5cfa4deedfe87c80d1a338a6042995"
+      },
+      "containersBefore": [
+        {
+          "service": "api",
+          "imageId": "sha256:93f0f200bc3e5c6ae9b7273653a300b4486746fb5a08e92b0215731735918a85",
+          "cpuLimit": 0.4,
+          "memoryLimit": 2147483648,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        },
+        {
+          "service": "db",
+          "imageId": "sha256:81bd698b4594e751a3269e4dcd3e03a4a0ec0daf7b72e7aa1abd43cce9887542",
+          "cpuLimit": 1.0,
+          "memoryLimit": 2147483648,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        },
+        {
+          "service": "nest",
+          "imageId": "sha256:ff45c4bda29ebcebaa02766d8e5cd650e013cb3d8579b3613d9e46e80963c22e",
+          "cpuLimit": 0.5,
+          "memoryLimit": 2147483648,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        },
+        {
+          "service": "proxy",
+          "imageId": "sha256:dc73b49f5124cf2ee538dfbdfbd121f0b4ccdcb20fea30f3a81bd477c02e2bb5",
+          "cpuLimit": 0.1,
+          "memoryLimit": 134217728,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        }
+      ],
+      "containersAfter": [
+        {
+          "service": "api",
+          "imageId": "sha256:93f0f200bc3e5c6ae9b7273653a300b4486746fb5a08e92b0215731735918a85",
+          "cpuLimit": 0.4,
+          "memoryLimit": 2147483648,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        },
+        {
+          "service": "db",
+          "imageId": "sha256:81bd698b4594e751a3269e4dcd3e03a4a0ec0daf7b72e7aa1abd43cce9887542",
+          "cpuLimit": 1.0,
+          "memoryLimit": 2147483648,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        },
+        {
+          "service": "nest",
+          "imageId": "sha256:ff45c4bda29ebcebaa02766d8e5cd650e013cb3d8579b3613d9e46e80963c22e",
+          "cpuLimit": 0.5,
+          "memoryLimit": 2147483648,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        },
+        {
+          "service": "proxy",
+          "imageId": "sha256:dc73b49f5124cf2ee538dfbdfbd121f0b4ccdcb20fea30f3a81bd477c02e2bb5",
+          "cpuLimit": 0.1,
+          "memoryLimit": 134217728,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        }
+      ]
+    },
+    {
+      "variant": "bun",
+      "checkedAt": "2026-10-25T10:06:37.939Z",
+      "passed": 48,
+      "cases": [
+        {
+          "name": "publisher tenant 1",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 2",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 3",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 4",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 5",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 6",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 7",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 8",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 9",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 10",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 11",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 12",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "initial snapshot",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "missing JWT",
+          "status": 401,
+          "equal": true
+        },
+        {
+          "name": "malformed JWT",
+          "status": 401,
+          "equal": true
+        },
+        {
+          "name": "expired JWT",
+          "status": 401,
+          "equal": true
+        },
+        {
+          "name": "bad JWT signature",
+          "status": 401,
+          "equal": true
+        },
+        {
+          "name": "unauthorized role",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "grant claims mismatch",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "other tenant block",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "path scope cannot be overwritten",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "invalid identifier",
+          "status": 400,
+          "equal": true
+        },
+        {
+          "name": "unsafe identifier",
+          "status": 400,
+          "equal": true
+        },
+        {
+          "name": "missing session",
+          "status": 400,
+          "equal": true
+        },
+        {
+          "name": "duplicate query identity",
+          "status": 400,
+          "equal": true
+        },
+        {
+          "name": "valid address query scope",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "forbidden address scope",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "cookie authentication",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "HTML unauthorized error view",
+          "status": 401,
+          "equal": true
+        },
+        {
+          "name": "generic field sync",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher territory forbidden",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "overseer permissions",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "catalog resolves current round",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "closed round permissions",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "provisional parents house and pending request",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "legacy house without normalized mapping",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "rejected house excluded",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "rejected block denies signature",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "empty round catalog retained",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "expired database signature",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "revoked signature",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "unchanged preparation",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "25-second unchanged timeout",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "revocation during long polling",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "before mutation",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "mutation wakes long polling with consistent snapshot",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "client disconnect accepted",
+          "equal": true,
+          "limitation": "Client cancellation tested; not a server-side leak proof"
+        },
+        {
+          "name": "explicit session leave",
+          "status": 200,
+          "equal": true
+        }
+      ],
+      "source": {
+        "modules/field/field.service.js": "ee163b944bc5f3de0b5f5fa07774bbd49efc8efb2dbcabcf2772059c34e997a2",
+        "modules/field/field-access.service.js": "7195210288c3896b82205153d300c7914db5d6c8c76498b4279da43754429495",
+        "modules/field/field.controller.js": "bb1274f2ba61d1230065ab7585fedbd6b5ba3a443549e1d720db78ac1cf6f1aa",
+        "modules/round/catalog-round.service.js": "9abc86c6dc4270a8b0ed261687997c3b0e8e45be8f8a603d2efc3a7b6b1b21da",
+        "modules/house/house-permissions.js": "ca4fe4ad0c621e0e78d1cee1386e5c32474d5589b2d0b0f34bde5c2744aba259",
+        "modules/field/pair-suggestion.js": "ac773dfea82324e0b0a61e5da2536b640ef33ad9da2d6c2a0c862587900512c3",
+        "modules/auth/guard/auth.guard.js": "5872b01ccf7488247384a60924f41ffd416402afeff5836c466ae749f735a424",
+        "modules/auth/guard/roles.guard.js": "c6f086f230c393ef2153db5a84201598b6255dd56b148720c7d8fd18bebe16b6",
+        "middleware/all-exceptions.filter.js": "58e8aac7c198759d8f7a1946772eb6386b5cfa4deedfe87c80d1a338a6042995"
+      },
+      "containersBefore": [
+        {
+          "service": "api",
+          "imageId": "sha256:93f0f200bc3e5c6ae9b7273653a300b4486746fb5a08e92b0215731735918a85",
+          "cpuLimit": 0.4,
+          "memoryLimit": 2147483648,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        },
+        {
+          "service": "bun",
+          "imageId": "sha256:8f17b805066f29c36ba56bc731058a215edd4209c4ed8bb86cb81c9044f92980",
+          "cpuLimit": 0.5,
+          "memoryLimit": 2147483648,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        },
+        {
+          "service": "db",
+          "imageId": "sha256:81bd698b4594e751a3269e4dcd3e03a4a0ec0daf7b72e7aa1abd43cce9887542",
+          "cpuLimit": 1.0,
+          "memoryLimit": 2147483648,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        },
+        {
+          "service": "proxy",
+          "imageId": "sha256:dc73b49f5124cf2ee538dfbdfbd121f0b4ccdcb20fea30f3a81bd477c02e2bb5",
+          "cpuLimit": 0.1,
+          "memoryLimit": 134217728,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        }
+      ],
+      "containersAfter": [
+        {
+          "service": "api",
+          "imageId": "sha256:93f0f200bc3e5c6ae9b7273653a300b4486746fb5a08e92b0215731735918a85",
+          "cpuLimit": 0.4,
+          "memoryLimit": 2147483648,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        },
+        {
+          "service": "bun",
+          "imageId": "sha256:8f17b805066f29c36ba56bc731058a215edd4209c4ed8bb86cb81c9044f92980",
+          "cpuLimit": 0.5,
+          "memoryLimit": 2147483648,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        },
+        {
+          "service": "db",
+          "imageId": "sha256:81bd698b4594e751a3269e4dcd3e03a4a0ec0daf7b72e7aa1abd43cce9887542",
+          "cpuLimit": 1.0,
+          "memoryLimit": 2147483648,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        },
+        {
+          "service": "proxy",
+          "imageId": "sha256:dc73b49f5124cf2ee538dfbdfbd121f0b4ccdcb20fea30f3a81bd477c02e2bb5",
+          "cpuLimit": 0.1,
+          "memoryLimit": 134217728,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        }
+      ]
+    }
+  ],
+  "images": "[{\"ID\":\"sha256:ff45c4bda29ebcebaa02766d8e5cd650e013cb3d8579b3613d9e46e80963c22e\",\"ContainerName\":\"territory-field-labs-nest-1\",\"Repository\":\"territory-field-lab-nest\",\"Tag\":\"local\",\"Platform\":\"linux/amd64\",\"Size\":603227431,\"Created\":\"2026-10-25T07:04:34.040761953-03:00\",\"LastTagTime\":\"2026-10-25T07:04:34.079173948-03:00\"},{\"ID\":\"sha256:8f17b805066f29c36ba56bc731058a215edd4209c4ed8bb86cb81c9044f92980\",\"ContainerName\":\"territory-field-labs-bun-1\",\"Repository\":\"territory-field-lab-bun\",\"Tag\":\"local\",\"Platform\":\"linux/amd64\",\"Size\":504896074,\"Created\":\"2026-10-25T07:05:43.096466797-03:00\",\"LastTagTime\":\"2026-10-25T07:05:43.180334899-03:00\"},{\"ID\":\"sha256:dc73b49f5124cf2ee538dfbdfbd121f0b4ccdcb20fea30f3a81bd477c02e2bb5\",\"ContainerName\":\"territory-field-labs-proxy-1\",\"Repository\":\"nginx\",\"Tag\":\"1.28-alpine\",\"Platform\":\"linux/amd64\",\"Size\":62095598,\"Created\":\"2026-03-24T23:11:15.718500787Z\"},{\"ID\":\"sha256:81bd698b4594e751a3269e4dcd3e03a4a0ec0daf7b72e7aa1abd43cce9887542\",\"ContainerName\":\"territory-field-labs-db-1\",\"Repository\":\"postgres\",\"Tag\":\"16-alpine\",\"Platform\":\"linux/amd64\",\"Size\":294299523,\"Created\":\"2026-09-17T21:31:24.32976807Z\"},{\"ID\":\"sha256:93f0f200bc3e5c6ae9b7273653a300b4486746fb5a08e92b0215731735918a85\",\"ContainerName\":\"territory-field-labs-api-1\",\"Repository\":\"territory-load-api\",\"Tag\":\"read-collation\",\"Platform\":\"linux/amd64\",\"Size\":603161410,\"Created\":\"2026-10-24T20:09:39.134223999-03:00\",\"LastTagTime\":\"2026-10-24T20:09:45.432269384-03:00\"}]\n\n"
+}

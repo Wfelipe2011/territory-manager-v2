@@ -1,0 +1,9 @@
+{
+  "name": "territory-field-labs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Isolated field HTTP laboratories; not a production application",
+  "dependencies": {
+    "pg": "8.23.1"
+  }
+}
