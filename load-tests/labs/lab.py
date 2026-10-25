@@ -38,7 +38,7 @@ def state(variant):
                                           text=True, stdout=subprocess.PIPE).stdout)
     result = [{
         'service': item['Config']['Labels']['com.docker.compose.service'],
-        'imageId': item['Image'], 'cpuLimit': item['HostConfig']['NanoCpus'] / 1e9,
+        'imageId': item['Image'], 'ulimits':item['HostConfig'].get('Ulimits',[]), 'cpuLimit': item['HostConfig']['NanoCpus'] / 1e9,
         'poolLimit': int(parse_qs(urlparse(next((v.split('=',1)[1] for v in item['Config']['Env'] if v.startswith('DATABASE_URL=')), '')).query).get('connection_limit',['0'])[0]),
         'memoryLimit': item['HostConfig']['Memory'], 'oom': item['State']['OOMKilled'],
         'restarts': item['RestartCount'], 'running': item['State']['Running'],

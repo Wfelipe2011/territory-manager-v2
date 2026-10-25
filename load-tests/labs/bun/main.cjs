@@ -66,7 +66,7 @@ async function main() {
     idleTimeout: 60, maxRequestBodySize: 10 * 1024 * 1024,
     async fetch(incoming) {
       const url = new URL(incoming.url);
-      if (url.pathname === '/healthz') return Response.json({ ok: true, variant: 'bun-pg', mode: process.env.LAB_SNAPSHOT_MODE || 'baseline', batchValidation:process.env.LAB_BATCH_VALIDATION==='1', stats: { ...db.$stats(), timings }, source, implementation });
+      if (url.pathname === '/healthz') return Response.json({ ok: true, variant: 'bun-pg', mode: process.env.LAB_SNAPSHOT_MODE || 'baseline', batchValidation:process.env.LAB_BATCH_VALIDATION==='1', stats: { ...db.$stats(), timings, activeRequests:active.size }, source, implementation });
       const headers = new Headers({ 'Access-Control-Allow-Origin': '*' });
       if (incoming.method === 'OPTIONS') {
         headers.set('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');

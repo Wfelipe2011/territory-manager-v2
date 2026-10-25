@@ -52,18 +52,11 @@ def monitor(stop, samples, generator):
                 'containers': [json.loads(line) for line in result.stdout.splitlines() if line.startswith('{')],
                 'database': json.loads(db("SELECT json_build_object('active',count(*) FILTER(WHERE state='active'),"
                     "'idleInTransaction',count(*) FILTER(WHERE state='idle in transaction'),'connections',count(*),"
-                    "'lockWaits',count(*) FILTER(WHERE wait_event_type='Lock')) FROM pg_stat_activity WHERE datname=current_database()"))})
+                    "'lockWaits',count(*) FILTER(WHERE wait_event_type='Lock'),"
+                    "'loadClients',(SELECT count(DISTINCT client_id) FROM field_session WHERE disconnected_at IS NULL AND last_seen_at>now()-interval '60 seconds' AND client_id~'^load-client-[0-9]{12}$'),"
+                    "'loadTenants',(SELECT count(DISTINCT tenant_id) FROM field_session WHERE disconnected_at IS NULL AND last_seen_at>now()-interval '60 seconds' AND client_id~'^load-client-[0-9]{12}$')) FROM pg_stat_activity WHERE datname=current_database()"))})
         except Exception as error:
-            with urllib.request.urlopen('http://localhost:3400/healthz',timeout=3) as health:
-                worker_stats=json.loads(health.read()).get('stats',{})
-            pressure={}
-            if tick%3==0:
-                for service in ['bun','nest','db','api']:
-                    if 'territory-field-labs-'+service+'-1' not in names: continue
-                    pressure[service]=lab.compose('exec','-T',service,'cat','/sys/fs/cgroup/cpu.stat','/sys/fs/cgroup/memory.events',stdout=subprocess.PIPE,stderr=subprocess.DEVNULL).stdout
-            tick+=1
-            statement_totals=json.loads(db("SELECT json_build_object('calls',coalesce(sum(calls),0),'executionMs',coalesce(sum(total_exec_time),0)) FROM pg_stat_statements"))
-            samples.append({'time': time.time(), 'hostMemoryAvailableKiB':int(next(line.split()[1] for line in Path('/proc/meminfo').read_text().splitlines() if line.startswith('MemAvailable:'))), 'workerStats':worker_stats, 'cgroups':pressure,'sqlTotals':statement_totals, 'error': str(type(error).__name__)})
+            samples.append({'time':time.time(),'error':type(error).__name__})
         stop.wait(4)
 
 
@@ -144,7 +137,8 @@ def trial(variant, users, repeat, out, pool=10, interval=3000, group=10, mode="b
     infrastructure = all(item['running'] and not item['oom'] and item['restarts'] == 0 for item in after)
     generator_cpu = cpu.get(generator, [])
     monitoring_valid = bool(generator_cpu)
-    generator_valid = not inspection['State']['OOMKilled'] and inspection['State']['ExitCode'] not in [137, 139] and bool(generator_cpu) and not (statistics.mean(generator_cpu) >= 90 and metric('writer_start_lateness_ms', 'p(95)') > 500)
+    generator_bound = bool(generator_cpu) and (statistics.mean(generator_cpu)>=90 or sum(v>=95 for v in generator_cpu)>max(2,len(generator_cpu)*.2))
+    generator_valid = not inspection['State']['OOMKilled'] and inspection['State']['ExitCode'] not in [137,139] and monitoring_valid and not generator_bound
     functional = infrastructure and generator_valid and metric('initial_ready', 'count') == users and metric('started_in_window_errors', 'rate', 1) < .01 and metric('unexpected_errors', 'rate', 1) < .01 and metric('principal_snapshot_errors', 'rate', 1) < .01 and metric('dropped_iterations', 'count') == 0 and delivery['acknowledged_writes'] == (0 if idle else users // 10 * 4) and not delivery['missing_sequences'] and (idle or metric('writer_start_lateness_ms', 'p(95)', 1e9) <= 500)
     capacity_passed = functional and metric('snapshot_ms', 'p(95)', 1e9) <= 1000 and (idle or metric('mark_ms', 'p(95)', 1e9) <= 500) 
     passed = capacity_passed and (idle or (delivery['observer_p95_ms'] is not None and delivery['observer_p95_ms'] <= 5000))
@@ -153,7 +147,7 @@ def trial(variant, users, repeat, out, pool=10, interval=3000, group=10, mode="b
         'checkIntervalMs': interval, 'poolSize': pool, 'measurementSeconds': 120, 'preparationSeconds': 65,
         'observerTailSeconds': 90, 'writerMaxDurationSeconds': 155, 'wallSeconds': time.time() - start,
         'windowStartMs': window, 'exitCode': code, 'passed': passed, 'capacityPassedWithoutPropagationGoal':capacity_passed, 'functionalSteadyPassed': functional,
-        'generatorValid': generator_valid, 'monitoringValid': monitoring_valid, 'infrastructureValid': infrastructure,
+        'generatorValid': generator_valid, 'generatorBound':generator_bound, 'monitoringValid': monitoring_valid, 'infrastructureValid': infrastructure,
         'sourceCommit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
         'ready': metric('initial_ready', 'count'), 'snapshotP95Ms': metric('snapshot_ms', 'p(95)'),
         'markP95Ms': metric('mark_ms', 'p(95)'), 'principalSnapshotP95Ms': metric('principal_snapshot_ms', 'p(95)'),
