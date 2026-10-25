@@ -23,9 +23,9 @@ const principal = jwt.decode(block.token);
 const { iat, exp, ...claims } = principal;
 const temporaryKeys = [];
 
-async function request(base, route, { token = block.token, method = 'GET', headers = {}, signal } = {}) {
+async function request(base, route, { token = block.token, method = 'GET', headers = {}, signal, body:requestBody } = {}) {
   const response = await fetch(base + route, {
-    method, signal: signal || AbortSignal.timeout(45000),
+    method, body:requestBody===undefined?undefined:JSON.stringify(requestBody), signal: signal || AbortSignal.timeout(45000),
     headers: { Accept: 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}), ...headers },
   });
   const text = await response.text();
@@ -125,6 +125,22 @@ async function main() {
     const pendingHouse = pending.data.streets.flatMap(street => street.houses).find(house => house.id === catalogHouse.id);
     assert.equal(pendingHouse.pendingRequest.id, proposal.id);
     assert.equal(pendingHouse.hasRound, true);
+    const provisionalRound=await db.round.findFirstOrThrow({where:{houseId:catalogHouse.id,tenantId:block.tenantId,roundNumber:8}});
+    try {
+      await db.house.update({where:{id:catalogHouse.id},data:{dontVisit:false}});
+      await db.round.update({where:{id:provisionalRound.id},data:{completed:false,completedDate:null}});
+      const workable=await equivalent('casa provisória livre permite marcação',path()+'?'+session);
+      assert(workable.data.streets.flatMap(s=>s.houses).find(h=>h.id===catalogHouse.id).canMark);
+      const markRoute=`/v1/territories/${block.territoryId}/blocks/${block.blockId}/address/${catalogHouse.addressId}/houses/${catalogHouse.id}`;
+      const marked=await request(urls[0],markRoute,{method:'PATCH',headers:{'Content-Type':'application/json'},body:{round:8,status:true}});
+      assert.equal(marked.status,200,'Normal API marks provisional house');
+      const worked=await equivalent('marcação HTTP de provisória aparece no snapshot',path()+'?'+session);
+      assert(worked.data.streets.flatMap(s=>s.houses).find(h=>h.id===catalogHouse.id).status);
+    } finally {
+      await db.round.update({where:{id:provisionalRound.id},data:{completed:provisionalRound.completed,completedDate:provisionalRound.completedDate,updateDate:provisionalRound.updateDate}});
+      await db.house.update({where:{id:catalogHouse.id},data:{dontVisit:true}});
+    }
+
     await db.house.update({ where: { id: catalogHouse.id }, data: { territoryBlockAddressId: null } });
     await equivalent('legacy house without normalized mapping', path() + '?' + session);
     let legacyStreet,duplicateStreet;
@@ -162,7 +178,7 @@ async function main() {
     const emptyGrant = await grant({ ...claims, round: emptyInfo.roundNumber });
     const empty = await equivalent('empty round catalog retained', path() + '?' + session, { token: emptyGrant.token });
     assert.equal(empty.data.workRoundNumber, emptyInfo.roundNumber);
-    assert(empty.data.streets.flatMap(street => street.houses).every(house => !house.hasRound));
+    assert(empty.data.streets.flatMap(street => street.houses).every(house => !house.hasRound && !house.canMark && !house.canUnmark));
   } finally {
     if (emptyInfo) await db.round_info.delete({ where: { id: emptyInfo.id } });
   }
