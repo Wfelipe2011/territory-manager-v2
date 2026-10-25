@@ -1,7 +1,7 @@
 version: '3.8'
 # Production Swarm stack. API/worker images must be a verified release pair.
-# No host ports: NPM reaches app-prod today; switch to territory-api-proxy:8080
-# only after the separate, confirmed routing cutover. See deploy/README.md.
+# No host ports: the existing NPM keeps app-prod:3000 as its default upstream
+# and routes only field sync/session to Bun. See deploy/npm-field-locations.conf.
 
 services:
   pgbouncer:
@@ -101,44 +101,6 @@ services:
         failure_action: rollback
         monitor: 45s
     networks: [npm_public]
-
-  field-proxy:
-    image: ${FIELD_PROXY_IMAGE:-nginx:1.28-alpine}
-    environment:
-      FIELD_SYNC_UPSTREAM: ${FIELD_SYNC_UPSTREAM:-field-worker:3402}
-      NGINX_ENVSUBST_FILTER: FIELD_SYNC_UPSTREAM
-    configs:
-      - source: field_proxy_template_20261025
-        target: /etc/nginx/templates/default.conf.template
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/api"]
-      interval: 5s
-      timeout: 5s
-      retries: 12
-      start_period: 30s
-    deploy:
-      replicas: 1
-      resources:
-        limits:
-          cpus: '0.1'
-          memory: 128M
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-      update_config:
-        parallelism: 1
-        order: stop-first
-        failure_action: rollback
-        monitor: 45s
-    networks:
-      npm_public:
-        aliases: [territory-api-proxy]
-
-# Versioned Docker config, no host bind mount or dependency on local file paths
-# on the Swarm worker node. Change the config name when changing its contents.
-configs:
-  field_proxy_template_20261025:
-    file: ./deploy/nginx-api.conf.template
 
 networks:
   npm_public:

@@ -1,14 +1,14 @@
 # Recursos e sincronização de campo — produção Swarm
 
 O **`docker-compose.yml` na raiz da API é o manifesto completo de produção**:
-API NestJS, worker Bun/pg, proxy interno nginx e PgBouncer. Não há overlay separado
+API NestJS, worker Bun/pg e PgBouncer. Não há nginx adicional nem overlay separado
 para o Bun. Esse é o arquivo lido pela stack Git `api-production` no Portainer.
-O PostgreSQL continua na sua stack própria; NPM é configurado separadamente.
+O PostgreSQL continua na sua stack própria; o NPM existente faz a divisão de rotas.
 
 Usar o manifesto como stack Swarm. A ordem entre serviços não depende de
 `depends_on`: migrations precisam estar aplicadas antes do deploy; healthchecks,
-reinício e rollback são controlados pelo Swarm. O template nginx é distribuído
-por Docker config, sem bind mount dependente do filesystem do nó de execução.
+reinício e rollback são controlados pelo Swarm. As regras do NPM estão versionadas
+em `deploy/npm-field-locations.conf`, mas não são aplicadas por esse Compose.
 
 ## Orçamento
 
@@ -17,9 +17,9 @@ por Docker config, sem bind mount dependente do filesystem do nó de execução.
 | PostgreSQL externo | 0,8 | Preservar configuração existente |
 | Worker Bun/pg | 0,7 | 2 GiB |
 | API NestJS | 0,4 | 2 GiB existentes |
-| Proxy interno | 0,1 | 128 MiB |
+| NPM existente | Fora desta stack | Preservar configuração existente |
 
-Total **2 CPUs para esses quatro serviços**, não para toda a VPS. Reservar capacidade
+Total proposto **1,9 CPU para banco, API e worker**, não para toda a VPS. Reservar capacidade
 adicional para Admin, PgBouncer, NPM, sistema e outros serviços. CPU é teto, não
 reserva garantida. A variante sintética usou banco com 2 GiB: memória e carga de
 produção precisam de avaliação antes do corte. Não reduzir memória por este ajuste.
@@ -28,8 +28,8 @@ checagem de segurança 1s e espera HTTP 25s. Nenhuma candidata experimental é u
 
 O limite de 0,8 CPU do banco é uma proposta separada para sua stack, não é aplicado
 pelo manifesto da API. Na inspeção de produção, o banco tinha 1 CPU/1 GiB; manter
-esse limite provisoriamente resulta em 2,2 CPUs de tetos somados. Não confundir isso
-com uma reserva de 2,2 cores ou alterar o banco silenciosamente para fechar a soma.
+esse limite provisoriamente resulta em 2,1 CPUs de tetos somados. Não confundir isso
+com uma reserva de 2,1 cores ou alterar o banco silenciosamente para fechar a soma.
 
 ## Pré-requisitos de uma futura publicação
 
@@ -48,7 +48,7 @@ com uma reserva de 2,2 cores ou alterar o banco silenciosamente para fechar a so
      API que aponta para esse pool. Codificar caracteres especiais das credenciais
       na URL; guardar segredos fora do Git.
    - `PGBOUNCER_IMAGE`: opcional; preservar o digest da instância atual para não
-     atualizar PgBouncer incidentalmente. `FIELD_PROXY_IMAGE` também aceita digest.
+     atualizar PgBouncer incidentalmente.
 4. Na stack EXISTENTE que administra o PostgreSQL, aplicar limite 0,8 CPU, preservando
    volume, imagem e demais configurações. `postgres.resources.example.yml` é só um
    fragmento: adaptar ao nome real do serviço, **não criar/substituir banco**. Esta
@@ -95,34 +95,39 @@ docker stack config -c docker-compose.yml > /dev/null
 Para o corte futuro: baixar o par de imagens aprovado; pausar tráfego e executar
 `prisma migrate deploy` com a imagem da API e `DIRECT_URL` direta, incluindo
 `20261025190000_field_read_model`. O startup de produção atual NÃO migra sozinho.
-Validar migrations antes de iniciar a API, depois worker e proxy. A API saudável
+Validar migrations antes de iniciar a API e o worker. A API saudável
 não substitui a verificação de migrations: o worker recusa iniciar sem read model.
 Não executar migration, recriação ou publish somente para validar YAML.
 
-O proxy usa `app-prod:3000` e expõe `8080` apenas na rede `npm_public`. No corte
-coordenado de API/Admin, configurar o NPM para `territory-api-proxy:8080` (HTTP),
-preservando TLS/domínio público. **Essa mudança não é automática nem foi executada.**
-Verificar acesso à rede, URL pública do Admin, links novos e compatibilidade legada.
-O template `deploy/nginx-api.conf.template` precisa acompanhar o manifesto no
-checkout Git do Portainer. O Swarm o entrega aos nós como Docker config, não
-como bind mount nem como configuração embutida no NPM. Versionar o nome do config
-no manifesto quando modificar seu conteúdo: configs Swarm são imutáveis.
-Não publicar a porta do worker ou do proxy no host.
+No Proxy Host existente de `api.territory-manager.com.br`, manter Details com
+Scheme `http`, Forward Hostname `app-prod`, Forward Port `3000`; preservar SSL,
+domínio e controle de acesso. Não criar outro Proxy Host com o mesmo domínio.
+Depois de confirmar API e Bun saudáveis, acrescentar o conteúdo completo de
+`deploy/npm-field-locations.conf` em Advanced > Custom Nginx Configuration,
+preservando regras preexistentes sem duplicar locations. O trecho encaminha
+somente sync, session e healthz para `api-production_field-worker:3402`;
+marcações, autenticação e demais rotas continuam no destino padrão NestJS.
+O nome é qualificado pela stack para evitar colisões de aliases na rede compartilhada.
+NPM e worker precisam estar em `npm_public`. Não publicar porta do worker no host.
+Validar `nginx -t`, status Online, HTTPS e repasse do URI/query antes de encerrar
+o corte. Não habilitar cache, buffering ou retries nesse long polling. Não
+reintroduzir Socket.IO nem alterar as URLs públicas do frontend.
 
 Conferir depois do corte: healthchecks, listener conectado, pool dois, intervalo
-1000ms; `X-Territory-Upstream: field-worker` em sync e `api` nas demais rotas,
+1000ms; `X-Territory-Upstream: field-worker` em sync; demais rotas devem manter o
+comportamento da API (o NPM não adiciona automaticamente o header `api`),
 login/assinaturas, uma marcação em tenant QA e sua propagação. Nenhuma carga em dados
 reais. A inspeção dos serviços Swarm deve confirmar `Resources.Limits.NanoCPUs`
-700000000/400000000/100000000. O banco só terá 800000000 após ajuste separado.
+700000000/400000000. O banco só terá 800000000 após ajuste separado.
 
 ## Rollback de tráfego
 
 Preservar upstream anterior do NPM, digests anteriores e configuração do banco.
-Com a API atual compatível, `FIELD_SYNC_UPSTREAM=app-prod:3000` permite recriar
-somente o proxy para encaminhar também sync ao NestJS, sem excluir migrations ou
-dados; reiniciar o proxy também após substituir endpoints para renovar DNS.
+Com a API atual compatível, remover apenas o bloco acrescentado em Advanced
+devolve também sync ao destino padrão `app-prod:3000`, sem excluir migrations ou
+dados. Validar e salvar pelo NPM, preservando as demais regras existentes.
 O worker pode continuar saudável. Rollback para imagens anteriores à unificação
-exige rollback coordenado API/Admin e do upstream público, não apenas esse override.
+exige rollback coordenado API/Admin e do upstream público, não apenas essa regra.
 Não usar `down -v`, apagar volumes ou reverter migrations aditivas como parte deste
 ajuste. Restaurar quotas anteriores na stack do banco se necessário.
 

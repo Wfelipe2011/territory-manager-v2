@@ -70,9 +70,12 @@ Rode-os manualmente (removendo o `skip`) **apenas quando o fluxo de e-mail/regis
   Reconstruir worker após mudar domínio; detalhes e rollback em `field-worker/README.md`.
 - Recursos locais: worker 0,7 CPU; PostgreSQL 0,8; API 0,4; proxy 0,1 (Admin e
   infraestrutura fora desse total). Produção usa o `docker-compose.yml` completo
-  na raiz desta API, compatível com Swarm: API, Bun, proxy e PgBouncer, sem overlay
+  na raiz desta API, compatível com Swarm: API, Bun e PgBouncer, sem nginx adicional ou overlay
   field. PostgreSQL permanece em stack separada, sem ajuste implícito de quota.
   Migrations e corte API/Admin/NPM exigem operação coordenada em `deploy/README.md`.
+  O NPM existente mantém `app-prod:3000` como destino padrão e usa o trecho
+  `deploy/npm-field-locations.conf` para sync/session do worker. O proxy local de
+  desenvolvimento é independente e continua no Compose do workspace.
 - Contratos, sincronização e corte de tráfego: `docs/field-http.md`.
 - Links novos usam seis caracteres alfanuméricos; UUIDs antigos continuam válidos até expirar.
 - `FieldAccessService` valida assinatura e escopo das rotas de dirigente/publicador. Não confiar em IDs enviados pelo frontend.
