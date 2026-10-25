@@ -54,7 +54,7 @@ services:
   bun:
     <<: *worker
     profiles: [bun]
-    image: territory-field-lab-bun:local
+    image: ${LAB_BUN_IMAGE:-territory-field-lab-bun:local}
     build:
       context: .
       target: bun

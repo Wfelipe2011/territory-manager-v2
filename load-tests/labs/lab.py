@@ -78,7 +78,7 @@ def up(variant):
     if not (RUNTIME / 'fixture-peak.json').exists():
         raise RuntimeError('Run prepare first')
     ENV['SNAPSHOT_UPSTREAM'] = f'{variant}:{3402 if variant == "bun" else 3403}'
-    compose('build', variant)
+    if ENV.get('LAB_SKIP_BUILD')!='1': compose('build', variant)
     compose('stop', 'proxy', 'nest' if variant == 'bun' else 'bun')
     compose('up', '-d', '--wait', 'db', 'api', variant)
     wait('http://localhost:3401/api')

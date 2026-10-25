@@ -58,11 +58,19 @@ def main():
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         try:
             if paused: subprocess.run(command+['stop',*paused],check=True)
+            lab.ENV.pop('LAB_SKIP_BUILD',None)
+            lab.ENV['LAB_BUN_IMAGE']='territory-field-lab-bun:local'
             if args.mode!='baseline' or args.batch_validation:
                 # Mandatory functional parity on the exact source/config before measuring it.
                 lab.ENV.update(LAB_POOL_SIZE=str(pools[0]),FIELD_POLL_CHECK_MS=str(intervals[0]),LAB_SNAPSHOT_MODE=args.mode,LAB_BATCH_VALIDATION=str(int(args.batch_validation)))
                 print('Checking original HTTP contract before capacity measurements',flush=True)
                 lab.test(['bun'])
+            else:
+                lab.compose('build','bun')
+            frozen='territory-field-lab-bun:campaign-'+time.strftime('%Y%m%d-%H%M%S',time.gmtime())
+            subprocess.run(['docker','image','tag','territory-field-lab-bun:local',frozen],check=True)
+            lab.ENV.update(LAB_BUN_IMAGE=frozen,LAB_SKIP_BUILD='1')
+            (out/'frozen-image.json').write_text(json.dumps({'image':frozen,'mode':args.mode,'batch':args.batch_validation},indent=2)+'\n')
             queue=list(counts)
             while queue:
                 n=queue.pop(0)
