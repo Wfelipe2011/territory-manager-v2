@@ -1,0 +1,8 @@
+{
+  "excludedFromWorkerPoolRanking": [
+    {
+      "id": "bun-baseline-p1-150u-g10-3000ms-mixed-r1",
+      "reason": "Exploratory first point changed reference API pool together with worker pool (both 1). Retained raw evidence; repeat with reference API pool fixed at 10 before ranking."
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "status": "stopped-by-user",
+  "completedUserCounts": [
+    300,
+    400,
+    500
+  ],
+  "excludedIncompleteUserCount": 350,
+  "confirmedCapacity": null,
+  "repetitionsPerPoint": 1,
+  "poolGridExecuted": false,
+  "note": "User requested stopping to make a decision. Complete trials preserved; no final maximum, three-run confirmation, or 1000-user capacity claim."
+}

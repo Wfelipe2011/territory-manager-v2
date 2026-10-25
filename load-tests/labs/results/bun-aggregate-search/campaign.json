@@ -1,0 +1,15 @@
+{
+  "mode": "aggregate",
+  "users": "150,300,500,750,1000,1500,2000,3000",
+  "pools": "2",
+  "intervals": "3000",
+  "groups": "10",
+  "repetitions": 1,
+  "repeat_start": 1,
+  "idle": false,
+  "batch_validation": false,
+  "search": true,
+  "refinements": 3,
+  "out": "load-tests/labs/results/bun-aggregate-search",
+  "resources": "worker 0.5CPU/2GiB; PG 1CPU/2GiB; API 0.4CPU/2GiB; proxy 0.1CPU/128MiB"
+}

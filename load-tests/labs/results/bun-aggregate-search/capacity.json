@@ -1,0 +1,7 @@
+{
+  "largestExploratoryPass": 300,
+  "firstFailingBound": 500,
+  "fixtureMaximum": 3950,
+  "refinements": 1,
+  "lowerBoundOnly": false
+}

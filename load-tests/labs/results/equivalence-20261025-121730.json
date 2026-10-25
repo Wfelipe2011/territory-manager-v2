@@ -1,0 +1,434 @@
+{
+  "scope": "functional equivalence, NOT capacity certification",
+  "reports": [
+    {
+      "variant": "bun",
+      "checkedAt": "2026-10-25T12:17:30.024Z",
+      "passed": 55,
+      "cases": [
+        {
+          "name": "publisher tenant 1",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 2",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 3",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 4",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 5",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 6",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 7",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 8",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 9",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 10",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 11",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher tenant 12",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "congrega\u00e7\u00f5es paralelas isoladas 2",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "congrega\u00e7\u00f5es paralelas isoladas 1",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "initial snapshot",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "missing JWT",
+          "status": 401,
+          "equal": true
+        },
+        {
+          "name": "malformed JWT",
+          "status": 401,
+          "equal": true
+        },
+        {
+          "name": "expired JWT",
+          "status": 401,
+          "equal": true
+        },
+        {
+          "name": "bad JWT signature",
+          "status": 401,
+          "equal": true
+        },
+        {
+          "name": "unauthorized role",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "grant claims mismatch",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "other tenant block",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "path scope cannot be overwritten",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "invalid identifier",
+          "status": 400,
+          "equal": true
+        },
+        {
+          "name": "unsafe identifier",
+          "status": 400,
+          "equal": true
+        },
+        {
+          "name": "missing session",
+          "status": 400,
+          "equal": true
+        },
+        {
+          "name": "duplicate query identity",
+          "status": 400,
+          "equal": true
+        },
+        {
+          "name": "valid address query scope",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "forbidden address scope",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "cookie authentication",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "HTML unauthorized error view",
+          "status": 401,
+          "equal": true
+        },
+        {
+          "name": "generic field sync",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "publisher territory forbidden",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "overseer permissions",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "catalog resolves current round",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "closed round permissions",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "ordem manual, complementos num\u00e9ricos e zeros \u00e0 esquerda",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "ordena\u00e7\u00e3o de ruas com acentos e diferen\u00e7as de caixa",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "nomes de ruas iguais preservam a ordem legada",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "provisional parents house and pending request",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "legacy house without normalized mapping",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "rua legada sem v\u00ednculo mant\u00e9m solicita\u00e7\u00e3o de alvo nulo",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "solicita\u00e7\u00f5es de alvo nulo duplicadas preservam montagem original",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "rejected house excluded",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "rejected block denies signature",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "empty round catalog retained",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "expired database signature",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "revoked signature",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "unchanged preparation",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "25-second unchanged timeout",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "revocation during long polling",
+          "status": 403,
+          "equal": true
+        },
+        {
+          "name": "before mutation",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "mutation wakes long polling with consistent snapshot",
+          "status": 200,
+          "equal": true
+        },
+        {
+          "name": "client disconnect accepted",
+          "equal": true,
+          "limitation": "Client cancellation tested; not a server-side leak proof"
+        },
+        {
+          "name": "explicit session leave",
+          "status": 200,
+          "equal": true
+        }
+      ],
+      "source": {
+        "modules/field/field.service.js": "ee163b944bc5f3de0b5f5fa07774bbd49efc8efb2dbcabcf2772059c34e997a2",
+        "modules/field/field-access.service.js": "7195210288c3896b82205153d300c7914db5d6c8c76498b4279da43754429495",
+        "modules/field/field.controller.js": "bb1274f2ba61d1230065ab7585fedbd6b5ba3a443549e1d720db78ac1cf6f1aa",
+        "modules/round/catalog-round.service.js": "9abc86c6dc4270a8b0ed261687997c3b0e8e45be8f8a603d2efc3a7b6b1b21da",
+        "modules/house/house-permissions.js": "ca4fe4ad0c621e0e78d1cee1386e5c32474d5589b2d0b0f34bde5c2744aba259",
+        "modules/field/pair-suggestion.js": "ac773dfea82324e0b0a61e5da2536b640ef33ad9da2d6c2a0c862587900512c3",
+        "modules/auth/guard/auth.guard.js": "5872b01ccf7488247384a60924f41ffd416402afeff5836c466ae749f735a424",
+        "modules/auth/guard/roles.guard.js": "c6f086f230c393ef2153db5a84201598b6255dd56b148720c7d8fd18bebe16b6",
+        "middleware/all-exceptions.filter.js": "58e8aac7c198759d8f7a1946772eb6386b5cfa4deedfe87c80d1a338a6042995"
+      },
+      "containersBefore": [
+        {
+          "service": "api",
+          "imageId": "sha256:93f0f200bc3e5c6ae9b7273653a300b4486746fb5a08e92b0215731735918a85",
+          "ulimits": null,
+          "cpuLimit": 0.4,
+          "poolLimit": 10,
+          "memoryLimit": 2147483648,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        },
+        {
+          "service": "bun",
+          "imageId": "sha256:5bc75d9fc77beb0332aab0a7e981a5ff200395608d63896bba3dcd845331c89f",
+          "ulimits": [
+            {
+              "Name": "nofile",
+              "Hard": 32768,
+              "Soft": 32768
+            }
+          ],
+          "cpuLimit": 0.5,
+          "poolLimit": 2,
+          "memoryLimit": 2147483648,
+          "oom": false,
+          "restarts": 0,
+          "running": true,
+          "implementationHashes": {
+            "main.cjs": "79dd51216bbfa72e81d56584bfea778ed9b9dc0bf0e2066c8891ebe5e12363bc",
+            "pg-adapter.cjs": "0ee30e26ad165213bfccedf241ba9c11f22885753704161190802c8696aa6880",
+            "snapshot-queries.cjs": "ca2fab9adc5453754f566f373a13ad7a92ef5370dff441fa6c72c9fc0018e403",
+            "aggregate-snapshot.cjs": "eb21d2b6ec9e2d968f9ee230d35d100daac867fa9b94b4bad12973d53efd7738",
+            "validation-query.cjs": "5942a153449c1311c6a51739d326fe8ed2ecb7e22824d67fe0bd5ec7650740ed"
+          },
+          "snapshotMode": "joined",
+          "batchValidation": false
+        },
+        {
+          "service": "db",
+          "imageId": "sha256:81bd698b4594e751a3269e4dcd3e03a4a0ec0daf7b72e7aa1abd43cce9887542",
+          "ulimits": null,
+          "cpuLimit": 1.0,
+          "poolLimit": 0,
+          "memoryLimit": 2147483648,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        },
+        {
+          "service": "proxy",
+          "imageId": "sha256:dc73b49f5124cf2ee538dfbdfbd121f0b4ccdcb20fea30f3a81bd477c02e2bb5",
+          "ulimits": [
+            {
+              "Name": "nofile",
+              "Hard": 32768,
+              "Soft": 32768
+            }
+          ],
+          "cpuLimit": 0.1,
+          "poolLimit": 0,
+          "memoryLimit": 134217728,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        }
+      ],
+      "containersAfter": [
+        {
+          "service": "api",
+          "imageId": "sha256:93f0f200bc3e5c6ae9b7273653a300b4486746fb5a08e92b0215731735918a85",
+          "ulimits": null,
+          "cpuLimit": 0.4,
+          "poolLimit": 10,
+          "memoryLimit": 2147483648,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        },
+        {
+          "service": "bun",
+          "imageId": "sha256:5bc75d9fc77beb0332aab0a7e981a5ff200395608d63896bba3dcd845331c89f",
+          "ulimits": [
+            {
+              "Name": "nofile",
+              "Hard": 32768,
+              "Soft": 32768
+            }
+          ],
+          "cpuLimit": 0.5,
+          "poolLimit": 2,
+          "memoryLimit": 2147483648,
+          "oom": false,
+          "restarts": 0,
+          "running": true,
+          "implementationHashes": {
+            "main.cjs": "79dd51216bbfa72e81d56584bfea778ed9b9dc0bf0e2066c8891ebe5e12363bc",
+            "pg-adapter.cjs": "0ee30e26ad165213bfccedf241ba9c11f22885753704161190802c8696aa6880",
+            "snapshot-queries.cjs": "ca2fab9adc5453754f566f373a13ad7a92ef5370dff441fa6c72c9fc0018e403",
+            "aggregate-snapshot.cjs": "eb21d2b6ec9e2d968f9ee230d35d100daac867fa9b94b4bad12973d53efd7738",
+            "validation-query.cjs": "5942a153449c1311c6a51739d326fe8ed2ecb7e22824d67fe0bd5ec7650740ed"
+          },
+          "snapshotMode": "joined",
+          "batchValidation": false
+        },
+        {
+          "service": "db",
+          "imageId": "sha256:81bd698b4594e751a3269e4dcd3e03a4a0ec0daf7b72e7aa1abd43cce9887542",
+          "ulimits": null,
+          "cpuLimit": 1.0,
+          "poolLimit": 0,
+          "memoryLimit": 2147483648,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        },
+        {
+          "service": "proxy",
+          "imageId": "sha256:dc73b49f5124cf2ee538dfbdfbd121f0b4ccdcb20fea30f3a81bd477c02e2bb5",
+          "ulimits": [
+            {
+              "Name": "nofile",
+              "Hard": 32768,
+              "Soft": 32768
+            }
+          ],
+          "cpuLimit": 0.1,
+          "poolLimit": 0,
+          "memoryLimit": 134217728,
+          "oom": false,
+          "restarts": 0,
+          "running": true
+        }
+      ]
+    }
+  ],
+  "images": "[{\"ID\":\"sha256:93f0f200bc3e5c6ae9b7273653a300b4486746fb5a08e92b0215731735918a85\",\"ContainerName\":\"territory-field-labs-api-1\",\"Repository\":\"territory-load-api\",\"Tag\":\"read-collation\",\"Platform\":\"linux/amd64\",\"Size\":603161410,\"Created\":\"2026-10-24T20:09:39.134223999-03:00\",\"LastTagTime\":\"2026-10-24T20:09:45.432269384-03:00\"},{\"ID\":\"sha256:5bc75d9fc77beb0332aab0a7e981a5ff200395608d63896bba3dcd845331c89f\",\"ContainerName\":\"territory-field-labs-bun-1\",\"Repository\":\"territory-field-lab-bun\",\"Tag\":\"local\",\"Platform\":\"linux/amd64\",\"Size\":504982224,\"Created\":\"2026-10-25T09:16:26.02602753-03:00\",\"LastTagTime\":\"2026-10-25T09:16:26.071207229-03:00\"},{\"ID\":\"sha256:81bd698b4594e751a3269e4dcd3e03a4a0ec0daf7b72e7aa1abd43cce9887542\",\"ContainerName\":\"territory-field-labs-db-1\",\"Repository\":\"postgres\",\"Tag\":\"16-alpine\",\"Platform\":\"linux/amd64\",\"Size\":294299523,\"Created\":\"2026-09-17T21:31:24.32976807Z\"},{\"ID\":\"sha256:dc73b49f5124cf2ee538dfbdfbd121f0b4ccdcb20fea30f3a81bd477c02e2bb5\",\"ContainerName\":\"territory-field-labs-proxy-1\",\"Repository\":\"nginx\",\"Tag\":\"1.28-alpine\",\"Platform\":\"linux/amd64\",\"Size\":62095598,\"Created\":\"2026-03-24T23:11:15.718500787Z\"}]\n\n",
+  "snapshotMode": "joined"
+}

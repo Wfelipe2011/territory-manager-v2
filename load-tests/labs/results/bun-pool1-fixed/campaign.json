@@ -1,0 +1,14 @@
+{
+  "mode": "baseline",
+  "users": "150",
+  "pools": "1",
+  "intervals": "3000",
+  "groups": "10",
+  "repetitions": 1,
+  "idle": false,
+  "batch_validation": false,
+  "search": false,
+  "refinements": 3,
+  "out": "load-tests/labs/results/bun-pool1-fixed",
+  "resources": "worker 0.5CPU/2GiB; PG 1CPU/2GiB; API 0.4CPU/2GiB; proxy 0.1CPU/128MiB"
+}

@@ -1,0 +1,11 @@
+{
+  "status": "interrupted-for-results-discussion",
+  "completedUserCounts": [
+    150,
+    300,
+    500
+  ],
+  "excludedIncompleteUserCount": 400,
+  "confirmedCapacity": null,
+  "note": "Automatic discovery and queued confirmation stopped for discussion. Complete results retained; incomplete 400-user trial excluded."
+}
