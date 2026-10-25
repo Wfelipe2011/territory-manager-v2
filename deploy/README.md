@@ -1,10 +1,14 @@
-# Recursos e sincronização de campo — configuração de produção opt-in
+# Recursos e sincronização de campo — produção Swarm
 
-Arquivos preparados, **sem deploy**, sem alteração do NPM/DNS ou do PostgreSQL
-externo. O `docker-compose.yml` de produção existente é preservado; o overlay
-`docker-compose.field.prod.yml` só passa a valer quando explicitamente combinado.
-Usar Docker Compose v2. Não tratar este arquivo como stack Swarm: dependências
-saudáveis, mounts e ordem de migrations exigem operação específica nessa plataforma.
+O **`docker-compose.yml` na raiz da API é o manifesto completo de produção**:
+API NestJS, worker Bun/pg, proxy interno nginx e PgBouncer. Não há overlay separado
+para o Bun. Esse é o arquivo lido pela stack Git `api-production` no Portainer.
+O PostgreSQL continua na sua stack própria; NPM é configurado separadamente.
+
+Usar o manifesto como stack Swarm. A ordem entre serviços não depende de
+`depends_on`: migrations precisam estar aplicadas antes do deploy; healthchecks,
+reinício e rollback são controlados pelo Swarm. O template nginx é distribuído
+por Docker config, sem bind mount dependente do filesystem do nó de execução.
 
 ## Orçamento
 
@@ -22,22 +26,29 @@ produção precisam de avaliação antes do corte. Não reduzir memória por est
 O pool de consultas do worker permanece dois + uma conexão dedicada de LISTEN,
 checagem de segurança 1s e espera HTTP 25s. Nenhuma candidata experimental é usada.
 
+O limite de 0,8 CPU do banco é uma proposta separada para sua stack, não é aplicado
+pelo manifesto da API. Na inspeção de produção, o banco tinha 1 CPU/1 GiB; manter
+esse limite provisoriamente resulta em 2,2 CPUs de tetos somados. Não confundir isso
+com uma reserva de 2,2 cores ou alterar o banco silenciosamente para fechar a soma.
+
 ## Pré-requisitos de uma futura publicação
 
 1. Backup validado e janela de manutenção. API e Admin unificado devem ser versões
    compatíveis; **não fazer apenas a troca de CPU em uma imagem antiga da API**.
 2. Gerar API (`Dockerfile.production`) e worker (`Dockerfile.field`) da MESMA revisão
-   aprovada; fixar `API_IMAGE` e `FIELD_WORKER_IMAGE` em digests imutáveis. Este overlay
+   aprovada; fixar `API_IMAGE` e `FIELD_WORKER_IMAGE` em digests imutáveis. O manifesto
    não cria/publica imagens. Não usar a imagem de experimento. Os workflows abaixo
    publicam o par, mas não executam deploy.
-3. Prover as variáveis já exigidas pelo Compose base (PostgreSQL, SMTP etc.), mais:
+3. Prover as variáveis do projeto (PostgreSQL, SMTP etc.), mais:
    - `API_IMAGE` e `FIELD_WORKER_IMAGE`: par validado, não tags móveis.
    - `JWT_SECRET` e `API_KEY_SECRET`: mesmos valores da API e do worker.
    - `DIRECT_URL`: URL PostgreSQL direta, utilizada pelas migrations Prisma.
    - `FIELD_DATABASE_URL`: URL PostgreSQL direta para o worker (schema `public`).
      Não usar PgBouncer em modo `transaction`, nem simplesmente copiar a URL da
      API que aponta para esse pool. Codificar caracteres especiais das credenciais
-     na URL; guardar segredos fora do Git.
+      na URL; guardar segredos fora do Git.
+   - `PGBOUNCER_IMAGE`: opcional; preservar o digest da instância atual para não
+     atualizar PgBouncer incidentalmente. `FIELD_PROXY_IMAGE` também aceita digest.
 4. Na stack EXISTENTE que administra o PostgreSQL, aplicar limite 0,8 CPU, preservando
    volume, imagem e demais configurações. `postgres.resources.example.yml` é só um
    fragmento: adaptar ao nome real do serviço, **não criar/substituir banco**. Esta
@@ -62,7 +73,7 @@ checagem de segurança 1s e espera HTTP 25s. Nenhuma candidata experimental é u
   O artefato contém `image-pair.json` (revisão, execução e referências completas)
   e `image-pair.env` (`API_IMAGE=...@sha256:...`, `FIELD_WORKER_IMAGE=...@sha256:...`).
   Esse env não contém credenciais e não substitui o arquivo seguro de publicação.
-  Usar os digests juntos no overlay, não imagens de execuções diferentes.
+   Usar os digests juntos no `docker-compose.yml`, não imagens de execuções diferentes.
 - Reutiliza `DOCKER_USERNAME` e `DOCKER_PASSWORD`. A conta/token precisa de escrita
   também nos dois novos repositórios do worker; verificar/criar esses repositórios
   e sua visibilidade no Docker Hub antes da primeira execução.
@@ -76,7 +87,9 @@ Na raiz da API, usando variáveis seguras do ambiente de publicação:
 
 ```bash
 # Valida sem subir nada; -q evita imprimir segredos resolvidos.
-docker compose -f docker-compose.yml -f docker-compose.field.prod.yml config -q
+docker compose -f docker-compose.yml config -q
+# Também validar a compatibilidade Swarm, descartando a saída com segredos:
+docker stack config -c docker-compose.yml > /dev/null
 ```
 
 Para o corte futuro: baixar o par de imagens aprovado; pausar tráfego e executar
@@ -90,14 +103,17 @@ O proxy usa `app-prod:3000` e expõe `8080` apenas na rede `npm_public`. No cort
 coordenado de API/Admin, configurar o NPM para `territory-api-proxy:8080` (HTTP),
 preservando TLS/domínio público. **Essa mudança não é automática nem foi executada.**
 Verificar acesso à rede, URL pública do Admin, links novos e compatibilidade legada.
-O template precisa existir no host do Compose, em `deploy/`; não é configuração
-embutida no NPM. Não publicar a porta do worker.
+O template `deploy/nginx-api.conf.template` precisa acompanhar o manifesto no
+checkout Git do Portainer. O Swarm o entrega aos nós como Docker config, não
+como bind mount nem como configuração embutida no NPM. Versionar o nome do config
+no manifesto quando modificar seu conteúdo: configs Swarm são imutáveis.
+Não publicar a porta do worker ou do proxy no host.
 
 Conferir depois do corte: healthchecks, listener conectado, pool dois, intervalo
 1000ms; `X-Territory-Upstream: field-worker` em sync e `api` nas demais rotas,
 login/assinaturas, uma marcação em tenant QA e sua propagação. Nenhuma carga em dados
-reais. `docker inspect` deve confirmar NanoCpus 700000000/400000000/100000000 e,
-na stack do banco, 800000000.
+reais. A inspeção dos serviços Swarm deve confirmar `Resources.Limits.NanoCPUs`
+700000000/400000000/100000000. O banco só terá 800000000 após ajuste separado.
 
 ## Rollback de tráfego
 

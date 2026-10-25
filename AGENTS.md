@@ -68,10 +68,11 @@ Rode-os manualmente (removendo o `skip`) **apenas quando o fluxo de e-mail/regis
   `revision-poll.cjs` recusa hash desconhecido de FieldService: revisar as regras
   de validação/espera e repetir equivalência antes de atualizar a compatibilidade.
   Reconstruir worker após mudar domínio; detalhes e rollback em `field-worker/README.md`.
-- Recursos: worker 0,7 CPU; PostgreSQL 0,8; API 0,4; proxy 0,1 (Admin e infraestrutura
-  fora desse total). `docker-compose.field.prod.yml` é overlay opt-in; Compose base
-  de produção permanece preservado. Não executar deploy automaticamente: banco
-  externo, migrations e corte API/Admin/NPM exigem operação coordenada em `deploy/README.md`.
+- Recursos locais: worker 0,7 CPU; PostgreSQL 0,8; API 0,4; proxy 0,1 (Admin e
+  infraestrutura fora desse total). Produção usa o `docker-compose.yml` completo
+  na raiz desta API, compatível com Swarm: API, Bun, proxy e PgBouncer, sem overlay
+  field. PostgreSQL permanece em stack separada, sem ajuste implícito de quota.
+  Migrations e corte API/Admin/NPM exigem operação coordenada em `deploy/README.md`.
 - Contratos, sincronização e corte de tráfego: `docs/field-http.md`.
 - Links novos usam seis caracteres alfanuméricos; UUIDs antigos continuam válidos até expirar.
 - `FieldAccessService` valida assinatura e escopo das rotas de dirigente/publicador. Não confiar em IDs enviados pelo frontend.

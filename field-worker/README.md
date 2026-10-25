@@ -52,8 +52,9 @@ e listener, mantendo agrupamento e o temporizador. Dados de negócio são preser
 ## Desenvolvimento local
 
 Orçamento local: banco 0,8 CPU, worker 0,7, API 0,4 e proxy 0,1 (total 2).
-Admin e outros serviços exigem margem adicional. Configuração de produção opt-in,
-sem deploy automático: [deploy/README.md](../deploy/README.md).
+Admin e outros serviços exigem margem adicional. Produção usa o `docker-compose.yml`
+da raiz da API (stack Swarm completa, sem overlay field). Operação e corte:
+[deploy/README.md](../deploy/README.md).
 
 Da raiz do workspace: `docker compose up --build -d`. Proxy em 3001, API direta
 somente localhost:3002. Worker sem porta publicada. Frontend mantém
