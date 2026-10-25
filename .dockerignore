@@ -4,5 +4,10 @@ dist
 .env*
 *.log
 load-tests/.runtime
+load-tests/labs/.runtime
+load-tests/labs/results
+field-worker/node_modules
+field-worker/results
+**/__pycache__
 load-tests/results
 coverage

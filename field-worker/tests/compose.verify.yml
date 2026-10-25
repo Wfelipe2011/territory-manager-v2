@@ -1,0 +1,14 @@
+# Merge with load-tests/labs/compose.yml: preserve its isolated DB/network/limits,
+# but exercise the actual local proxy template and the promoted worker image.
+services:
+  bun:
+    environment:
+      FIELD_DB_POOL_SIZE: 2
+      FIELD_WORKER_DIAGNOSTICS: 1
+  proxy:
+    environment:
+      FIELD_SYNC_UPSTREAM: bun:3402
+      NGINX_ENVSUBST_FILTER: FIELD_SYNC_UPSTREAM
+    volumes:
+      - ${FIELD_PROXY_TEMPLATE:?Set FIELD_PROXY_TEMPLATE}:/etc/nginx/templates/default.conf.template:ro
+    command: [nginx, -g, "daemon off;"]

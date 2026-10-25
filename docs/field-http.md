@@ -111,3 +111,18 @@ check expõe `activeSessions` e conserva `sockets` como alias de compatibilidade
 ## Solicitações e catálogo sem rodada
 
 O catálogo e as permissões estruturais foram ampliados em [change-requests.md](change-requests.md). Casas sem participação aparecem em cinza; correções pendentes preservam o trabalho. Links sem rodada acompanham a última rodada aberta compatível.
+
+## Integração local Bun + pg (2026-10-25)
+
+O Compose da raiz agora mantém uma entrada pública em `localhost:3001`: proxy
+nginx envia `/v1/field/blocks/:id/sync`, `/v1/field/sync` e
+`/v1/field/session` ao worker Bun + pg; todas as outras rotas, incluindo PATCH
+de casas, continuam na API NestJS. Frontend mantém a URL existente. API direta
+para diagnóstico somente em `127.0.0.1:3002`; worker sem porta no host.
+
+`Dockerfile.field` compila as regras atuais de `src/`. Snapshot agregado,
+validação consolidada por invocação, pool 2, verificação 3s, espera HTTP 25s.
+O worker não executa migrations nem usa imagens/fixtures dos laboratórios.
+Detalhes de operação, testes e rollback em `../field-worker/README.md`.
+Esta integração é **somente local**; as instruções históricas de publicação
+anteriores não constituem autorização nem procedimento validado para publicar o worker.

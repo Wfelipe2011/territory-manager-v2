@@ -55,6 +55,10 @@ Rode-os manualmente (removendo o `skip`) **apenas quando o fluxo de e-mail/regis
 
 ## Área de campo (frontend unificado)
 
+- Worker local Bun + pg em `field-worker/`, build `Dockerfile.field` a partir dos
+  fontes atuais desta API. Proxy do workspace mantém porta 3001; sync/saída vão
+  ao worker, escritas continuam no NestJS. Pool padrão 2, verificação 3s.
+  Reconstruir worker após mudar domínio; detalhes e rollback em `field-worker/README.md`.
 - Contratos, sincronização e corte de tráfego: `docs/field-http.md`.
 - Links novos usam seis caracteres alfanuméricos; UUIDs antigos continuam válidos até expirar.
 - `FieldAccessService` valida assinatura e escopo das rotas de dirigente/publicador. Não confiar em IDs enviados pelo frontend.
