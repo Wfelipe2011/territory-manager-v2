@@ -8,6 +8,7 @@ from pathlib import Path
 import subprocess
 import time
 import urllib.request
+from urllib.parse import urlparse,parse_qs
 
 ROOT = Path(__file__).resolve().parent
 RUNTIME = ROOT / '.runtime'
@@ -38,6 +39,7 @@ def state(variant):
     result = [{
         'service': item['Config']['Labels']['com.docker.compose.service'],
         'imageId': item['Image'], 'cpuLimit': item['HostConfig']['NanoCpus'] / 1e9,
+        'poolLimit': int(parse_qs(urlparse(next((v.split('=',1)[1] for v in item['Config']['Env'] if v.startswith('DATABASE_URL=')), '')).query).get('connection_limit',['0'])[0]),
         'memoryLimit': item['HostConfig']['Memory'], 'oom': item['State']['OOMKilled'],
         'restarts': item['RestartCount'], 'running': item['State']['Running'],
     } for item in containers]

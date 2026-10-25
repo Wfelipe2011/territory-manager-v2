@@ -44,6 +44,7 @@ services:
     environment:
       <<: *environment
       NODE_OPTIONS: --max-old-space-size=1536
+      DATABASE_URL: postgresql://load:load-local-only@db:5432/territory_manager_peak_load?connection_limit=${LAB_REFERENCE_POOL_SIZE:-10}&pool_timeout=20
       PORT: 3000
     depends_on:
       db: { condition: service_healthy }
