@@ -33,6 +33,10 @@ async function load(connection, name, args, sql, params, mode) {
         FROM territory_block_address m JOIN address a ON a.id=m.address_id WHERE m.territory_block_id=h.id AND m.registration_status<>'rejected'), '[]'::json) AS territory_block_address
       FROM (`+sql+`) h JOIN block b ON b.id=h."blockId" LEFT JOIN signature s ON s.id=h."signatureId"`;
     const rows = (await connection.query(query, params)).rows;
+    for (const row of rows) {
+      const names=row.territory_block_address.map(m=>m.address.name).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+      if(names.some((name,i)=>i>0&&name.localeCompare(names[i-1],'pt-BR')===0)) return undefined;
+    }
     return rows.map(row=>{ if(row.signature?.expirationDate) row.signature.expirationDate=new Date(/[zZ]|[+-][0-9]{2}:[0-9]{2}$/.test(row.signature.expirationDate)?row.signature.expirationDate:row.signature.expirationDate+'Z'); return row; });
   }
 }

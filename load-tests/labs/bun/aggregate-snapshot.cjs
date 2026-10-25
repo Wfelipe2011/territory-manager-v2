@@ -61,6 +61,8 @@ SELECT json_build_object(
 
 async function snapshot(connection,user,scope,info) {
   const data = (await connection.query(SQL,[user.tenantId,user.territoryId,scope.blockId,scope.round??-1,info?.status==='closed'])).rows[0].payload;
+  const names=data.streets.map(s=>s.name).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  if (names.some((name,i)=>i>0&&name.localeCompare(names[i-1],'pt-BR')===0)) return undefined;
   if (data._duplicateRequests) return undefined; // Preserve unspecified legacy request ordering via original path.
   delete data._duplicateRequests;
   for (const street of data.streets) {

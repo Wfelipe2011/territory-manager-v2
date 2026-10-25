@@ -107,6 +107,8 @@ async function main() {
     const names=['Água 2','água 10','Agua 1'];
     for(let i=0;i<addresses.length;i++)await db.address.update({where:{id:addresses[i].id},data:{name:names[i]}});
     await equivalent('ordenação de ruas com acentos e diferenças de caixa',path()+'?'+session);
+    for(const row of addresses)await db.address.update({where:{id:row.id},data:{name:'Rua Igual'}});
+    await equivalent('nomes de ruas iguais preservam a ordem legada',path()+'?'+session);
   } finally {for(const row of addresses)await db.address.update({where:{id:row.id},data:{name:row.name}});}
   const mapping = await db.territory_block_address.findUniqueOrThrow({ where: { id: catalogHouse.territoryBlockAddressId } });
   const link = await db.territory_block.findUniqueOrThrow({ where: { id: mapping.territoryBlockId } });

@@ -37,6 +37,7 @@ async function main() {
       if (scope.fullBlock) {
         const data = await tx.$blockSnapshot(user,scope,info);
         if (data !== undefined) return data;
+        return original(tx.$baselineAdapter(),user,scope,info);
       }
       return original(tx,user,scope,info);
     };

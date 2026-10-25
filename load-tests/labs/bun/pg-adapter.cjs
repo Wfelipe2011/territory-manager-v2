@@ -68,7 +68,7 @@ module.exports = function createAdapter(connectionString, models) {
       finally { counters.queries++; counters.queryMs += performance.now()-begin; }
     }};
   }
-  function adapter(client, transactional = false) {
+  function adapter(client, transactional = false, specializedReads = true) {
     async function load(name, args = {}, connection = client) {
       if (validation && !transactional) { const result=await validation.load(connection,name,args); if(result!==undefined)return result; }
       for (const key of Object.keys(args)) {
@@ -154,7 +154,7 @@ module.exports = function createAdapter(connectionString, models) {
         if (!Number.isInteger(args.take) || args.take < 0) throw Error('Unsupported take');
         sql += ' LIMIT ' + bind(args.take);
       }
-      if (mode !== 'baseline') {
+      if (specializedReads && mode !== 'baseline') {
         const direct = await specialized.load(connection, name, args, sql, params, mode);
         if (direct !== undefined) return direct;
       }
@@ -187,6 +187,7 @@ module.exports = function createAdapter(connectionString, models) {
     }
 
     const result = {};
+    if (transactional) result.$baselineAdapter = () => adapter(client,true,false);
     if (mode === 'aggregate' && transactional) result.$blockSnapshot = (user,scope,info) => require('./aggregate-snapshot.cjs').snapshot(client,user,scope,info);
     for (const model of models) {
       result[model.name] = {};
