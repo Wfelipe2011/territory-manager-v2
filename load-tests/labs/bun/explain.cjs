@@ -39,5 +39,6 @@ Client.prototype.query=function(text,values,...rest){
   }
   await conn.query('ROLLBACK');
  } finally {conn.release();await pool.end();await db.$disconnect();}
- console.log(JSON.stringify({mode:process.env.LAB_SNAPSHOT_MODE||'baseline',houses:data.streets.reduce((n,s)=>n+s.houses.length,0),plans},null,2));
+ fs.writeFileSync('/tmp/field-explain.json',JSON.stringify({mode:process.env.LAB_SNAPSHOT_MODE||'baseline',houses:data.streets.reduce((n,s)=>n+s.houses.length,0),plans},null,2));
+ console.log('Snapshot plans saved');
 })().catch(e=>{console.error(e.message);process.exit(1);});

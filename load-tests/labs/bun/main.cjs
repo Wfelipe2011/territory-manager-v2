@@ -30,6 +30,13 @@ async function main() {
     };
   }
   const timings = {};
+  const jwt = require('jsonwebtoken');
+  const originalVerify = jwt.verify;
+  jwt.verify = function(...args) {
+    const begin=performance.now();
+    try { return originalVerify.apply(this,args); }
+    finally { const metric=timings.jwtVerify??={calls:0,totalMs:0,maxMs:0}; const elapsed=performance.now()-begin;metric.calls++;metric.totalMs+=elapsed;metric.maxMs=Math.max(metric.maxMs,elapsed); }
+  };
   for (const [object,key,label] of [[field,'snapshot','snapshot'],[field,'revision','revision'],[access,'validate','validation']]) {
     const original = object[key].bind(object);
     object[key] = async (...args) => {
