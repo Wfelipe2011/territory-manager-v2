@@ -144,7 +144,11 @@ def trial(variant, users, repeat, out, pool=10, interval=3000, group=10, mode="b
     capacity_passed = functional and metric('snapshot_ms', 'p(95)', 1e9) <= 1000 and (idle or metric('mark_ms', 'p(95)', 1e9) <= 500) 
     passed = capacity_passed and (idle or (delivery['observer_p95_ms'] is not None and delivery['observer_p95_ms'] <= 5000))
     queries = json.loads(db("SELECT coalesce(json_agg(q),'[]'::json) FROM (SELECT query,calls,total_exec_time,mean_exec_time,rows FROM pg_stat_statements ORDER BY total_exec_time DESC LIMIT 25) q"))
-    result = {'id': name, 'variant': variant, 'logicalUsers': users, 'repeat': repeat, 'groupPreference': group, 'snapshotMode': mode, 'idleOnly': idle, 'batchValidation':batch,
+    populations=[(users+11-t)//12 for t in range(12)]
+    groups_per_tenant=[max(1,n//10 if group==10 else (n+19)//20) for n in populations]
+    actual_min=min(n//g for n,g in zip(populations,groups_per_tenant))
+    actual_max=max((n+g-1)//g for n,g in zip(populations,groups_per_tenant))
+    result = {'actualGroupMin':actual_min,'actualGroupMax':actual_max,'expectedBlocks':sum(groups_per_tenant),'id': name, 'variant': variant, 'logicalUsers': users, 'repeat': repeat, 'groupPreference': group, 'snapshotMode': mode, 'idleOnly': idle, 'batchValidation':batch,
         'checkIntervalMs': interval, 'poolSize': pool, 'measurementSeconds': 120, 'preparationSeconds': 65,
         'observerTailSeconds': 90, 'writerMaxDurationSeconds': 155, 'wallSeconds': time.time() - start,
         'windowStartMs': window, 'exitCode': code, 'passed': passed, 'capacityPassedWithoutPropagationGoal':capacity_passed, 'functionalSteadyPassed': functional,
