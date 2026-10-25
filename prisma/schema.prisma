@@ -328,6 +328,25 @@ model field_session {
   @@index([createdAt], map: "field_session_history_idx")
 }
 
+// Aggregate analytics only: scopeId=0 is global; others are tenant IDs.
+model field_concurrency_sample {
+  sampledAt DateTime @map("sampled_at") @db.Timestamptz(6)
+  scopeId   Int      @map("scope_id")
+  active    Int
+  @@id([sampledAt, scopeId])
+}
+
+model field_concurrency_hour {
+  bucketAt  DateTime @map("bucket_at") @db.Timestamptz(6)
+  scopeId   Int      @map("scope_id")
+  samples   Int
+  activeSum BigInt   @map("active_sum")
+  peak      Int
+  peakAt    DateTime @map("peak_at") @db.Timestamptz(6)
+  @@id([bucketAt, scopeId])
+  @@index([scopeId, bucketAt], map: "field_concurrency_hour_scope_idx")
+}
+
 model paypal_transaction {
   id                      Int      @id @unique @default(autoincrement())
   transactionId           String   @unique // ID da transação do PayPal

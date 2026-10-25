@@ -36,7 +36,7 @@ export class AppController {
     @Query('to') to?: string,
   ) {
     const VALID_GROUPBY = ['10min', '30min', '1h', '1d'];
-    const VALID_PERIOD = ['1d', '3d', '7d'];
+    const VALID_PERIOD = ['1d', '3d', '7d', '30d'];
     if (groupBy && !VALID_GROUPBY.includes(groupBy)) {
       throw new BadRequestException(`groupBy inválido. Use: ${VALID_GROUPBY.join(', ')}`);
     }

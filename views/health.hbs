@@ -75,7 +75,7 @@
 
         <!-- Metric Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <!-- Signatures & Sockets -->
+            <!-- Signatures & HTTP presence -->
             <div class="grid grid-rows-2 gap-6">
                 <div class="card flex justify-between items-center">
                     <div>
@@ -86,8 +86,8 @@
                 </div>
                 <div class="card flex justify-between items-center">
                     <div>
-                        <p class="text-gray-400 text-sm uppercase font-semibold">Sockets</p>
-                        <h2 class="text-3xl font-bold text-white mt-1" id="sockets-count">{{health.sockets}}</h2>
+                        <p class="text-gray-400 text-sm uppercase font-semibold">Dispositivos online agora</p>
+                        <h2 class="text-3xl font-bold text-white mt-1" id="active-sessions-count">{{health.activeSessions}}</h2>
                     </div>
                     <i class="fas fa-plug text-green-500 text-2xl opacity-50"></i>
                 </div>
@@ -187,13 +187,23 @@
             </div>
         </div>
 
-        <!-- Sessões WebSocket -->
+        <!-- Persistent long-poll presence analytics -->
         <div class="card mb-8">
             <div class="flex justify-between items-center mb-4">
-                <p class="text-gray-400 text-sm uppercase font-semibold">Sessões WebSocket</p>
+                <p class="text-gray-400 text-sm uppercase font-semibold">Simultaneidade — campo via HTTP</p>
                 <i class="fas fa-network-wired text-green-500 opacity-50"></i>
             </div>
 
+            <p class="text-sm text-gray-300 mb-4">Dispositivos distintos com presença nos últimos 60s, sem saída e com link válido. Abas do mesmo dispositivo não duplicam a contagem. Não representa pessoas únicas.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div><p class="text-gray-400">Pico registrado no período</p><strong id="concurrency-peak" class="text-2xl text-white">—</strong><p id="concurrency-peak-at" class="text-gray-300 text-sm"></p></div>
+                <div><p class="text-gray-400">Online agora por congregação</p><p id="concurrency-online-tenants" class="text-sm text-gray-300"></p></div>
+            </div>
+            <p id="concurrency-status" role="status" class="text-sm text-gray-300 mb-3">Carregando histórico…</p>
+            <button id="concurrency-pause" type="button" onclick="toggleConcurrencyRefresh()" aria-pressed="false" class="mb-3 px-3 py-2 rounded bg-gray-800 text-white">Pausar atualização automática</button>
+            <p id="concurrency-chart-scope" class="text-sm text-gray-300 mb-2">Gráfico e pico: geral</p>
+            <svg id="concurrency-chart" viewBox="0 0 960 180" role="img" aria-label="Pico de dispositivos simultâneos por intervalo; valores detalhados na tabela" class="w-full mb-4"></svg>
+            <p class="text-xs text-gray-400 mb-4">Amostras a cada 30s; picos mais curtos podem não ser capturados. Detalhes por 90 dias, agregados horários preservados depois disso. Lacunas são ausência de coleta, não zero. Horários em São Paulo; intervalos alinhados em UTC.</p>
             <!-- Filter Bar -->
             <div class="space-y-3 mb-4">
                 <!-- Quick Filters Row -->
@@ -204,6 +214,7 @@
                         <button data-period="1d" onclick="setPeriod('1d')" class="px-3 py-1 rounded-md text-xs font-semibold bg-green-700 text-white border border-green-600 transition-colors">1d</button>
                         <button data-period="3d" onclick="setPeriod('3d')" class="px-3 py-1 rounded-md text-xs font-semibold bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-500 hover:text-white transition-colors">3d</button>
                         <button data-period="7d" onclick="setPeriod('7d')" class="px-3 py-1 rounded-md text-xs font-semibold bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-500 hover:text-white transition-colors">7d</button>
+                        <button data-period="30d" onclick="setPeriod('30d')" class="px-3 py-1 rounded-md text-xs font-semibold bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-500 hover:text-white transition-colors">30d</button>
                         <button data-period="custom" onclick="setPeriod('custom')" class="px-3 py-1 rounded-md text-xs font-semibold bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-500 hover:text-white transition-colors">Personalizado</button>
                     </div>
                     <!-- Divider -->
@@ -245,12 +256,12 @@
                 <div id="advanced-panel" class="hidden border border-gray-700 rounded-lg p-4 bg-gray-900">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
-                            <label class="text-xs text-gray-500 block mb-1.5">Mín. sessões ativas</label>
+                            <label for="min-active" class="text-xs text-gray-500 block mb-1.5">Pico mínimo</label>
                             <input type="number" id="min-active" min="0" value="0" onchange="setMinActive(this.value)"
                                 class="w-full bg-gray-800 text-white text-sm rounded px-2 py-1.5 border border-gray-600 focus:outline-none focus:border-green-500">
                         </div>
                         <div>
-                            <label class="text-xs text-gray-500 block mb-1.5">Mín. sessões iniciadas</label>
+                            <label for="min-started" class="text-xs text-gray-500 block mb-1.5">Média mínima</label>
                             <input type="number" id="min-started" min="0" value="0" onchange="setMinStarted(this.value)"
                                 class="w-full bg-gray-800 text-white text-sm rounded px-2 py-1.5 border border-gray-600 focus:outline-none focus:border-green-500">
                         </div>
@@ -259,8 +270,8 @@
                             <select id="sort-by" onchange="setSortBy(this.value)"
                                 class="w-full bg-gray-800 text-white text-sm rounded px-2 py-1.5 border border-gray-600 focus:outline-none focus:border-green-500">
                                 <option value="slot">Horário</option>
-                                <option value="active">Mais ativas</option>
-                                <option value="started">Mais iniciadas</option>
+                                <option value="active">Maior pico</option>
+                                <option value="started">Maior média</option>
                             </select>
                         </div>
                         <div id="tenant-filter-wrap" class="hidden">
@@ -300,8 +311,8 @@
                     <thead>
                         <tr class="text-gray-400 text-left border-b border-gray-700">
                             <th class="pb-2">Horário</th>
-                            <th class="pb-2 text-right">Iniciadas</th>
-                            <th class="pb-2 text-right">Ativas no período</th>
+                            <th class="pb-2 text-right">Média simultânea</th>
+                            <th class="pb-2 text-right">Pico / horário</th>
                         </tr>
                     </thead>
                     <tbody id="sessions-geral-body">
@@ -309,7 +320,7 @@
                             {{#each health.sessionsGeneral}}
                             <tr class="table-row">
                                 <td class="py-1.5 text-gray-300">{{slot}}</td>
-                                <td class="py-1.5 text-right text-gray-400">{{started}}</td>
+                                <td class="py-1.5 text-right text-gray-400">{{average}}</td>
                                 <td class="py-1.5 text-right font-bold text-white">{{active}}</td>
                             </tr>
                             {{/each}}
@@ -326,8 +337,8 @@
                         <tr class="text-gray-400 text-left border-b border-gray-700">
                             <th class="pb-2">Horário</th>
                             <th class="pb-2">Congregação</th>
-                            <th class="pb-2 text-right">Iniciadas</th>
-                            <th class="pb-2 text-right">Ativas no período</th>
+                            <th class="pb-2 text-right">Média simultânea</th>
+                            <th class="pb-2 text-right">Pico / horário</th>
                         </tr>
                     </thead>
                     <tbody id="sessions-tenant-body">
@@ -336,7 +347,7 @@
                             <tr class="table-row">
                                 <td class="py-1.5 text-gray-300">{{slot}}</td>
                                 <td class="py-1.5 text-gray-300">{{tenant_name}}</td>
-                                <td class="py-1.5 text-right text-gray-400">{{started}}</td>
+                                <td class="py-1.5 text-right text-gray-400">{{average}}</td>
                                 <td class="py-1.5 text-right font-bold text-white">{{active}}</td>
                             </tr>
                             {{/each}}
@@ -359,6 +370,18 @@
         };
         let isAdvancedOpen = false;
         let currentTab = 'geral';
+        let sessionsRequest = 0;
+        let groupSeconds = 600;
+        let concurrencyPaused = false;
+        function toggleConcurrencyRefresh() {
+            concurrencyPaused = !concurrencyPaused;
+            const button = document.getElementById('concurrency-pause');
+            button.setAttribute('aria-pressed', String(concurrencyPaused));
+            button.innerText = concurrencyPaused ? 'Retomar atualização automática' : 'Pausar atualização automática';
+            if (!concurrencyPaused) fetchSessions();
+        }
+        const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
+        const localTime = iso => new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
         // ===== CHIP CSS =====
         const CHIP_ACTIVE   = 'px-3 py-1 rounded-md text-xs font-semibold bg-green-700 text-white border border-green-600 transition-colors';
@@ -481,6 +504,7 @@
 
         // ===== FETCH FROM API =====
         async function fetchSessions() {
+            const request = ++sessionsRequest;
             const params = new URLSearchParams({ groupBy: filters.groupBy });
             if (filters.from && filters.to) {
                 params.set('from', filters.from);
@@ -492,11 +516,22 @@
                 const res = await fetch(`/v1/sessions?${params}`);
                 if (!res.ok) throw new Error('Falha ao buscar sessões');
                 const data = await res.json();
+                if (request !== sessionsRequest) return;
                 allSessionsGeneral  = data.sessionsGeneral;
                 allSessionsByTenant = data.sessionsByTenant;
+                groupSeconds = data.groupSeconds;
+                document.getElementById('active-sessions-count').innerText = data.online;
+                document.getElementById('concurrency-peak').innerText = data.peak ? data.peak.active : '—';
+                document.getElementById('concurrency-peak-at').innerText = data.peak ? localTime(data.peak.at) : 'Sem amostras no período';
+                const tenantNames = new Map(allSessionsByTenant.map(s => [s.tenantId, s.tenant_name]));
+                document.getElementById('concurrency-online-tenants').innerText = data.onlineByTenant.map(t => `${tenantNames.get(t.scope_id) || 'Congregação ' + t.scope_id}: ${t.active}`).join(' · ');
+                const stale = !data.lastCollectedAt || Date.now() - Date.parse(data.lastCollectedAt) > 90000;
+                document.getElementById('concurrency-status').innerText = `${stale ? 'Atenção: coleta ausente ou atrasada. ' : ''}${data.resolutionSeconds === 3600 ? 'Agregados horários; limites arredondados às horas disponíveis' : 'Amostras de 30 segundos'} · intervalo ${data.groupSeconds/60} min · última coleta: ${data.lastCollectedAt ? localTime(data.lastCollectedAt) : 'ainda não iniciada'}`;
                 populateTenantSelect();
                 applyFilters();
             } catch (e) {
+                if (request !== sessionsRequest) return;
+                document.getElementById('concurrency-status').innerText = 'Falha ao atualizar histórico. Os valores anteriores podem estar desatualizados.';
                 console.error('Erro ao buscar sessões:', e);
             }
         }
@@ -507,7 +542,7 @@
             const select  = document.getElementById('tenant-select');
             const current = filters.tenant;
             select.innerHTML = '<option value="">Todas</option>' +
-                unique.map(t => `<option value="${t.replace(/"/g, '&quot;')}"${t === current ? ' selected' : ''}>${t}</option>`).join('');
+                unique.map(t => `<option value="${escapeHtml(t)}"${t === current ? ' selected' : ''}>${escapeHtml(t)}</option>`).join('');
         }
 
         // ===== APPLY CLIENT-SIDE FILTERS =====
@@ -517,12 +552,12 @@
             const filter = s => {
                 if (onlyActive && s.active === 0) return false;
                 if (s.active   < minActive)        return false;
-                if (s.started  < minStarted)       return false;
+                if (s.average  < minStarted)       return false;
                 return true;
             };
             const sort = arr => {
                 if (sortBy === 'active')  arr.sort((a, b) => b.active  - a.active);
-                if (sortBy === 'started') arr.sort((a, b) => b.started - a.started);
+                if (sortBy === 'started') arr.sort((a, b) => b.average - a.average);
                 return arr;
             };
 
@@ -531,6 +566,7 @@
 
             document.getElementById('sessions-geral-body').innerHTML  = renderSessionRows(general, 3);
             document.getElementById('sessions-tenant-body').innerHTML = renderSessionRows(byTenant, 4);
+            renderConcurrencyChart();
             renderActiveChips();
         }
 
@@ -542,13 +578,13 @@
                 chips.push({ label: `${fmt(filters.from)} → ${fmt(filters.to)}`, key: 'daterange' });
             }
             if (filters.onlyActive)      chips.push({ label: 'Apenas com atividade', key: 'onlyActive' });
-            if (filters.minActive > 0)   chips.push({ label: `Mín. ativas ≥ ${filters.minActive}`, key: 'minActive' });
-            if (filters.minStarted > 0)  chips.push({ label: `Mín. iniciadas ≥ ${filters.minStarted}`, key: 'minStarted' });
-            if (filters.sortBy !== 'slot') chips.push({ label: `Ordenar: ${filters.sortBy === 'active' ? 'Mais ativas' : 'Mais iniciadas'}`, key: 'sortBy' });
+            if (filters.minActive > 0)   chips.push({ label: `Pico ≥ ${filters.minActive}`, key: 'minActive' });
+            if (filters.minStarted > 0)  chips.push({ label: `Média ≥ ${filters.minStarted}`, key: 'minStarted' });
+            if (filters.sortBy !== 'slot') chips.push({ label: `Ordenar: ${filters.sortBy === 'active' ? 'Maior pico' : 'Maior média'}`, key: 'sortBy' });
             if (filters.tenant)          chips.push({ label: `Congregação: ${filters.tenant}`, key: 'tenant' });
 
             document.getElementById('active-chips').innerHTML = chips.map(c =>
-                `<span class="${CHIP_ACTIVE_FILTER}">${c.label}<button onclick="removeChip('${c.key}')" class="ml-1 hover:text-green-400 font-bold">×</button></span>`
+                `<span class="${CHIP_ACTIVE_FILTER}">${escapeHtml(c.label)}<button aria-label="Remover filtro" onclick="removeChip('${c.key}')" class="ml-1 hover:text-green-400 font-bold">×</button></span>`
             ).join('');
         }
 
@@ -558,8 +594,10 @@
                 return `<tr><td colspan="${cols}" class="py-4 text-center text-gray-500">Nenhuma sessão registrada</td></tr>`;
             }
             return sessions.map(s => {
-                if (cols === 3) return `<tr class="table-row"><td class="py-1.5 text-gray-300">${s.slot}</td><td class="py-1.5 text-right text-gray-400">${s.started}</td><td class="py-1.5 text-right font-bold text-white">${s.active}</td></tr>`;
-                return `<tr class="table-row"><td class="py-1.5 text-gray-300">${s.slot}</td><td class="py-1.5 text-gray-300">${s.tenant_name}</td><td class="py-1.5 text-right text-gray-400">${s.started}</td><td class="py-1.5 text-right font-bold text-white">${s.active}</td></tr>`;
+                const peak = `${s.active}<br><span class="text-xs font-normal text-gray-300">${escapeHtml(localTime(s.peakAt))}</span>`;
+                const mean = `${s.average}<br><span class="text-xs">${s.samples} amostras</span>`;
+                if (cols === 3) return `<tr class="table-row"><td class="py-1.5 text-gray-300">${escapeHtml(s.slot)}</td><td class="py-1.5 text-right text-gray-400">${mean}</td><td class="py-1.5 text-right font-bold text-white">${peak}</td></tr>`;
+                return `<tr class="table-row"><td class="py-1.5 text-gray-300">${escapeHtml(s.slot)}</td><td class="py-1.5 text-gray-300">${escapeHtml(s.tenant_name)}</td><td class="py-1.5 text-right text-gray-400">${mean}</td><td class="py-1.5 text-right font-bold text-white">${peak}</td></tr>`;
             }).join('');
         }
 
@@ -578,7 +616,7 @@
                 }
                 document.getElementById('server-message').innerText    = data.message;
                 document.getElementById('signatures-count').innerText  = data.signatures;
-                document.getElementById('sockets-count').innerText     = data.sockets;
+                document.getElementById('active-sessions-count').innerText = data.activeSessions;
                 document.getElementById('db-active').innerText         = data.database_info.active;
                 document.getElementById('db-idle').innerText           = data.database_info.idle;
                 document.getElementById('db-max').innerText            = data.database_info.max_connections;
@@ -610,8 +648,36 @@
             }
         }
 
+        function renderConcurrencyChart() {
+            const rows = [...(currentTab === 'tenant' && filters.tenant
+                ? allSessionsByTenant.filter(s => s.tenant_name === filters.tenant)
+                : allSessionsGeneral)].sort((a,b) => Date.parse(a.slotAt)-Date.parse(b.slotAt));
+            const chart = document.getElementById('concurrency-chart');
+            const scope = currentTab === 'tenant' && filters.tenant ? filters.tenant : 'geral';
+            document.getElementById('concurrency-chart-scope').innerText = `Gráfico e pico: ${scope}`;
+            const peak = rows.reduce((best, row) => !best || row.active > best.active || (row.active === best.active && Date.parse(row.peakAt) < Date.parse(best.peakAt)) ? row : best, null);
+            document.getElementById('concurrency-peak').innerText = peak ? peak.active : '—';
+            document.getElementById('concurrency-peak-at').innerText = peak ? localTime(peak.peakAt) : 'Sem amostras no período';
+            if (!rows.length) { chart.innerHTML = '<text x="40" y="90" fill="#d1d5db">Sem amostras no período</text>'; return; }
+            const max = Math.max(1, ...rows.map(s => s.active));
+            const start = Date.parse(rows[0].slotAt), end = Date.parse(rows[rows.length-1].slotAt);
+            const x = s => 50 + (Date.parse(s.slotAt)-start)/Math.max(1,end-start)*860;
+            const y = s => 145 - s.active/max*120;
+            const segments = [[]];
+            rows.forEach((s,i) => {
+                if (i && Date.parse(s.slotAt)-Date.parse(rows[i-1].slotAt)>groupSeconds*1000) segments.push([]);
+                segments[segments.length-1].push(s);
+            });
+            chart.innerHTML = `<text x="5" y="25" fill="#d1d5db">${max}</text><text x="5" y="145" fill="#d1d5db">0</text>` +
+                segments.map(segment => `<polyline fill="none" stroke="#4ade80" stroke-width="2" points="${segment.map(s => `${x(s)},${y(s)}`).join(' ')}"/>`).join('') +
+                rows.map(s => `<circle cx="${x(s)}" cy="${y(s)}" r="2" fill="#4ade80"><title>${escapeHtml(s.slot)}: ${s.active}</title></circle>`).join('') +
+                `<text x="50" y="175" fill="#d1d5db" font-size="12">${escapeHtml(rows[0].slot)}</text><text x="910" y="175" text-anchor="end" fill="#d1d5db" font-size="12">${escapeHtml(rows[rows.length-1].slot)}</text>`;
+        }
+
         // ===== INIT =====
         populateTenantSelect();
+        fetchSessions();
+        setInterval(() => { if (!document.hidden && !concurrencyPaused) fetchSessions(); }, 30000);
     </script>
 </body>
 </html>

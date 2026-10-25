@@ -3,11 +3,12 @@ import { DashboardController } from './dashboard.controller';
 import { DashboardService } from './dashboard.service';
 import { HealthService } from './health.service';
 import { AuthModule } from '../auth/auth.module';
+import { ConcurrencyService } from './concurrency.service';
 
 @Module({
   imports: [AuthModule],
   controllers: [DashboardController],
-  providers: [DashboardService, HealthService],
+   providers: [DashboardService, HealthService, ConcurrencyService],
   exports: [HealthService],
 })
 export class DashboardModule { }
