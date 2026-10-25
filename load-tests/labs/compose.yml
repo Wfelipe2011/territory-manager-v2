@@ -58,6 +58,7 @@ services:
       args: { API_IMAGE: "${LAB_API_IMAGE:-territory-load-api:read-collation}" }
     environment:
       <<: *environment
+      LAB_SNAPSHOT_MODE: ${LAB_SNAPSHOT_MODE:-baseline}
       PORT: 3402
     ports: ["127.0.0.1:3402:3402"]
     healthcheck:

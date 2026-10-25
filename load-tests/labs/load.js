@@ -6,24 +6,26 @@ import { config, blockFor, writerOwner, sampledReader, headers } from '../config
 
 // Separate writer shutdown from observer shutdown. Writes start only inside the
 // 120-second window; observers continue another 60 seconds for late ACK delivery.
-const users = config.USERS, active = users / 10, prep = 65, duration = 120, tail = 90;
+const idle = __ENV.IDLE_ONLY === '1';
+const users = config.USERS, active = idle ? 0 : users / 10, prep = 65, duration = 120, tail = 90;
 if (!config.STAGED || users < 120 || users % 10) throw Error('Staged synthetic peak workload required');
 const ready = new Counter('initial_ready'), entries = new Trend('snapshot_ms', true);
 const marks = new Trend('mark_ms', true), sentinel = new Trend('principal_snapshot_ms', true);
 const errors = new Rate('unexpected_errors'), measured = new Rate('started_in_window_errors');
 const sentinelErrors = new Rate('principal_snapshot_errors'), lateness = new Trend('writer_start_lateness_ms', true);
+const changedTime = new Trend('changed_snapshot_ms', true), unchangedTime = new Trend('unchanged_response_ms', true);
 const initialCount = new Counter('initial_snapshots'), changed = new Counter('changed_snapshots');
 export const options = {
   discardResponseBodies: true,
   systemTags: ['status', 'method', 'name', 'scenario', 'expected_response'],
   scenarios: {
     observers: { executor: 'constant-vus', vus: users, duration: `${prep + duration + tail}s`, exec: 'observeScreen', gracefulStop: '35s' },
-    writers: { executor: 'per-vu-iterations', vus: active, iterations: 4, startTime: `${prep}s`, maxDuration: '155s', exec: 'writeHouse', gracefulStop: '35s' },
+    ...(idle ? {} : { writers: { executor: 'per-vu-iterations', vus: active, iterations: 4, startTime: `${prep}s`, maxDuration: '155s', exec: 'writeHouse', gracefulStop: '35s' } }),
     principal: { executor: 'constant-vus', vus: 1, startTime: `${prep}s`, duration: `${duration}s`, exec: 'principalProbe', gracefulStop: '35s' },
   },
-  thresholds: { initial_ready: [`count>=${users}`], snapshot_ms: ['p(95)<=1000'], mark_ms: ['p(95)<=500'],
+  thresholds: { initial_ready: [`count>=${users}`], snapshot_ms: ['p(95)<=1000'], ...(idle ? {} : {mark_ms: ['p(95)<=500']}),
     unexpected_errors: ['rate<0.01'], started_in_window_errors: ['rate<0.01'],
-    principal_snapshot_errors: ['rate<0.01'], writer_start_lateness_ms: ['p(95)<=500'], dropped_iterations: ['count==0'] },
+    principal_snapshot_errors: ['rate<0.01'], ...(idle ? {} : {writer_start_lateness_ms: ['p(95)<=500']}), dropped_iterations: ['count==0'] },
   summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
 };
 let cursor, previous, started = false, counted = false;
@@ -74,7 +76,8 @@ export function observeScreen() {
     entries.add(res.timings.duration);
     if (!counted) { counted = true; initialCount.add(1); if (Date.now() < exec.scenario.startTime + prep * 1000) ready.add(1); }
     remember(state, true);
-  } else if (state.changed) { changed.add(1); remember(state, false); }
+  } else if (state.changed) { changed.add(1); changedTime.add(res.timings.duration); remember(state, false); }
+  else unchangedTime.add(res.timings.duration);
 }
 export function writeHouse() {
   const owner = (exec.vu.idInTest - 1) % active, round = exec.vu.iterationInScenario;

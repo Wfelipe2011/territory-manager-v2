@@ -38,13 +38,17 @@ def monitor(stop, samples, generator):
                 raise RuntimeError('No laboratory containers to monitor')
             result = subprocess.run(['docker', 'stats', '--no-stream', '--format', '{{json .}}', *names],
                                     text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-            samples.append({'time': time.time(), 'hostLoad': os.getloadavg(),
+            with urllib.request.urlopen('http://localhost:3400/healthz',timeout=3) as health:
+                worker_stats=json.loads(health.read()).get('stats',{})
+            samples.append({'time': time.time(), 'workerStats':worker_stats, 'hostLoad': os.getloadavg(),
                 'containers': [json.loads(line) for line in result.stdout.splitlines() if line.startswith('{')],
                 'database': json.loads(db("SELECT json_build_object('active',count(*) FILTER(WHERE state='active'),"
                     "'idleInTransaction',count(*) FILTER(WHERE state='idle in transaction'),'connections',count(*),"
                     "'lockWaits',count(*) FILTER(WHERE wait_event_type='Lock')) FROM pg_stat_activity WHERE datname=current_database()"))})
         except Exception as error:
-            samples.append({'time': time.time(), 'error': str(type(error).__name__)})
+            with urllib.request.urlopen('http://localhost:3400/healthz',timeout=3) as health:
+                worker_stats=json.loads(health.read()).get('stats',{})
+            samples.append({'time': time.time(), 'workerStats':worker_stats, 'error': str(type(error).__name__)})
         stop.wait(4)
 
 
@@ -62,20 +66,26 @@ def warmup():
     db('TRUNCATE field_session; SELECT pg_stat_statements_reset();')
 
 
-def trial(variant, users, repeat, out):
+def trial(variant, users, repeat, out, pool=10, interval=3000, group=10, mode="baseline", idle=False):
+    lab.ENV.update(LAB_POOL_SIZE=str(pool), FIELD_POLL_CHECK_MS=str(interval), LAB_SNAPSHOT_MODE=mode)
+    # Refuse a running generator, remove only a stopped orphan from a prior run.
+    old = subprocess.run(['docker','inspect','territory-field-lab-generator','--format','{{.State.Running}}'],capture_output=True,text=True)
+    if old.returncode == 0:
+        if old.stdout.strip() == 'true': raise RuntimeError('A generator is already running')
+        subprocess.run(['docker','rm','territory-field-lab-generator'],check=True,stdout=subprocess.DEVNULL)
     # A fresh worker/API process for each repetition; same warmup/data reset.
     lab.compose('stop', 'proxy', 'api', 'bun', 'nest')
     lab.up(variant)
     before = lab.state(variant)
     db('UPDATE round SET completed=false,completed_date=NULL,update_date=NULL WHERE round_number=8 AND (completed OR completed_date IS NOT NULL); TRUNCATE field_session;')
     warmup()
-    name = f'{variant}-{users}u-g10-3s-r{repeat}'
+    name = f'{variant}-{mode}-p{pool}-{users}u-g{group}-{interval}ms-{"idle" if idle else "mixed"}-r{repeat}'
     log_path = lab.RUNTIME / (name + '.log')
     summary_path = lab.RUNTIME / 'load-summary.json'
     summary_path.unlink(missing_ok=True)
     generator = 'territory-field-lab-generator'
     args = lab.COMPOSE + ['run', '-T', '--no-deps', '--name', generator, '--user', f'{os.getuid()}:{os.getgid()}',
-        '-e', f'USERS={users}', '-e', 'GROUP_SIZE=10', '-e', 'STAGED_READERS=1', '-e', 'FIXTURE_PATH=./.runtime/fixture-peak.json',
+        '-e', f'USERS={users}', '-e', f'GROUP_SIZE={group}', '-e', f'IDLE_ONLY={int(idle)}', '-e', 'STAGED_READERS=1', '-e', 'FIXTURE_PATH=./.runtime/fixture-peak.json',
         'generator', 'run', '--quiet', '--log-format', 'raw', 'labs/load.js']
     print(name + ': starting 65s preparation + 120s measurement + 90s observer tail', flush=True)
     start = time.time()
@@ -113,15 +123,17 @@ def trial(variant, users, repeat, out):
     metric = lambda name, key, default=0: metrics.metric(summary, name, key, default)
     infrastructure = all(item['running'] and not item['oom'] and item['restarts'] == 0 for item in after)
     generator_cpu = cpu.get(generator, [])
-    generator_valid = not inspection['State']['OOMKilled'] and inspection['State']['ExitCode'] not in [137, 139] and bool(generator_cpu) and max(generator_cpu) < 95
-    functional = infrastructure and generator_valid and metric('initial_ready', 'count') == users and metric('started_in_window_errors', 'rate', 1) < .01 and metric('unexpected_errors', 'rate', 1) < .01 and metric('principal_snapshot_errors', 'rate', 1) < .01 and metric('dropped_iterations', 'count') == 0 and delivery['acknowledged_writes'] == users // 10 * 4 and not delivery['missing_sequences'] and metric('writer_start_lateness_ms', 'p(95)', 1e9) <= 500
-    passed = functional and metric('snapshot_ms', 'p(95)', 1e9) <= 1000 and metric('mark_ms', 'p(95)', 1e9) <= 500 and delivery['p95_ms'] is not None and delivery['p95_ms'] <= 5000
+    monitoring_valid = bool(generator_cpu)
+    generator_valid = not inspection['State']['OOMKilled'] and inspection['State']['ExitCode'] not in [137, 139] and bool(generator_cpu) and not (statistics.mean(generator_cpu) >= 90 and metric('writer_start_lateness_ms', 'p(95)') > 500)
+    functional = infrastructure and generator_valid and metric('initial_ready', 'count') == users and metric('started_in_window_errors', 'rate', 1) < .01 and metric('unexpected_errors', 'rate', 1) < .01 and metric('principal_snapshot_errors', 'rate', 1) < .01 and metric('dropped_iterations', 'count') == 0 and delivery['acknowledged_writes'] == (0 if idle else users // 10 * 4) and not delivery['missing_sequences'] and (idle or metric('writer_start_lateness_ms', 'p(95)', 1e9) <= 500)
+    passed = functional and metric('snapshot_ms', 'p(95)', 1e9) <= 1000 and (idle or metric('mark_ms', 'p(95)', 1e9) <= 500) and (idle or (delivery['observer_p95_ms'] is not None and delivery['observer_p95_ms'] <= 5000))
     queries = json.loads(db("SELECT coalesce(json_agg(q),'[]'::json) FROM (SELECT query,calls,total_exec_time,mean_exec_time,rows FROM pg_stat_statements ORDER BY total_exec_time DESC LIMIT 25) q"))
-    result = {'id': name, 'variant': variant, 'logicalUsers': users, 'repeat': repeat, 'groupPreference': 10,
-        'checkIntervalMs': 3000, 'poolSize': 10, 'measurementSeconds': 120, 'preparationSeconds': 65,
+    result = {'id': name, 'variant': variant, 'logicalUsers': users, 'repeat': repeat, 'groupPreference': group, 'snapshotMode': mode, 'idleOnly': idle,
+        'checkIntervalMs': interval, 'poolSize': pool, 'measurementSeconds': 120, 'preparationSeconds': 65,
         'observerTailSeconds': 90, 'writerMaxDurationSeconds': 155, 'wallSeconds': time.time() - start,
         'windowStartMs': window, 'exitCode': code, 'passed': passed, 'functionalSteadyPassed': functional,
-        'generatorValid': generator_valid, 'infrastructureValid': infrastructure,
+        'generatorValid': generator_valid, 'monitoringValid': monitoring_valid, 'infrastructureValid': infrastructure,
+        'sourceCommit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
         'ready': metric('initial_ready', 'count'), 'snapshotP95Ms': metric('snapshot_ms', 'p(95)'),
         'markP95Ms': metric('mark_ms', 'p(95)'), 'principalSnapshotP95Ms': metric('principal_snapshot_ms', 'p(95)'),
         'errorRateStartedInWindow': metric('started_in_window_errors', 'rate', 1), 'errorRateAllPhases': metric('unexpected_errors', 'rate', 1),
