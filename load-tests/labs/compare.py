@@ -84,6 +84,7 @@ def trial(variant, users, repeat, out, pool=10, interval=3000, group=10, mode="b
     # A fresh worker/API process for each repetition; same warmup/data reset.
     lab.compose('stop', 'proxy', 'api', 'bun', 'nest')
     lab.up(variant)
+    build_commit = subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
     before = lab.state(variant)
     worker=next(item for item in before if item['service']==variant)
     reference=next(item for item in before if item['service']=='api')
@@ -148,7 +149,7 @@ def trial(variant, users, repeat, out, pool=10, interval=3000, group=10, mode="b
         'observerTailSeconds': 90, 'writerMaxDurationSeconds': 155, 'wallSeconds': time.time() - start,
         'windowStartMs': window, 'exitCode': code, 'passed': passed, 'capacityPassedWithoutPropagationGoal':capacity_passed, 'functionalSteadyPassed': functional,
         'generatorValid': generator_valid, 'generatorBound':generator_bound, 'monitoringValid': monitoring_valid, 'infrastructureValid': infrastructure,
-        'sourceCommit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+        'sourceCommit': build_commit,
         'ready': metric('initial_ready', 'count'), 'snapshotP95Ms': metric('snapshot_ms', 'p(95)'),
         'markP95Ms': metric('mark_ms', 'p(95)'), 'principalSnapshotP95Ms': metric('principal_snapshot_ms', 'p(95)'),
         'errorRateStartedInWindow': metric('started_in_window_errors', 'rate', 1), 'errorRateAllPhases': metric('unexpected_errors', 'rate', 1),
