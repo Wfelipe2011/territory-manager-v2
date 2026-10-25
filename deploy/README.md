@@ -35,20 +35,21 @@ com uma reserva de 2,1 cores ou alterar o banco silenciosamente para fechar a so
 
 1. Backup validado e janela de manutenção. API e Admin unificado devem ser versões
    compatíveis; **não fazer apenas a troca de CPU em uma imagem antiga da API**.
-2. Gerar API (`Dockerfile.production`) e worker (`Dockerfile.field`) da MESMA revisão
-   aprovada; fixar `API_IMAGE` e `FIELD_WORKER_IMAGE` em digests imutáveis. O manifesto
-   não cria/publica imagens. Não usar a imagem de experimento. Os workflows abaixo
-   publicam o par, mas não executam deploy.
+2. Aguardar a publicação bem-sucedida da API (`Dockerfile.production`) e do worker
+   (`Dockerfile.field`) da MESMA revisão aprovada. Os repositórios e tags `master`
+   estão definidos no próprio `docker-compose.yml`: não cadastrar variáveis de
+   imagem no Portainer. O manifesto não publica imagens e não usa experimentos.
+   Registrar os digests anteriores para rollback e conferir a revisão das duas
+   imagens após o redeploy. Os workflows publicam o par, mas não executam deploy.
 3. Prover as variáveis do projeto (PostgreSQL, SMTP etc.), mais:
-   - `API_IMAGE` e `FIELD_WORKER_IMAGE`: par validado, não tags móveis.
    - `JWT_SECRET` e `API_KEY_SECRET`: mesmos valores da API e do worker.
    - `DIRECT_URL`: URL PostgreSQL direta, utilizada pelas migrations Prisma.
    - `FIELD_DATABASE_URL`: URL PostgreSQL direta para o worker (schema `public`).
      Não usar PgBouncer em modo `transaction`, nem simplesmente copiar a URL da
      API que aponta para esse pool. Codificar caracteres especiais das credenciais
       na URL; guardar segredos fora do Git.
-   - `PGBOUNCER_IMAGE`: opcional; preservar o digest da instância atual para não
-     atualizar PgBouncer incidentalmente.
+   O PgBouncer permanece fixado no Compose no digest da instância inspecionada,
+   para não atualizar esse componente incidentalmente.
 4. Na stack EXISTENTE que administra o PostgreSQL, aplicar limite 0,8 CPU, preservando
    volume, imagem e demais configurações. `postgres.resources.example.yml` é só um
    fragmento: adaptar ao nome real do serviço, **não criar/substituir banco**. Esta
@@ -66,14 +67,16 @@ com uma reserva de 2,1 cores ou alterar o banco silenciosamente para fechar a so
   `wfelipe2011/territorio-digital-field-worker-acceptance`.
 - Ambos usam o mesmo checkout, `Dockerfile.production` e `Dockerfile.field`;
   preservam tags de branch (`master`/`acp`) e acrescentam `sha-<SHA completo>`.
-  Imagens são publicadas sequencialmente, não atomicamente. Não automatizar corte
-  usando apenas tags móveis ou presumir par completo se o workflow falhar.
+  Imagens são publicadas sequencialmente, não atomicamente. Aguardar o workflow
+  completo antes de usar Redeploy from git; não redeployar após somente o push
+  Git ou presumir par completo se a publicação de uma das imagens falhar.
 - Somente após os dois pushes bem-sucedidos, o job escreve os digests no resumo
   da execução e no artefato `territory-image-pair-<ambiente>-<SHA>-<tentativa>`.
   O artefato contém `image-pair.json` (revisão, execução e referências completas)
   e `image-pair.env` (`API_IMAGE=...@sha256:...`, `FIELD_WORKER_IMAGE=...@sha256:...`).
-  Esse env não contém credenciais e não substitui o arquivo seguro de publicação.
-   Usar os digests juntos no `docker-compose.yml`, não imagens de execuções diferentes.
+  Esse artefato não contém credenciais e serve para conferência/rollback: não é
+  obrigatório importar suas variáveis na stack. O Compose usa as tags `master`.
+  Para rollback, restaurar os dois digests correspondentes, não misturar execuções.
 - Reutiliza `DOCKER_USERNAME` e `DOCKER_PASSWORD`. A conta/token precisa de escrita
   também nos dois novos repositórios do worker; verificar/criar esses repositórios
   e sua visibilidade no Docker Hub antes da primeira execução.

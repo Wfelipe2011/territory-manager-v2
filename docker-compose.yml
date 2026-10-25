@@ -1,12 +1,13 @@
 version: '3.8'
-# Production Swarm stack. API/worker images must be a verified release pair.
+# Production Swarm stack. Wait for BOTH image publications before redeploying.
+# Image repositories/tags are defined here; no image environment variables needed.
 # No host ports: the existing NPM keeps app-prod:3000 as its default upstream
 # and routes only field sync/session to Bun. See deploy/npm-field-locations.conf.
 
 services:
   pgbouncer:
-    # Preserve the currently running PgBouncer release unless explicitly changed.
-    image: ${PGBOUNCER_IMAGE:-edoburu/pgbouncer@sha256:9c78945868a6a142c7fc40ccd843bbe5a606df163c7ffce4de70e0d628d696a2}
+    # Preserve the currently running PgBouncer release.
+    image: edoburu/pgbouncer@sha256:9c78945868a6a142c7fc40ccd843bbe5a606df163c7ffce4de70e0d628d696a2
     environment:
       - DB_HOST=$POSTGRES_HOST
       - DB_PORT=${POSTGRES_PORT:-5432}
@@ -22,7 +23,7 @@ services:
       - npm_public
 
   app-prod:
-    image: ${API_IMAGE:?Set the validated API image digest}
+    image: wfelipe2011/territorio-digital-prod:master
     deploy:
       replicas: 1
       resources:
@@ -66,7 +67,7 @@ services:
       - npm_public
 
   field-worker:
-    image: ${FIELD_WORKER_IMAGE:?Set the matching worker image digest}
+    image: wfelipe2011/territorio-digital-field-worker-prod:master
     stop_grace_period: 40s
     ulimits:
       nofile: { soft: 32768, hard: 32768 }

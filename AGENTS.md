@@ -48,8 +48,10 @@ Rode-os manualmente (removendo o `skip`) **apenas quando o fluxo de e-mail/regis
 - CI publica imagem Docker no push para `master` (`.github/workflows/ci.yml`) e `acp` (`.github/workflows/ci.acp.yml`).
 - Esses workflows publicam API + worker Bun da mesma revisão, com tags de branch
   e SHA completo; o artefato `territory-image-pair-*` registra os dois digests.
-  Consumir o par completo, nunca presumir publicação atômica ou fazer deploy por
-  tags móveis. Não há deploy/migration automático; detalhes em `deploy/README.md`.
+  Aguardar a publicação completa, nunca presumir atomicidade. O Compose de produção
+  define as imagens `:master` diretamente, sem variáveis de imagem na stack;
+  conferir a revisão das duas imagens e guardar digests para rollback. Não há
+  deploy/migration automático; detalhes em `deploy/README.md`.
 
 ## Prisma
 
