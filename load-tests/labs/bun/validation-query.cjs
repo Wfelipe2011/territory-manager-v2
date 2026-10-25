@@ -3,7 +3,7 @@
 const {AsyncLocalStorage}=require('node:async_hooks');
 module.exports=function validationQuery(){
  const contexts=new AsyncLocalStorage();
- const stats={invocations:0,statements:0};
+ const stats={invocations:0,statements:0,territoryReuses:0,linkReuses:0};
  const SQL=`SELECT s.id,s.key,s.token,s.tenant_id AS "tenantId",s.can_edit_structure AS "canEditStructure",s.expiration_date AS "expirationDate",
  CASE WHEN t.id IS NULL THEN NULL ELSE json_build_object('id',t.id,'name',t.name,'tenantId',t.tenant_id,'typeId',t.type_id,'imageUrl',t.image_url) END AS _territory,
  CASE WHEN b.id IS NULL THEN NULL ELSE json_build_object('id',b.id,'registrationStatus',b.registration_status,'blockId',b.block_id,'territoryId',b.territory_id,'signatureId',b.signature_id,'tenantId',b.tenant_id) END AS _link
@@ -22,9 +22,9 @@ module.exports=function validationQuery(){
   }
   if(!context.loaded||!context.value)return;
   if(name==='territory' && Object.keys(where).length===2 && where.id===user.territoryId && where.tenantId===user.tenantId && !args.select && !args.include)
-   return context.value._territory?[context.value._territory]:[];
+   {stats.territoryReuses++;return context.value._territory?[context.value._territory]:[];}
   if(name==='territory_block' && Object.keys(where).length===4 && where.tenantId===user.tenantId && where.territoryId===user.territoryId && where.blockId===user.blockId && where.registrationStatus?.not==='rejected' && !args.select && !args.include)
-   return context.value._link?[context.value._link]:[];
+   {stats.linkReuses++;return context.value._link?[context.value._link]:[];}
  }
  return {run:(user,fn)=>{stats.invocations++;return contexts.run({user},fn);},load,stats:()=>({...stats})};
 };

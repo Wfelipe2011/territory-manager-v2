@@ -243,6 +243,7 @@ async function main() {
   const finalHealth=await (await fetch('http://proxy:8080/healthz')).json();
   if(finalHealth.batchValidation) {
     assert(finalHealth.stats.validationBatch.statements>0,'Validation SQL optimization must really execute');
+    assert(finalHealth.stats.validationBatch.territoryReuses>0 && finalHealth.stats.validationBatch.linkReuses>0,'Original validation must consume joined scope reads');
     assert.equal(finalHealth.stats.validationBatch.invocations,finalHealth.stats.validationBatch.statements,'One fresh statement per validation invocation');
     cases.push({name:'uma consulta nova por validação, sem cache entre chamadas',equal:true});
   }
