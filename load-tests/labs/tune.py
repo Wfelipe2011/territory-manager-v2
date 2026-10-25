@@ -19,6 +19,7 @@ def main():
     p.add_argument('--intervals', default='3000')
     p.add_argument('--groups', default='10')
     p.add_argument('--repetitions', type=int, default=1)
+    p.add_argument('--repeat-start',type=int,default=1)
     p.add_argument('--idle', action='store_true')
     p.add_argument('--batch-validation',action='store_true')
     p.add_argument('--search', action='store_true')
@@ -29,7 +30,7 @@ def main():
     pools = [int(x) for x in args.pools.split(',')]
     intervals = [int(x) for x in args.intervals.split(',')]
     groups = [int(x) for x in args.groups.split(',')]
-    if any(n<120 or n%10 for n in counts) or any(n not in [1,2,5,10] for n in pools) or any(n not in [3000,5000,10000,15000,20000,25000] for n in intervals) or any(n not in [10,20] for n in groups) or args.repetitions<1:
+    if any(n<120 or n%10 for n in counts) or any(n not in [1,2,5,10] for n in pools) or any(n not in [3000,5000,10000,15000,20000,25000] for n in intervals) or any(n not in [10,20] for n in groups) or args.repetitions<1 or args.repeat_start<1:
         p.error('Unsupported cohort/pool/interval/group/repetitions')
     if args.search and (len(pools)!=1 or len(intervals)!=1 or len(groups)!=1):
         p.error('Search changes only user count')
@@ -61,7 +62,7 @@ def main():
             while queue:
                 n=queue.pop(0)
                 stage=[]
-                for rep in range(1,args.repetitions+1):
+                for rep in range(args.repeat_start,args.repeat_start+args.repetitions):
                     # Alternate pool order so a fixed order cannot always favor one candidate.
                     for pool in pools if rep%2 else list(reversed(pools)):
                         for interval in intervals:

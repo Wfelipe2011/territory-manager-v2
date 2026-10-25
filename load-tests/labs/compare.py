@@ -48,7 +48,7 @@ def monitor(stop, samples, generator):
                     pressure[service]=lab.compose('exec','-T',service,'cat','/sys/fs/cgroup/cpu.stat','/sys/fs/cgroup/memory.events',stdout=subprocess.PIPE,stderr=subprocess.DEVNULL).stdout
             tick+=1
             statement_totals=json.loads(db("SELECT json_build_object('calls',coalesce(sum(calls),0),'executionMs',coalesce(sum(total_exec_time),0)) FROM pg_stat_statements"))
-            samples.append({'time': time.time(), 'workerStats':worker_stats, 'cgroups':pressure,'sqlTotals':statement_totals, 'hostLoad': os.getloadavg(),
+            samples.append({'time': time.time(), 'hostMemoryAvailableKiB':int(next(line.split()[1] for line in Path('/proc/meminfo').read_text().splitlines() if line.startswith('MemAvailable:'))), 'workerStats':worker_stats, 'cgroups':pressure,'sqlTotals':statement_totals, 'hostLoad': os.getloadavg(),
                 'containers': [json.loads(line) for line in result.stdout.splitlines() if line.startswith('{')],
                 'database': json.loads(db("SELECT json_build_object('active',count(*) FILTER(WHERE state='active'),"
                     "'idleInTransaction',count(*) FILTER(WHERE state='idle in transaction'),'connections',count(*),"
@@ -63,7 +63,7 @@ def monitor(stop, samples, generator):
                     pressure[service]=lab.compose('exec','-T',service,'cat','/sys/fs/cgroup/cpu.stat','/sys/fs/cgroup/memory.events',stdout=subprocess.PIPE,stderr=subprocess.DEVNULL).stdout
             tick+=1
             statement_totals=json.loads(db("SELECT json_build_object('calls',coalesce(sum(calls),0),'executionMs',coalesce(sum(total_exec_time),0)) FROM pg_stat_statements"))
-            samples.append({'time': time.time(), 'workerStats':worker_stats, 'cgroups':pressure,'sqlTotals':statement_totals, 'error': str(type(error).__name__)})
+            samples.append({'time': time.time(), 'hostMemoryAvailableKiB':int(next(line.split()[1] for line in Path('/proc/meminfo').read_text().splitlines() if line.startswith('MemAvailable:'))), 'workerStats':worker_stats, 'cgroups':pressure,'sqlTotals':statement_totals, 'error': str(type(error).__name__)})
         stop.wait(4)
 
 
