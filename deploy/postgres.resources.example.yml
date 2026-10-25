@@ -1,0 +1,10 @@
+# FRAGMENT ONLY. Merge into the EXISTING PostgreSQL stack, never start a new DB.
+# Rename "db" to that stack's actual service name before using this example.
+# Preserve its image, data volume, ports, credentials, memory and other limits.
+services:
+  db:
+    cpus: 0.8
+    deploy:
+      resources:
+        limits:
+          cpus: '0.8'

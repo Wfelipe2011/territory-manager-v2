@@ -44,12 +44,16 @@ controla a verificação; espera HTTP permanece 25s, presença 60s. `PORT=3402`.
 configuração efetiva, listener conectado e hashes de fontes.
 `FIELD_WORKER_DIAGNOSTICS=1` habilita contadores de consultas/pool, somente para
 diagnóstico controlado. O serviço não aplica migrations/seed; aguarda a API saudável
-no Compose local. Limites do worker: 0,5 CPU/2 GiB, **pool 2 + uma conexão dedicada**
+no Compose local. Limites do worker: 0,7 CPU/2 GiB, **pool 2 + uma conexão dedicada**
 para LISTEN, nofile 32768. Listener exige conexão direta ou PgBouncer em session
 pooling, nunca transaction pooling. `FIELD_READ_MODEL_ENABLED=0` desliga a tabela
 e listener, mantendo agrupamento e o temporizador. Dados de negócio são preservados.
 
 ## Desenvolvimento local
+
+Orçamento local: banco 0,8 CPU, worker 0,7, API 0,4 e proxy 0,1 (total 2).
+Admin e outros serviços exigem margem adicional. Configuração de produção opt-in,
+sem deploy automático: [deploy/README.md](../deploy/README.md).
 
 Da raiz do workspace: `docker compose up --build -d`. Proxy em 3001, API direta
 somente localhost:3002. Worker sem porta publicada. Frontend mantém

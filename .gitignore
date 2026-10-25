@@ -35,7 +35,12 @@ lerna-debug.log*
 !.vscode/extensions.json
 openspec
 openspec-kanban
-.github
+/.github/*
+!/.github/workflows/
+!/.github/scripts/
+/.github/scripts/*
+!/.github/scripts/write-image-pair.py
+!/.github/scripts/test_image_pair.py
 
 # banco
 docker/postgres

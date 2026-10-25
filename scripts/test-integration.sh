@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# The shared workspace reserves 5433 for another project. Its runner executes
+# this same E2E suite against an isolated PostgreSQL on 5544 instead.
+PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [[ -f "$PROJECT_ROOT/../dev/test-api.sh" ]]; then
+  exec bash "$PROJECT_ROOT/../dev/test-api.sh"
+fi
+
 # Sobe o banco de dados
 npm run test:db:up
 

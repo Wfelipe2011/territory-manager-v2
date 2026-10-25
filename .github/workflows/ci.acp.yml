@@ -13,9 +13,15 @@ jobs:
       packages: write
       contents: read
       attestations: write
+    env:
+      API_IMAGE_REPOSITORY: wfelipe2011/territorio-digital-acceptance
+      WORKER_IMAGE_REPOSITORY: wfelipe2011/territorio-digital-field-worker-acceptance
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
+
+      - name: Test image pair recording
+        run: python3 .github/scripts/test_image_pair.py
 
       - name: Log in to Docker Hub
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
@@ -27,7 +33,19 @@ jobs:
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
-          images: wfelipe2011/territorio-digital-acceptance
+          images: ${{ env.API_IMAGE_REPOSITORY }}
+          tags: |
+            type=ref,event=branch
+            type=raw,value=sha-${{ github.sha }}
+
+      - name: Extract worker metadata
+        id: worker_meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ env.WORKER_IMAGE_REPOSITORY }}
+          tags: |
+            type=ref,event=branch
+            type=raw,value=sha-${{ github.sha }}
 
       - name: Build and push Docker image
         id: push
@@ -38,12 +56,27 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-      
-      
-      # - name: Generate artifact attestation 
-      #   uses: actions/attest-build-provenance@v1 
-      #   with:   
-      #     subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}   
-      #     subject-digest: ${{ steps.push.outputs.digest }}   
-      #     push-to-registry: true
-      
+
+      - name: Build and push Bun field worker
+        id: worker_push
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        with:
+          context: .
+          file: ./Dockerfile.field
+          push: true
+          tags: ${{ steps.worker_meta.outputs.tags }}
+          labels: ${{ steps.worker_meta.outputs.labels }}
+
+      - name: Record API and worker release digests
+        env:
+          IMAGE_PAIR_DIR: ${{ runner.temp }}/territory-image-pair
+          API_DIGEST: ${{ steps.push.outputs.digest }}
+          WORKER_DIGEST: ${{ steps.worker_push.outputs.digest }}
+        run: python3 .github/scripts/write-image-pair.py
+
+      - name: Upload immutable image pair
+        uses: actions/upload-artifact@v4
+        with:
+          name: territory-image-pair-acceptance-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/territory-image-pair/
+          if-no-files-found: error
