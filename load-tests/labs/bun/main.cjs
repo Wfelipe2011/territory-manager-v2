@@ -18,6 +18,15 @@ async function main() {
   const rounds = new c.CatalogRoundService(db);
   const access = new c.FieldAccessService(db, rounds);
   const field = new c.FieldService(db, access, rounds);
+  const timings = {};
+  for (const [object,key,label] of [[field,'snapshot','snapshot'],[field,'revision','revision'],[access,'validate','validation']]) {
+    const original = object[key].bind(object);
+    object[key] = async (...args) => {
+      const begin=performance.now();
+      try { return await original(...args); }
+      finally { const metric=timings[label]??={calls:0,totalMs:0,maxMs:0}; const elapsed=performance.now()-begin;metric.calls++;metric.totalMs+=elapsed;metric.maxMs=Math.max(metric.maxMs,elapsed); }
+    };
+  }
   const reflector = new Reflector();
   const limiter = throttle(reflector);
   const guards = [new c.AuthGuard(reflector, access), new c.RolesGuard(reflector), new c.ApiKeyGuard(reflector), limiter.guard];
@@ -32,7 +41,7 @@ async function main() {
     idleTimeout: 60, maxRequestBodySize: 10 * 1024 * 1024,
     async fetch(incoming) {
       const url = new URL(incoming.url);
-      if (url.pathname === '/healthz') return Response.json({ ok: true, variant: 'bun-pg', source: provenance() });
+      if (url.pathname === '/healthz') return Response.json({ ok: true, variant: 'bun-pg', mode: process.env.LAB_SNAPSHOT_MODE || 'baseline', stats: { ...db.$stats(), timings }, source: provenance() });
       const headers = new Headers({ 'Access-Control-Allow-Origin': '*' });
       if (incoming.method === 'OPTIONS') {
         headers.set('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
@@ -107,7 +116,9 @@ async function main() {
           active.delete(abort);
         }
         headers.set('Content-Type', html === undefined ? 'application/json; charset=utf-8' : 'text/html; charset=utf-8');
+        const encodeStarted=performance.now();
         const payload = html === undefined ? (body === undefined ? null : JSON.stringify(body)) : html;
+        const metric=timings.serialization??={calls:0,totalMs:0,maxMs:0}; const elapsed=performance.now()-encodeStarted; metric.calls++;metric.totalMs+=elapsed;metric.maxMs=Math.max(metric.maxMs,elapsed);
         resolve(new Response(req.method === 'HEAD' ? null : payload, { status, headers }));
       }));
     },

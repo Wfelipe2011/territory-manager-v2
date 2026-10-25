@@ -78,10 +78,10 @@ def up(variant):
     print(f'{variant}: proxy http://localhost:3400; synthetic reference API http://localhost:3401')
 
 
-def test():
+def test(variants=("nest","bun")):
     reports = []
     try:
-        for variant in ['nest', 'bun']:
+        for variant in variants:
             up(variant)
             before = state(variant)
             filename = f'equivalence-{variant}.json'
@@ -91,7 +91,7 @@ def test():
             report['containersBefore'] = before
             report['containersAfter'] = state(variant)
             reports.append(report)
-        if reports[0]['source'] != reports[1]['source']:
+        if len(reports)>1 and reports[0]['source'] != reports[1]['source']:
             raise RuntimeError('Variants do not use identical compiled domain sources')
         result = ROOT / 'results'
         result.mkdir(exist_ok=True)
@@ -99,7 +99,7 @@ def test():
         images = compose('images', '--format', 'json', stdout=subprocess.PIPE).stdout
         (result / f'equivalence-{stamp}.json').write_text(json.dumps({
             'scope': 'functional equivalence, NOT capacity certification',
-            'reports': reports, 'images': images,
+            'reports': reports, 'images': images, 'snapshotMode': ENV.get('LAB_SNAPSHOT_MODE','baseline'),
         }, indent=2) + '\n')
         print('Both variants matched the original API; sanitized evidence saved in labs/results/.')
     finally:
@@ -123,7 +123,7 @@ def main():
                 parser.error('up requires bun or nest')
             up(args.variant)
         elif args.action == 'test':
-            test()
+            test([args.variant] if args.variant else ['nest','bun'])
         elif args.action == 'down':
             compose('down')
         else:

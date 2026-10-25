@@ -91,6 +91,16 @@ async function main() {
   assert(closed.data.streets.flatMap(street => street.houses).every(house => house.readOnly));
 
   const catalogHouse = await db.house.findUniqueOrThrow({ where: { id: block.firstHouse } });
+  const ordered = await db.house.findMany({where:{tenantId:block.tenantId,blockId:block.blockId},orderBy:{id:'asc'},take:8});
+  try {
+    const numbers=['12','10','2A','2','02','1','2-1','3/1'];
+    for(let i=0;i<ordered.length;i++) await db.house.update({where:{id:ordered[i].id},data:{number:numbers[i],order:i===1?0:null}});
+    const sorted=await equivalent('manual order numeric complements and leading zeros',path()+'?'+session);
+    const houses=sorted.data.streets.flatMap(s=>s.houses).filter(h=>ordered.some(o=>o.id===h.id));
+    assert.deepEqual(houses.map(h=>h.number),['10','1','2','02','2-1','2A','3/1','12']);
+  } finally {
+    for(const original of ordered) await db.house.update({where:{id:original.id},data:{number:original.number,order:original.order}});
+  }
   const mapping = await db.territory_block_address.findUniqueOrThrow({ where: { id: catalogHouse.territoryBlockAddressId } });
   const link = await db.territory_block.findUniqueOrThrow({ where: { id: mapping.territoryBlockId } });
   let proposal;

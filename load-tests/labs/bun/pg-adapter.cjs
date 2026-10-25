@@ -2,6 +2,7 @@
 // No Prisma client/engine; schema names come from DMMF and values are parameters.
 // Unsupported operations fail closed. Writes are limited to the original presence SQL.
 const { Pool, types } = require('pg');
+const specialized = require('./snapshot-queries.cjs');
 types.setTypeParser(1114, value => new Date(value.replace(' ', 'T') + 'Z'));
 const quote = value => '"' + value.replace(/"/g, '""') + '"';
 // pg normally encodes Date in process-local timezone. PostgreSQL timestamp
@@ -10,6 +11,9 @@ const quote = value => '"' + value.replace(/"/g, '""') + '"';
 const parameter = value => value instanceof Date ? value.toISOString() : value;
 
 module.exports = function createAdapter(connectionString, models) {
+  const mode = process.env.LAB_SNAPSHOT_MODE || 'baseline';
+  if (!['baseline','joined','aggregate'].includes(mode)) throw Error('Unknown snapshot mode');
+  const counters = { queries: 0, queryMs: 0, acquisitions: 0, acquireMs: 0, transactions: 0, transactionMs: 0 };
   const modelMap = new Map(models.map(model => [model.name, model]));
   const url = new URL(connectionString);
   const max = Number(url.searchParams.get('connection_limit') || 10);
@@ -33,7 +37,7 @@ module.exports = function createAdapter(connectionString, models) {
   // either statement on the pool before BEGIN, as eager promises would do.
   function operation(run) {
     let pending;
-    return { run, then(resolve, reject) { pending ||= run(pool); return pending.then(resolve, reject); } };
+    return { run, then(resolve, reject) { pending ||= run(observed(pool)); return pending.then(resolve, reject); } };
   }
 
   function raw(strings, values) {
@@ -56,6 +60,13 @@ module.exports = function createAdapter(connectionString, models) {
     return { text: append(strings, values), values: parameters };
   }
 
+  function observed(connection) {
+    return { async query(...args) {
+      const begin = performance.now();
+      try { return await connection.query(...args); }
+      finally { counters.queries++; counters.queryMs += performance.now()-begin; }
+    }};
+  }
   function adapter(client, transactional = false) {
     async function load(name, args = {}, connection = client) {
       for (const key of Object.keys(args)) {
@@ -141,6 +152,10 @@ module.exports = function createAdapter(connectionString, models) {
         if (!Number.isInteger(args.take) || args.take < 0) throw Error('Unsupported take');
         sql += ' LIMIT ' + bind(args.take);
       }
+      if (mode !== 'baseline') {
+        const direct = await specialized.load(connection, name, args, sql, params, mode);
+        if (direct !== undefined) return direct;
+      }
       const rows = (await connection.query(sql, params)).rows;
       const result = rows.map(row => Object.fromEntries(selected.map(key => [key, row[key]])));
       for (const [key, configuration] of relations) {
@@ -170,6 +185,7 @@ module.exports = function createAdapter(connectionString, models) {
     }
 
     const result = {};
+
     for (const model of models) {
       result[model.name] = {};
       for (const method of ['findMany', 'findFirst', 'findUnique', 'findFirstOrThrow', 'findUniqueOrThrow']) {
@@ -200,19 +216,23 @@ module.exports = function createAdapter(connectionString, models) {
     return result;
   }
 
-  const root = adapter(pool);
+  const root = adapter(observed(pool));
+  root.$stats = () => ({ ...counters, poolTotal: pool.totalCount, poolIdle: pool.idleCount, poolWaiting: pool.waitingCount });
   root.$transaction = async (work, options = {}) => {
     const isolation = options.isolationLevel || 'ReadCommitted';
     if (!['ReadCommitted', 'RepeatableRead'].includes(isolation)) throw Error('Unsupported isolation');
+    const began = performance.now();
     const client = await pool.connect();
+    counters.acquisitions++; counters.acquireMs += performance.now() - began;
+    const transactionBegan = performance.now();
     let discard = false;
     try {
       await client.query('BEGIN ISOLATION LEVEL ' + (isolation === 'RepeatableRead' ? 'REPEATABLE READ' : 'READ COMMITTED'));
-      const value = Array.isArray(work) ? [] : await work(adapter(client, true));
+      const value = Array.isArray(work) ? [] : await work(adapter(observed(client), true));
       if (Array.isArray(work)) {
         for (const item of work) {
           if (typeof item.run !== 'function') throw Error('Only lazy adapter operations may enter an array transaction');
-          value.push(await item.run(client));
+          value.push(await item.run(observed(client)));
         }
       }
       await client.query('COMMIT');
@@ -220,7 +240,7 @@ module.exports = function createAdapter(connectionString, models) {
     } catch (error) {
       try { await client.query('ROLLBACK'); } catch { discard = true; }
       throw error;
-    } finally { client.release(discard); }
+    } finally { counters.transactions++; counters.transactionMs += performance.now() - transactionBegan; client.release(discard); }
   };
   root.$connect = () => pool.query('SELECT 1');
   root.$disconnect = () => pool.end();

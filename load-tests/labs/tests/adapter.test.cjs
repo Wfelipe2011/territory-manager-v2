@@ -22,8 +22,8 @@ function fixture(models = []) {
     async connect() { return client; }
     async end() {}
   }
-  const sandbox = { module: { exports: {} }, URL, Date, console,
-    require(name) { assert.equal(name, 'pg'); return { Pool, types: { setTypeParser() {} } }; },
+  const sandbox = { module: { exports: {} }, URL, Date, console, performance, process: {env: {}},
+    require(name) { if (name === './snapshot-queries.cjs') return require('../bun/snapshot-queries.cjs'); assert.equal(name, 'pg'); return { Pool, types: { setTypeParser() {} } }; },
   };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../bun/pg-adapter.cjs'), 'utf8'), sandbox);
   return { db: sandbox.module.exports('postgresql://load:password@db/test?connection_limit=2', models), calls, released: () => released };
