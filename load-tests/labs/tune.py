@@ -58,6 +58,11 @@ def main():
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         try:
             if paused: subprocess.run(command+['stop',*paused],check=True)
+            if args.mode!='baseline' or args.batch_validation:
+                # Mandatory functional parity on the exact source/config before measuring it.
+                lab.ENV.update(LAB_POOL_SIZE=str(pools[0]),FIELD_POLL_CHECK_MS=str(intervals[0]),LAB_SNAPSHOT_MODE=args.mode,LAB_BATCH_VALIDATION=str(int(args.batch_validation)))
+                print('Checking original HTTP contract before capacity measurements',flush=True)
+                lab.test(['bun'])
             queue=list(counts)
             while queue:
                 n=queue.pop(0)
