@@ -69,8 +69,8 @@ def main():
                 lab.compose('build','bun')
             frozen='territory-field-lab-bun:campaign-'+time.strftime('%Y%m%d-%H%M%S',time.gmtime())
             subprocess.run(['docker','image','tag','territory-field-lab-bun:local',frozen],check=True)
-            lab.ENV.update(LAB_BUN_IMAGE=frozen,LAB_SKIP_BUILD='1')
-            (out/'frozen-image.json').write_text(json.dumps({'image':frozen,'mode':args.mode,'batch':args.batch_validation},indent=2)+'\n')
+            lab.ENV.update(LAB_BUN_IMAGE=frozen,LAB_SKIP_BUILD='1',LAB_SOURCE_COMMIT=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip())
+            (out/'frozen-image.json').write_text(json.dumps({'image':frozen,'mode':args.mode,'batch':args.batch_validation,'commit':lab.ENV['LAB_SOURCE_COMMIT']},indent=2)+'\n')
             queue=list(counts)
             while queue:
                 n=queue.pop(0)

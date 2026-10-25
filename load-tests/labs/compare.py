@@ -84,7 +84,7 @@ def trial(variant, users, repeat, out, pool=10, interval=3000, group=10, mode="b
     # A fresh worker/API process for each repetition; same warmup/data reset.
     lab.compose('stop', 'proxy', 'api', 'bun', 'nest')
     lab.up(variant)
-    build_commit = subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+    build_commit = lab.ENV.get('LAB_SOURCE_COMMIT') or subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
     before = lab.state(variant)
     worker=next(item for item in before if item['service']==variant)
     reference=next(item for item in before if item['service']=='api')
