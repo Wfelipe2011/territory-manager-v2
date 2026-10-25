@@ -14,6 +14,7 @@ module.exports = function createAdapter(connectionString, models) {
   const mode = process.env.LAB_SNAPSHOT_MODE || 'baseline';
   if (!['baseline','joined','aggregate'].includes(mode)) throw Error('Unknown snapshot mode');
   const counters = { queries: 0, queryMs: 0, acquisitions: 0, acquireMs: 0, transactions: 0, transactionMs: 0 };
+  const validation = process.env.LAB_BATCH_VALIDATION==='1' ? require('./validation-query.cjs')() : null;
   const modelMap = new Map(models.map(model => [model.name, model]));
   const url = new URL(connectionString);
   const max = Number(url.searchParams.get('connection_limit') || 10);
@@ -69,6 +70,7 @@ module.exports = function createAdapter(connectionString, models) {
   }
   function adapter(client, transactional = false) {
     async function load(name, args = {}, connection = client) {
+      if (validation && !transactional) { const result=await validation.load(connection,name,args); if(result!==undefined)return result; }
       for (const key of Object.keys(args)) {
         if (!['where', 'select', 'include', 'orderBy', 'take'].includes(key)) throw Error('Unsupported query option: ' + key);
       }
@@ -221,7 +223,8 @@ module.exports = function createAdapter(connectionString, models) {
     const rows=await observed(pool).query(`WITH active AS MATERIALIZED (SELECT DISTINCT fs.client_id,fs.block_id,fs.address_id FROM field_session fs JOIN signature s ON s.key=fs.signature_key AND s.tenant_id=fs.tenant_id WHERE fs.tenant_id=$1 AND fs.territory_id=$2 AND fs.round_number=$3 AND fs.last_seen_at>now()-interval '60 seconds' AND fs.disconnected_at IS NULL AND s.expiration_date>now() AND ($4::integer IS NULL OR fs.block_id=$4)), b AS (SELECT block_id,count(DISTINCT client_id)::int AS n FROM active WHERE block_id IS NOT NULL AND block_id<>0 GROUP BY block_id), a AS (SELECT block_id,address_id,count(DISTINCT client_id)::int AS n FROM active WHERE address_id IS NOT NULL AND address_id<>0 GROUP BY block_id,address_id) SELECT (SELECT count(DISTINCT client_id)::int FROM active) AS total, coalesce((SELECT json_object_agg(block_id,n) FROM b),'{}'::json) AS blocks,coalesce((SELECT json_object_agg(coalesce(block_id::text,'null')||':'||address_id::text,n) FROM a),'{}'::json) AS streets`,[user.tenantId,user.territoryId,scope.round??0,user.roles.includes('publisher')?user.blockId:null]);
     return rows.rows[0];
   };
-  root.$stats = () => ({ ...counters, poolTotal: pool.totalCount, poolIdle: pool.idleCount, poolWaiting: pool.waitingCount });
+  if (validation) root.$withValidation = (user,work) => validation.run(user,work);
+  root.$stats = () => ({ ...counters, validationBatch:validation?.stats(), poolTotal: pool.totalCount, poolIdle: pool.idleCount, poolWaiting: pool.waitingCount });
   root.$transaction = async (work, options = {}) => {
     const isolation = options.isolationLevel || 'ReadCommitted';
     if (!['ReadCommitted', 'RepeatableRead'].includes(isolation)) throw Error('Unsupported isolation');

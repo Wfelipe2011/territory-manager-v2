@@ -226,3 +226,13 @@ Para testar cada candidato antes da carga, reconstruir a imagem de tools/Nest
 load-tests/labs/lab.py test bun`, repetindo com `aggregate`. A suíte inclui ordem
 manual, complementos numéricos e zeros à esquerda, além dos casos de segurança,
 provisórios, rodadas, revogação, presença e espera real já descritos.
+
+
+Candidata adicional `--batch-validation`: reúne as leituras de assinatura,
+território e vínculo em um SELECT novo por chamada de `validate()`. O método de
+validação compilado original ainda executa JWT e comparação de claims/permissões.
+AsyncLocalStorage limita os resultados exclusivamente àquela invocação; não há
+cache entre requisições nem entre verificações durante a espera. O pool da API
+de marcações fica fixo em dez, separado de `LAB_POOL_SIZE` do worker. A candidata
+fica desabilitada por padrão e exige paridade HTTP antes de medir capacidade.
+A saúde registra contagens para provar que houve um SELECT novo por validação.

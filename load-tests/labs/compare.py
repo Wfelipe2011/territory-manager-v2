@@ -81,8 +81,8 @@ def warmup():
     db('TRUNCATE field_session; SELECT pg_stat_statements_reset();')
 
 
-def trial(variant, users, repeat, out, pool=10, interval=3000, group=10, mode="baseline", idle=False):
-    lab.ENV.update(LAB_POOL_SIZE=str(pool), FIELD_POLL_CHECK_MS=str(interval), LAB_SNAPSHOT_MODE=mode)
+def trial(variant, users, repeat, out, pool=10, interval=3000, group=10, mode="baseline", idle=False, batch=False):
+    lab.ENV.update(LAB_POOL_SIZE=str(pool), FIELD_POLL_CHECK_MS=str(interval), LAB_SNAPSHOT_MODE=mode, LAB_BATCH_VALIDATION=str(int(batch)))
     # Refuse a running generator, remove only a stopped orphan from a prior run.
     old = subprocess.run(['docker','inspect','territory-field-lab-generator','--format','{{.State.Running}}'],capture_output=True,text=True)
     if old.returncode == 0:
@@ -92,9 +92,14 @@ def trial(variant, users, repeat, out, pool=10, interval=3000, group=10, mode="b
     lab.compose('stop', 'proxy', 'api', 'bun', 'nest')
     lab.up(variant)
     before = lab.state(variant)
+    worker=next(item for item in before if item['service']==variant)
+    reference=next(item for item in before if item['service']=='api')
+    if worker.get('poolLimit',pool)!=pool or reference.get('poolLimit',10)!=10:
+        raise RuntimeError('Worker/reference pools differ from experiment settings')
+    subprocess.run(['docker','image','tag',worker['imageId'],'territory-field-lab-'+variant+':evidence-'+worker['imageId'].split(':')[1][:16]],check=True)
     db('UPDATE round SET completed=false,completed_date=NULL,update_date=NULL WHERE round_number=8 AND (completed OR completed_date IS NOT NULL); TRUNCATE field_session;')
     warmup()
-    name = f'{variant}-{mode}-p{pool}-{users}u-g{group}-{interval}ms-{"idle" if idle else "mixed"}-r{repeat}'
+    name = f'{variant}-{mode}{'-batch' if batch else ''}-p{pool}-{users}u-g{group}-{interval}ms-{"idle" if idle else "mixed"}-r{repeat}'
     log_path = lab.RUNTIME / (name + '.log')
     summary_path = lab.RUNTIME / 'load-summary.json'
     summary_path.unlink(missing_ok=True)
@@ -144,7 +149,7 @@ def trial(variant, users, repeat, out, pool=10, interval=3000, group=10, mode="b
     capacity_passed = functional and metric('snapshot_ms', 'p(95)', 1e9) <= 1000 and (idle or metric('mark_ms', 'p(95)', 1e9) <= 500) 
     passed = capacity_passed and (idle or (delivery['observer_p95_ms'] is not None and delivery['observer_p95_ms'] <= 5000))
     queries = json.loads(db("SELECT coalesce(json_agg(q),'[]'::json) FROM (SELECT query,calls,total_exec_time,mean_exec_time,rows FROM pg_stat_statements ORDER BY total_exec_time DESC LIMIT 25) q"))
-    result = {'id': name, 'variant': variant, 'logicalUsers': users, 'repeat': repeat, 'groupPreference': group, 'snapshotMode': mode, 'idleOnly': idle,
+    result = {'id': name, 'variant': variant, 'logicalUsers': users, 'repeat': repeat, 'groupPreference': group, 'snapshotMode': mode, 'idleOnly': idle, 'batchValidation':batch,
         'checkIntervalMs': interval, 'poolSize': pool, 'measurementSeconds': 120, 'preparationSeconds': 65,
         'observerTailSeconds': 90, 'writerMaxDurationSeconds': 155, 'wallSeconds': time.time() - start,
         'windowStartMs': window, 'exitCode': code, 'passed': passed, 'capacityPassedWithoutPropagationGoal':capacity_passed, 'functionalSteadyPassed': functional,

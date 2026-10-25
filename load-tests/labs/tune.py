@@ -20,6 +20,7 @@ def main():
     p.add_argument('--groups', default='10')
     p.add_argument('--repetitions', type=int, default=1)
     p.add_argument('--idle', action='store_true')
+    p.add_argument('--batch-validation',action='store_true')
     p.add_argument('--search', action='store_true')
     p.add_argument('--refinements',type=int,default=3)
     p.add_argument('--out', type=Path)
@@ -65,7 +66,7 @@ def main():
                     for pool in pools if rep%2 else list(reversed(pools)):
                         for interval in intervals:
                             for group in groups:
-                                row=compare.trial('bun',n,rep,out,pool,interval,group,args.mode,args.idle)
+                                row=compare.trial('bun',n,rep,out,pool,interval,group,args.mode,args.idle,args.batch_validation)
                                 stage.append(row); results.append(row)
                                 (out/'summary.json').write_text(json.dumps(results,indent=2)+'\n')
                                 if not row['monitoringValid'] or not row['generatorValid'] or not row['infrastructureValid']:

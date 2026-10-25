@@ -58,6 +58,7 @@ async function main() {
   for (const b of fixture.blocks.slice(0, 12)) {
     await equivalent('publisher tenant ' + b.tenantId, path(b) + '?' + session, { token: b.token });
   }
+  await Promise.all(fixture.blocks.slice(0,2).map(b=>equivalent('congregações paralelas isoladas '+b.tenantId,path(b)+'?'+session,{token:b.token})));
   const initial = await equivalent('initial snapshot', path() + '?' + session);
   assert.equal(initial.changed, true);
   assert(initial.data.streets.some(street => street.houses.length));
@@ -95,12 +96,18 @@ async function main() {
   try {
     const numbers=['12','10','2A','2','02','1','2-1','3/1'];
     for(let i=0;i<ordered.length;i++) await db.house.update({where:{id:ordered[i].id},data:{number:numbers[i],order:i===1?0:null}});
-    const sorted=await equivalent('manual order numeric complements and leading zeros',path()+'?'+session);
+    const sorted=await equivalent('ordem manual, complementos numéricos e zeros à esquerda',path()+'?'+session);
     const houses=sorted.data.streets.flatMap(s=>s.houses).filter(h=>ordered.some(o=>o.id===h.id));
     assert.deepEqual(houses.map(h=>h.number),['10','1','2','02','2-1','2A','3/1','12']);
   } finally {
     for(const original of ordered) await db.house.update({where:{id:original.id},data:{number:original.number,order:original.order}});
   }
+  const addresses=await db.address.findMany({where:{tenantId:block.tenantId,id:{in:[block.firstAddress,block.firstAddress+1,block.firstAddress+2]}}});
+  try {
+    const names=['Água 2','água 10','Agua 1'];
+    for(let i=0;i<addresses.length;i++)await db.address.update({where:{id:addresses[i].id},data:{name:names[i]}});
+    await equivalent('ordenação de ruas com acentos e diferenças de caixa',path()+'?'+session);
+  } finally {for(const row of addresses)await db.address.update({where:{id:row.id},data:{name:row.name}});}
   const mapping = await db.territory_block_address.findUniqueOrThrow({ where: { id: catalogHouse.territoryBlockAddressId } });
   const link = await db.territory_block.findUniqueOrThrow({ where: { id: mapping.territoryBlockId } });
   let proposal;
@@ -118,6 +125,19 @@ async function main() {
     assert.equal(pendingHouse.hasRound, true);
     await db.house.update({ where: { id: catalogHouse.id }, data: { territoryBlockAddressId: null } });
     await equivalent('legacy house without normalized mapping', path() + '?' + session);
+    let legacyStreet,duplicateStreet;
+    try {
+      await db.territory_block_address.update({where:{id:mapping.id},data:{registrationStatus:'rejected'}});
+      legacyStreet=await db.change_request.create({data:{tenantId:block.tenantId,territoryId:block.territoryId,blockId:block.blockId,entity:'street',action:'create',targetId:null,proposedData:{},observations:'Lab legacy street only'}});
+      await equivalent('rua legada sem vínculo mantém solicitação de alvo nulo',path()+'?'+session);
+      duplicateStreet=await db.change_request.create({data:{tenantId:block.tenantId,territoryId:block.territoryId,blockId:block.blockId,entity:'street',action:'update',targetId:null,proposedData:{},observations:'Lab duplicate null target only'}});
+      await equivalent('solicitações de alvo nulo duplicadas preservam montagem original',path()+'?'+session);
+    } finally {
+      if(duplicateStreet)await db.change_request.delete({where:{id:duplicateStreet.id}});
+      if(legacyStreet)await db.change_request.delete({where:{id:legacyStreet.id}});
+      await db.territory_block_address.update({where:{id:mapping.id},data:{registrationStatus:'pending'}});
+    }
+
     await db.house.update({ where: { id: catalogHouse.id }, data: { registrationStatus: 'rejected' } });
     const rejected = await equivalent('rejected house excluded', path() + '?' + session);
     assert(!rejected.data.streets.flatMap(street => street.houses).some(house => house.id === catalogHouse.id));
@@ -202,6 +222,12 @@ async function main() {
   await equivalent('explicit session leave', '/v1/field/session?' + session, { method: 'DELETE' });
   // Leave is tenant-scoped and idempotent; other tenants' test sessions are untouched.
   assert.equal(await db.$queryRaw`SELECT count(*)::int AS count FROM field_session WHERE tenant_id=${block.tenantId} AND client_id=${clientId} AND disconnected_at IS NULL`.then(rows => rows[0].count), 0);
+  const finalHealth=await (await fetch('http://proxy:8080/healthz')).json();
+  if(finalHealth.batchValidation) {
+    assert(finalHealth.stats.validationBatch.statements>0,'Validation SQL optimization must really execute');
+    assert.equal(finalHealth.stats.validationBatch.invocations,finalHealth.stats.validationBatch.statements,'One fresh statement per validation invocation');
+    cases.push({name:'uma consulta nova por validação, sem cache entre chamadas',equal:true});
+  }
   const output = { variant, checkedAt: new Date().toISOString(), passed: cases.length, cases, source: health.source };
   fs.writeFileSync('/output/equivalence-' + variant + '.json', JSON.stringify(output, null, 2), { mode: 0o600 });
   console.log(JSON.stringify({ variant, passed: cases.length }));

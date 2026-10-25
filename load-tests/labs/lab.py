@@ -43,6 +43,13 @@ def state(variant):
         'memoryLimit': item['HostConfig']['Memory'], 'oom': item['State']['OOMKilled'],
         'restarts': item['RestartCount'], 'running': item['State']['Running'],
     } for item in containers]
+    with urllib.request.urlopen('http://localhost:3400/healthz',timeout=5) as response:
+        meta=json.load(response)
+    for item in result:
+        if item['service']==variant:
+            item['implementationHashes']=meta.get('implementation',{})
+            item['snapshotMode']=meta.get('mode','baseline')
+            item['batchValidation']=meta.get('batchValidation',False)
     expected = {'db': (1, 2 * 1024**3), 'api': (.4, 2 * 1024**3),
                 variant: (.5, 2 * 1024**3), 'proxy': (.1, 128 * 1024**2)}
     actual = {item['service']: (item['cpuLimit'], item['memoryLimit']) for item in result}
@@ -83,6 +90,7 @@ def up(variant):
 def test(variants=("nest","bun")):
     reports = []
     try:
+        compose('build','nest')  # Tools carry the current parity suite, even for Bun-only tests.
         for variant in variants:
             up(variant)
             before = state(variant)
@@ -103,7 +111,7 @@ def test(variants=("nest","bun")):
             'scope': 'functional equivalence, NOT capacity certification',
             'reports': reports, 'images': images, 'snapshotMode': ENV.get('LAB_SNAPSHOT_MODE','baseline'),
         }, indent=2) + '\n')
-        print('Both variants matched the original API; sanitized evidence saved in labs/results/.')
+        print('Selected workers matched the original API; sanitized evidence saved in labs/results/.')
     except Exception:
         with (RUNTIME/('equivalence-failed-'+ENV.get('LAB_SNAPSHOT_MODE','baseline')+'.log')).open('w') as log:
             compose('logs','--no-color','bun','api',stdout=log,stderr=subprocess.STDOUT)

@@ -26,6 +26,10 @@ async function main() {
   const rounds = new c.CatalogRoundService(db);
   const access = new c.FieldAccessService(db, rounds);
   const field = new c.FieldService(db, access, rounds);
+  if (process.env.LAB_BATCH_VALIDATION==='1') {
+    const validate=access.validate.bind(access);
+    access.validate=user=>db.$withValidation(user,()=>validate(user));
+  }
   if (process.env.LAB_SNAPSHOT_MODE === 'aggregate') {
     field.presence = (user,scope) => db.$presenceSummary(user,scope);
     const original = field.snapshot.bind(field);
@@ -53,13 +57,16 @@ async function main() {
   const filter = new c.AllExceptionsFilter(trace);
   const stopCleanup = cleanupTimer(field);
   const active = new Set();
+  const source=provenance();
+  const {createHash}=require('node:crypto');
+  const implementation=Object.fromEntries(['main.cjs','pg-adapter.cjs','snapshot-queries.cjs','aggregate-snapshot.cjs','validation-query.cjs'].map(file=>[file,createHash('sha256').update(fs.readFileSync('/app/labs/bun/'+file)).digest('hex')]));
 
   const server = Bun.serve({
     hostname: '0.0.0.0', port: Number(process.env.PORT || 3402),
     idleTimeout: 60, maxRequestBodySize: 10 * 1024 * 1024,
     async fetch(incoming) {
       const url = new URL(incoming.url);
-      if (url.pathname === '/healthz') return Response.json({ ok: true, variant: 'bun-pg', mode: process.env.LAB_SNAPSHOT_MODE || 'baseline', stats: { ...db.$stats(), timings }, source: provenance() });
+      if (url.pathname === '/healthz') return Response.json({ ok: true, variant: 'bun-pg', mode: process.env.LAB_SNAPSHOT_MODE || 'baseline', batchValidation:process.env.LAB_BATCH_VALIDATION==='1', stats: { ...db.$stats(), timings }, source, implementation });
       const headers = new Headers({ 'Access-Control-Allow-Origin': '*' });
       if (incoming.method === 'OPTIONS') {
         headers.set('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
