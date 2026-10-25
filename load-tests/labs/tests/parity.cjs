@@ -244,8 +244,14 @@ async function main() {
   if(finalHealth.batchValidation) {
     assert(finalHealth.stats.validationBatch.statements>0,'Validation SQL optimization must really execute');
     assert(finalHealth.stats.validationBatch.territoryReuses>0 && finalHealth.stats.validationBatch.linkReuses>0,'Original validation must consume joined scope reads');
-    assert.equal(finalHealth.stats.validationBatch.invocations,finalHealth.stats.validationBatch.statements,'One fresh statement per validation invocation');
-    cases.push({name:'uma consulta nova por validação, sem cache entre chamadas',equal:true});
+    const validation = finalHealth.stats.validationBatch;
+    if (validation.inflightSharing) {
+      assert.equal(validation.invocations,validation.statements+validation.followers,'Each invocation starts or joins a live query');
+      cases.push({name:'revalidação por invocação com consultas simultâneas agrupadas, sem cache concluído',equal:true});
+    } else {
+      assert.equal(validation.invocations,validation.statements,'One fresh statement per validation invocation');
+      cases.push({name:'uma consulta nova por validação, sem cache entre chamadas',equal:true});
+    }
   }
   const output = { variant, checkedAt: new Date().toISOString(), passed: cases.length, cases, source: health.source };
   fs.writeFileSync('/output/equivalence-' + variant + '.json', JSON.stringify(output, null, 2), { mode: 0o600 });

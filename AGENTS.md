@@ -57,7 +57,12 @@ Rode-os manualmente (removendo o `skip`) **apenas quando o fluxo de e-mail/regis
 
 - Worker local Bun + pg em `field-worker/`, build `Dockerfile.field` a partir dos
   fontes atuais desta API. Proxy do workspace mantém porta 3001; sync/saída vão
-  ao worker, escritas continuam no NestJS. Pool padrão 2, verificação 3s.
+  ao worker, escritas continuam no NestJS. Pool padrão 2 + listener dedicado,
+  verificação de segurança 1s, tabela de leitura versionada e agrupamento in-flight.
+  Não guardar autorização concluída na tabela. NOTIFY é dica, revisão persistida
+  é autoridade. Migration aditiva `20261025190000_field_read_model`.
+  `revision-poll.cjs` recusa hash desconhecido de FieldService: revisar as regras
+  de validação/espera e repetir equivalência antes de atualizar a compatibilidade.
   Reconstruir worker após mudar domínio; detalhes e rollback em `field-worker/README.md`.
 - Contratos, sincronização e corte de tráfego: `docs/field-http.md`.
 - Links novos usam seis caracteres alfanuméricos; UUIDs antigos continuam válidos até expirar.

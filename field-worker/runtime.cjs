@@ -23,12 +23,13 @@ function configure(env = process.env) {
     return parsed;
   };
   const poolSize = integer(env.FIELD_DB_POOL_SIZE || '2', 1, 64, 'FIELD_DB_POOL_SIZE');
-  const checkIntervalMs = integer(env.FIELD_POLL_CHECK_MS || '3000', 100, 25000, 'FIELD_POLL_CHECK_MS');
+  const checkIntervalMs = integer(env.FIELD_POLL_CHECK_MS || '1000', 100, 25000, 'FIELD_POLL_CHECK_MS');
   const port = integer(env.PORT || '3402', 1, 65535, 'PORT');
   url.searchParams.set('connection_limit', String(poolSize));
   env.DATABASE_URL = url.toString();
   env.FIELD_POLL_CHECK_MS = String(checkIntervalMs);
-  return { poolSize, checkIntervalMs, port };
+  if (env.FIELD_READ_MODEL_ENABLED && !['0','1'].includes(env.FIELD_READ_MODEL_ENABLED)) throw Error('Invalid FIELD_READ_MODEL_ENABLED');
+  return { poolSize, checkIntervalMs, port, readModelEnabled: env.FIELD_READ_MODEL_ENABLED !== '0' };
 }
 
 function classes() {

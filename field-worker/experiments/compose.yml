@@ -1,0 +1,6 @@
+# Lab-only overlay, always merge AFTER tests/compose.verify.yml.
+services:
+  bun:
+    command: [bun, "${FIELD_EXPERIMENT_ENTRY:-/app/field-worker/experiments/bootstrap.cjs}"]
+    environment:
+      FIELD_EXPERIMENT: ${FIELD_EXPERIMENT:?Select grouped or notify}

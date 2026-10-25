@@ -24,7 +24,7 @@ function fixture(models = []) {
   }
   const sandbox = { module: { exports: {} }, URL, Date, console, performance, process: {env: {}},
     require(name) {
-      if (['./snapshot-queries.cjs', './aggregate-snapshot.cjs', './validation-query.cjs'].includes(name)) return require('../' + name.slice(2));
+      if (['./snapshot-queries.cjs', './aggregate-snapshot.cjs', './validation-query.cjs', './inflight.cjs'].includes(name)) return require('../' + name.slice(2));
       assert.equal(name, 'pg'); return { Pool, types: { setTypeParser() {} } };
     },
   };

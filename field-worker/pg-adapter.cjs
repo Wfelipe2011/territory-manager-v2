@@ -14,6 +14,7 @@ module.exports = function createAdapter(connectionString, models) {
   const mode = 'aggregate';
   const counters = { queries: 0, queryMs: 0, acquisitions: 0, acquireMs: 0, transactions: 0, transactionMs: 0 };
   const validation = require('./validation-query.cjs')();
+  let blockSnapshot = (connection,...args) => require('./aggregate-snapshot.cjs').snapshot(connection,...args);
   const modelMap = new Map(models.map(model => [model.name, model]));
   const url = new URL(connectionString);
   const max = Number(url.searchParams.get('connection_limit') || 2);
@@ -187,7 +188,7 @@ module.exports = function createAdapter(connectionString, models) {
 
     const result = {};
     if (transactional) result.$baselineAdapter = () => adapter(client,true,false);
-    if (mode === 'aggregate' && transactional) result.$blockSnapshot = (user,scope,info) => require('./aggregate-snapshot.cjs').snapshot(client,user,scope,info);
+    if (mode === 'aggregate' && transactional) result.$blockSnapshot = (user,scope,info) => blockSnapshot(client,user,scope,info);
     for (const model of models) {
       result[model.name] = {};
       for (const method of ['findMany', 'findFirst', 'findUnique', 'findFirstOrThrow', 'findUniqueOrThrow']) {
@@ -250,6 +251,21 @@ module.exports = function createAdapter(connectionString, models) {
     } finally { counters.transactions++; counters.transactionMs += performance.now() - transactionBegan; client.release(discard); }
   };
   root.$connect = () => pool.query('SELECT 1');
+  root.$setBlockSnapshot = handler => { blockSnapshot = handler; };
+  // Explicit derived-data writes; the generic adapter remains read/presence-only.
+  root.$storeReadModel = values => observed(pool).query('SELECT field_store_read_model($1::integer,$2::integer,$3::integer,$4::integer,$5::text,$6::jsonb)', values);
+  root.$pruneReadModels = () => observed(pool).query("DELETE FROM field_read_model WHERE ctid IN (SELECT ctid FROM field_read_model WHERE updated_at < now()-interval '1 hour' ORDER BY updated_at LIMIT 1000)");
+  root.$readModelReady = async () => {
+    const result = await observed(pool).query("SELECT to_regclass('public.field_read_model') AS model,to_regprocedure('public.field_store_read_model(integer,integer,integer,integer,text,jsonb)') AS store");
+    if (!result.rows[0]?.model || !result.rows[0]?.store) throw Error('Field read-model migration is required before starting the worker');
+  };
+  const sharedReads = require('./inflight.cjs').create();
+  for (const name of ['parameter','round_info','territory_block','territory','multitenancy']) {
+    for (const [method, original] of Object.entries(root[name] || {})) root[name][method] = args => sharedReads.run(JSON.stringify([name,method,args]), () => original(args));
+  }
+  const presenceSummary = root.$presenceSummary.bind(root);
+  root.$presenceSummary = (user,scope) => sharedReads.run(JSON.stringify(['presence',user.tenantId,user.id,user.territoryId,user.blockId,user.roles,scope]), () => presenceSummary(user,scope));
+  root.$sharedReadsStats = sharedReads.stats;
   root.$disconnect = () => pool.end();
   return root;
 };

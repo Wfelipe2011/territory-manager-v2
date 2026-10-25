@@ -16,11 +16,15 @@ const SQL = `WITH links AS MATERIALIZED (
 ), requests AS MATERIALIZED (
  SELECT id,entity,action,target_id FROM change_request
  WHERE tenant_id=$1 AND territory_id=$2 AND block_id=$3 AND status='pending'
+), chosen_rounds AS MATERIALIZED (
+ SELECT DISTINCT ON (house_id) house_id,id,completed,completed_date,end_date,leave_letter
+ FROM round WHERE round_number=$4 AND house_id IN (
+   SELECT hx.id FROM house hx WHERE hx.tenant_id=$1 AND hx.territory_id=$2 AND hx.block_id=$3)
+ ORDER BY house_id,id
 ), houses AS MATERIALIZED (
  SELECT h.*,a.name AS address_name,r.id AS round_id,r.completed,r.completed_date,r.end_date,r.leave_letter
  FROM house h JOIN links l ON l.block_id=h.block_id JOIN address a ON a.id=h.address_id
- LEFT JOIN LATERAL (SELECT id,completed,completed_date,end_date,leave_letter FROM round
-   WHERE house_id=h.id AND round_number=$4 ORDER BY id LIMIT 1) r ON TRUE
+ LEFT JOIN chosen_rounds r ON r.house_id=h.id
  WHERE h.tenant_id=$1 AND h.territory_id=$2 AND h.registration_status<>'rejected' AND h.number<>'ghost'
  AND (h.territory_block_address_id IS NULL OR h.territory_block_address_id IN(SELECT id FROM mappings))
 ), streets AS (

@@ -16,6 +16,7 @@ async function main() {
   const c = classes();
   const db = createAdapter(process.env.DATABASE_URL, Prisma.dmmf.datamodel.models);
   await db.$connect();
+  if (configuration.readModelEnabled) await db.$readModelReady();
   const rounds = new c.CatalogRoundService(db);
   const access = new c.FieldAccessService(db, rounds);
   const field = new c.FieldService(db, access, rounds);
@@ -35,6 +36,26 @@ async function main() {
       return original(tx,user,scope,info);
     };
   }
+  let readModel, revisionHub;
+  if (configuration.readModelEnabled) {
+    const aggregate = require('./aggregate-snapshot.cjs');
+    readModel = require('./read-model.cjs').install(db, aggregate.snapshot, aggregate.SQL);
+    db.$setBlockSnapshot(readModel.read);
+    readModel.attach(field);
+    revisionHub = require('./revision-listener.cjs').create(process.env.DATABASE_URL, changed => {
+      for (const key of field.revisions.keys()) {
+        const [tenant,territory,,block] = key.split(':').map(Number);
+        if (!changed || (tenant===changed[0] && territory===changed[1] && block===changed[2])) field.revisions.delete(key);
+      }
+      readModel.refresh(changed);
+    });
+    require('./revision-poll.cjs').install(field, revisionHub);
+    const cleanup = field.cleanup.bind(field);
+    field.cleanup = async () => { await cleanup(); await readModel.prune(); };
+  }
+  const grouping = require('./snapshot-group.cjs').install(field,db);
+  const stats = db.$stats;
+  db.$stats = () => ({ ...stats(), grouping:grouping(), sharedReads:db.$sharedReadsStats(), readModel:readModel?.stats(), notifications:revisionHub?.stats() });
   const reflector = new Reflector();
   const limiter = throttle(reflector);
   const guards = [new c.AuthGuard(reflector, access), new c.RolesGuard(reflector), new c.ApiKeyGuard(reflector), limiter.guard];
@@ -45,7 +66,7 @@ async function main() {
   const active = new Set();
   const source=provenance();
   const {createHash}=require('node:crypto');
-  const implementation=Object.fromEntries(['main.cjs','pg-adapter.cjs','snapshot-queries.cjs','aggregate-snapshot.cjs','validation-query.cjs','runtime.cjs'].map(file=>[file,createHash('sha256').update(fs.readFileSync(path.join(__dirname,file))).digest('hex')]));
+  const implementation=Object.fromEntries(['main.cjs','pg-adapter.cjs','snapshot-queries.cjs','aggregate-snapshot.cjs','validation-query.cjs','runtime.cjs','inflight.cjs','snapshot-group.cjs','revision-poll.cjs','revision-listener.cjs','read-model.cjs'].map(file=>[file,createHash('sha256').update(fs.readFileSync(path.join(__dirname,file))).digest('hex')]));
 
   const server = Bun.serve({
     hostname: '0.0.0.0', port: configuration.port,
@@ -53,7 +74,8 @@ async function main() {
     async fetch(incoming) {
       const url = new URL(incoming.url);
       if (url.pathname === '/healthz') return Response.json({ ok: true, variant: 'bun-pg', mode: 'aggregate', batchValidation: true,
-        poolSize: configuration.poolSize, checkIntervalMs: configuration.checkIntervalMs, source, implementation,
+        poolSize: configuration.poolSize, checkIntervalMs: configuration.checkIntervalMs, readModelEnabled:configuration.readModelEnabled,
+        listenerConnected:revisionHub?.stats().connected??false, source, implementation,
         ...(process.env.FIELD_WORKER_DIAGNOSTICS === '1' ? { stats: { ...db.$stats(), activeRequests: active.size } } : {}),
       });
       const headers = new Headers({ 'Access-Control-Allow-Origin': '*' });
@@ -140,9 +162,11 @@ async function main() {
     if (closing) return;
     closing = true;
     stopCleanup();
+    readModel?.close();
     limiter.stop();
     for (const abort of active) abort.abort();
     await server.stop();
+    await revisionHub?.close();
     await db.$disconnect();
   }
   process.once('SIGTERM', close);

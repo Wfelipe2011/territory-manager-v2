@@ -121,7 +121,10 @@ de casas, continuam na API NestJS. Frontend mantém a URL existente. API direta
 para diagnóstico somente em `127.0.0.1:3002`; worker sem porta no host.
 
 `Dockerfile.field` compila as regras atuais de `src/`. Snapshot agregado,
-validação consolidada por invocação, pool 2, verificação 3s, espera HTTP 25s.
+validação/leituras simultâneas agrupadas, tabela derivada versionada e NOTIFY por
+escopo; pool 2 + listener dedicado, verificação de segurança 1s, espera HTTP 25s.
+JWT/claims continuam por caller. Tabela não armazena autorização, presença nem
+tokens; revisão persistida é autoridade e permissões temporais são recalculadas.
 O worker não executa migrations nem usa imagens/fixtures dos laboratórios.
 Detalhes de operação, testes e rollback em `../field-worker/README.md`.
 Esta integração é **somente local**; as instruções históricas de publicação

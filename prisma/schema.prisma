@@ -295,6 +295,20 @@ model field_revision {
   @@id([tenantId, territoryId, roundNumber, blockId])
 }
 
+// Derived, disposable raw catalogs. No signature tokens or authorization decisions.
+model field_read_model {
+  tenantId    Int      @map("tenant_id")
+  territoryId Int      @map("territory_id")
+  blockId     Int      @map("block_id")
+  roundNumber Int      @map("round_number")
+  revision    String
+  payload     Json
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@id([tenantId, territoryId, blockId, roundNumber, revision])
+  @@index([updatedAt], map: "field_read_model_updated_at_idx")
+}
+
 model field_session {
   id             Int       @id @default(autoincrement())
   tenantId       Int       @map("tenant_id")
