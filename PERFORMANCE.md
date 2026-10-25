@@ -1,5 +1,8 @@
 # Histórico de Performance — Load Tests
 
+> Histórico legado: endpoints e WebSocket de fevereiro/2026.
+> Não comparar diretamente com o perfil HTTP atual. Veja [Bun + pg](load-tests/labs/results/BUN-TUNING.md) e [catálogo de campo](docs/field-performance.md).
+
 Arquivo de acompanhamento da evolução dos tempos de resposta sob carga.
 Cada entrada representa uma rodada de teste com k6.
 
