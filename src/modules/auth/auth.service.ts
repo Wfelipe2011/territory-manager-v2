@@ -23,6 +23,7 @@ export class AuthService {
       where: {
         email,
       },
+      include: { multitenancy: { select: { name: true } } },
     });
     this.logger.log(`Verificando usuário ${user?.email}`);
     if (!user) throw new UnauthorizedException('Não autorizado');
@@ -43,6 +44,7 @@ export class AuthService {
         userName: user.name,
         roles,
         tenantId: user.tenantId,
+        tenantName: user.multitenancy.name,
       },
       envs.JWT_SECRET,
       {
@@ -90,6 +92,7 @@ export class AuthService {
         userName: user.name,
         roles,
         tenantId: user.tenantId,
+        tenantName: tenant.name,
       },
       envs.JWT_SECRET,
       {

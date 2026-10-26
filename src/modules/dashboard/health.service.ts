@@ -10,7 +10,7 @@ export class HealthService {
 
   async getHealthData() {
     const [database, load, lastChanges, sessions] = await Promise.all([
-      this.getDatabaseInfo(), si.currentLoad(), this.getLastChanges(), this.concurrency.history(),
+      this.getDatabaseInfo(), si.currentLoad(), this.getLastChanges(), this.concurrency.current(),
     ]);
     const total = os.totalmem();
     const free = os.freemem();
@@ -18,8 +18,8 @@ export class HealthService {
     return {
       message: `[${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}] - [${process.env.INSTANCE_ID}] - O servidor está em execução`,
       signatures: database.countSignatures,
-      sockets: sessions.online, // Compatibility only; this is NOT a socket count.
-      activeSessions: sessions.online,
+      sockets: sessions.find(r => r.scope_id === 0)?.active || 0, // Compatibility only.
+      activeSessions: sessions.find(r => r.scope_id === 0)?.active || 0,
       database_info: {
         active: Number(database.countActive), idle: Number(database.countIdle), max_connections: Number(database.max_connections),
       },
@@ -30,7 +30,6 @@ export class HealthService {
         load_average: { '1_min': average[0], '5_min': average[1], '15_min': average[2] },
       },
       last_changes: lastChanges,
-      ...sessions,
     };
   }
 

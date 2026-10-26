@@ -82,6 +82,8 @@ export class ConcurrencyService implements OnModuleInit, OnModuleDestroy {
   async history(params: ConcurrencyParams = {}) {
     const now = new Date();
     const days: Record<string, number> = { '1d': 1, '3d': 3, '7d': 7, '30d': 30 };
+    if (params.period && !Object.keys(days).includes(params.period)) throw new BadRequestException('Período inválido.');
+    if (params.groupBy && !['10min','30min','1h','1d'].includes(params.groupBy)) throw new BadRequestException('Agrupamento inválido.');
     if (Boolean(params.from) !== Boolean(params.to)) throw new BadRequestException('Informe início e fim.');
     let from = params.from ? new Date(params.from) : new Date(now.getTime() - (days[params.period || '1d'] || 1) * 86400000);
     let to = params.to ? new Date(params.to) : now;

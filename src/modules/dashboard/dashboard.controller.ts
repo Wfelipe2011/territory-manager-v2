@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Post, Render, Res, Request } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Render, Res, Request } from '@nestjs/common';
+import { UsageService } from './usage.service';
+import { ConcurrencyParams } from './concurrency.service';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { VERSION } from 'src/enum/version.enum';
 import { DashboardService } from './dashboard.service';
-import { HealthService } from './health.service';
 import { Public } from 'src/decorators/public.decorator';
 import { RequestUser } from 'src/interfaces/RequestUser';
 import { Roles } from 'src/decorators/roles.decorator';
@@ -20,8 +21,8 @@ import * as jwt from 'jsonwebtoken';
 export class DashboardController {
   constructor(
     readonly dashBoardService: DashboardService,
-    private readonly healthService: HealthService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly usageService: UsageService
   ) { }
 
   @Public()
@@ -67,38 +68,25 @@ export class DashboardController {
   @Get()
   @Render('dashboard')
   async root(@Request() req: RequestUser) {
-    const metrics = await this.dashBoardService.getBusinessMetrics();
-
     return {
-      metrics,
       user: req.user,
       isSuperAdmin: true,
       activePage: 'dashboard',
     };
   }
 
+  @Get('usage')
+  usage(@Query() params: ConcurrencyParams & { tenantId?: string }) {
+    return this.usageService.getUsage(params);
+  }
+
   @Get('health')
   @Render('health')
   async healthPage(@Request() req: RequestUser) {
-    const health = await this.healthService.getHealthData();
-
-    // Formatação de Uptime para o SSR inicial
-    const uptime = health.system_info.uptime_seconds;
-    const d = Math.floor(uptime / (3600 * 24));
-    const h = Math.floor(uptime % (3600 * 24) / 3600);
-    const m = Math.floor(uptime % 3600 / 60);
-    const s = Math.floor(uptime % 60);
-
     return {
-      health,
       user: req.user,
       isSuperAdmin: true,
       activePage: 'health',
-      lastUpdateTime: new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
-      dbPercent: ((health.database_info.active / health.database_info.max_connections) * 100).toFixed(1),
-      uptimeFormatted: `${d}d ${h}h ${m}m ${s}s`,
-      sessionsGeneralJson: JSON.stringify(health.sessionsGeneral).replace(/</g, '\\u003c'),
-      sessionsByTenantJson: JSON.stringify(health.sessionsByTenant).replace(/</g, '\\u003c'),
     };
   }
 

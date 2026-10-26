@@ -347,6 +347,23 @@ model field_concurrency_hour {
   @@index([scopeId, bucketAt], map: "field_concurrency_hour_scope_idx")
 }
 
+model request_metric_minute {
+  bucketAt DateTime @map("bucket_at") @db.Timestamptz(6)
+  component String
+  instanceId String @map("instance_id")
+  category String
+  requests Int
+  errors Int
+  clientErrors Int @map("client_errors")
+  aborted Int
+  totalMs Float @map("total_ms")
+  maxMs Float @map("max_ms")
+  histogram Int[]
+  revision Int
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  @@id([bucketAt, component, instanceId, category])
+}
+
 model paypal_transaction {
   id                      Int      @id @unique @default(autoincrement())
   transactionId           String   @unique // ID da transação do PayPal

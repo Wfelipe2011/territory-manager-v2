@@ -43,6 +43,7 @@ import { FirebaseModule } from './infra/firebase.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { NameResolverModule } from './infra/name-resolver/name-resolver.module';
+import { MonitoringModule } from './modules/monitoring/monitoring.module';
 
 // Usar instância global singleton do TraceService
 const winstonTransports: winston.transport[] = [
@@ -104,6 +105,7 @@ if (envs.AWS_ACCESS_KEY_ID && envs.AWS_SECRET_ACCESS_KEY) {
     }),
     HttpModule,
     PrismaModule,
+    MonitoringModule,
     FieldModule,
     ChangeRequestModule,
     FirebaseModule,

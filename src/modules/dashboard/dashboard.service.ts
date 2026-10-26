@@ -129,19 +129,10 @@ export class DashboardService {
     const activeIds = activeTenants.map(t => t.id);
 
     // 2. Buscar as métricas filtradas apenas para estas congregações ativas
-    const [houses, territories, users, financial, totalTenantsCount] = await Promise.all([
+    const [houses, territories, users, totalTenantsCount] = await Promise.all([
       this.prisma.house.count({ where: { tenantId: { in: activeIds }, registrationStatus: 'approved' } }),
       this.prisma.territory.count({ where: { tenantId: { in: activeIds } } }),
       this.prisma.user.count({ where: { tenantId: { in: activeIds } } }),
-      this.prisma.financial_entry.aggregate({
-        where: {
-          type: 'POSITIVE',
-          tenantId: { in: activeIds }
-        },
-        _sum: {
-          value: true,
-        },
-      }),
       this.prisma.multitenancy.count() // Mantemos o total global apenas para referência se precisar
     ]);
 
@@ -164,7 +155,6 @@ export class DashboardService {
         lastActivity: t.round[0]?.updateDate || null
       })),
       activeSignatures,
-      globalBalance: financial._sum.value || 0,
     };
   }
 }

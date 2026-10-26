@@ -9,9 +9,12 @@ const hbs = require('hbs');
 const path = require('node:path');
 const { configure, classes, provenance, cleanupTimer, throttle } = require('./runtime.cjs');
 const createAdapter = require('./pg-adapter.cjs');
+const { RequestMetrics, requestCategory } = require('../dist/modules/monitoring/request-metrics');
+const telemetry = require('./telemetry.cjs');
 
 async function main() {
   const configuration = configure();
+  const metrics = new RequestMetrics('worker');
   Logger.overrideLogger(['error', 'warn']);
   const c = classes();
   const db = createAdapter(process.env.DATABASE_URL, Prisma.dmmf.datamodel.models);
@@ -66,13 +69,21 @@ async function main() {
   const active = new Set();
   const source=provenance();
   const {createHash}=require('node:crypto');
-  const implementation=Object.fromEntries(['main.cjs','pg-adapter.cjs','snapshot-queries.cjs','aggregate-snapshot.cjs','validation-query.cjs','runtime.cjs','inflight.cjs','snapshot-group.cjs','revision-poll.cjs','revision-listener.cjs','read-model.cjs'].map(file=>[file,createHash('sha256').update(fs.readFileSync(path.join(__dirname,file))).digest('hex')]));
+  const implementation=Object.fromEntries(['main.cjs','telemetry.cjs','pg-adapter.cjs','snapshot-queries.cjs','aggregate-snapshot.cjs','validation-query.cjs','runtime.cjs','inflight.cjs','snapshot-group.cjs','revision-poll.cjs','revision-listener.cjs','read-model.cjs'].map(file=>[file,createHash('sha256').update(fs.readFileSync(path.join(__dirname,file))).digest('hex')]));
 
   const server = Bun.serve({
     hostname: '0.0.0.0', port: configuration.port,
     idleTimeout: 60, maxRequestBodySize: 10 * 1024 * 1024,
     async fetch(incoming) {
       const url = new URL(incoming.url);
+      if (url.pathname === '/internal/metrics') {
+        const stats = db.$stats();
+        return telemetry.response(incoming, process.env.API_KEY_SECRET, metrics, {
+          readModelEnabled: configuration.readModelEnabled, listenerConnected: revisionHub?.stats().connected ?? false,
+          poolSize: configuration.poolSize, poolTotal: stats.poolTotal, poolIdle: stats.poolIdle,
+          poolWaiting: stats.poolWaiting, activeRequests: active.size,
+        });
+      }
       if (url.pathname === '/healthz') return Response.json({ ok: true, variant: 'bun-pg', mode: 'aggregate', batchValidation: true,
         poolSize: configuration.poolSize, checkIntervalMs: configuration.checkIntervalMs, readModelEnabled:configuration.readModelEnabled,
         listenerConnected:revisionHub?.stats().connected??false, source, implementation,
@@ -87,6 +98,8 @@ async function main() {
         return new Response(null, { status: 204, headers });
       }
       const match = /^\/v1\/field\/blocks\/([^/]+)\/sync\/?$/.exec(url.pathname);
+      const metricStarted = performance.now();
+      const category = requestCategory(incoming.method, url.pathname + url.search);
       const sync = /^\/v1\/field\/sync\/?$/.test(url.pathname);
       const leave = /^\/v1\/field\/session\/?$/.test(url.pathname);
       let status = 200;
@@ -148,6 +161,7 @@ async function main() {
         } catch (error) {
           filter.catch(error, { switchToHttp: () => ({ getRequest: () => req, getResponse: () => res }) });
         } finally {
+          metrics.record(category, performance.now() - metricStarted, status, abort.signal.aborted);
           incoming.signal.removeEventListener('abort', cancel);
           active.delete(abort);
         }

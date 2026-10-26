@@ -33,13 +33,28 @@ mostra última coleta, aviso de atraso e número de amostras por intervalo.
 ## Consulta
 
 `/v1/sessions?period=1d|3d|7d|30d&groupBy=10min|30min|1h|1d`, ou `from`/`to`
-ISO, intervalo semiaberto e até 366 dias. Mantém o controle de acesso preexistente
-desse endpoint; o painel é de superadmin. A política de exposição pública das
-rotas legadas `/v1/sessions` e `/v1/health-check` merece revisão separada.
+ISO, intervalo semiaberto e até 366 dias. As rotas `/v1/sessions`,
+`/v1/health-check` e `/v1/dashboard/usage` agora exigem superadmin (cookie ou JWT).
+Monitores anônimos devem usar o endpoint público de documentação `/api` para
+disponibilidade HTTP e `/healthz` para o Bun; o painel técnico não afirma medir
+a saúde do Bun sem instrumentação dedicada. O worker não consome essas rotas.
 
-O painel apresenta online agora, pico e horário, médias, gráfico e tabela geral
-ou por congregação, com atualização a cada 30s e opção de pausa. Horários são
-exibidos em São Paulo; janelas são alinhadas em UTC.
+O painel de uso `/v1/dashboard` apresenta online agora, pico e horário, médias,
+gráfico de média/pico, distribuição por cidade/UF e tabela paginada por
+congregação, com atualização a cada 30s e opção de pausa. Horários são exibidos
+em São Paulo; janelas são alinhadas em UTC. Filtros não trocam o tenant da sessão.
+O botão Acessar conserva o POST existente de troca de congregação.
+
+Congregações com atividade têm presença coletada acima de zero ou alteração de
+rodada no período. Usuários cadastrados não são usuários ativos. Localidade é
+o cadastro da congregação, não a localização dos dispositivos. Rodadas abertas,
+cadastros e pendências são estado atual; conclusões usam timestamps persistidos,
+não um log completo de eventos (remarcações não são reconstruídas).
+
+Saúde técnica está separada em `/v1/dashboard/health`, sem consultas de histórico
+de simultaneidade. CPU, memória e uptime referem-se ao sistema visível ao processo,
+não métricas exclusivas do container. Financeiro saiu do menu e dos indicadores
+deste painel; seus dados, rotas e fluxos do Admin não foram removidos.
 
 Consultas horárias/diárias usam agregados. Períodos maiores que 7 dias têm no
 mínimo agrupamento horário; maiores que 31 dias, diário. Consultas anteriores à

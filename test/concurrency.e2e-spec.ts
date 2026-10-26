@@ -6,6 +6,8 @@ import { PrismaService } from '../src/infra/prisma/prisma.service';
 import { createTestApp } from './utils/app-helper';
 import { cleanDatabase } from './utils/db-cleaner';
 import { fieldFixture } from './utils/field-fixture';
+import { createTestToken } from './utils/auth-helper';
+import { Role } from '../src/enum/role.enum';
 
 describe('Histórico persistente de simultaneidade HTTP', () => {
   let app: INestApplication;
@@ -77,9 +79,10 @@ describe('Histórico persistente de simultaneidade HTTP', () => {
   });
 
   it('aceita filtro de 30 dias e rejeita datas incompletas, invertidas e períodos excessivos', async () => {
-    await request(app.getHttpServer()).get('/v1/sessions?period=30d').expect(200);
+    const token = createTestToken({ roles: [Role.SUPER_ADMIN] });
+    await request(app.getHttpServer()).get('/v1/sessions?period=30d').set('Authorization', `Bearer ${token}`).expect(200);
     for (const query of ['from=2026-01-01', 'from=2026-02-01&to=2026-01-01', 'from=2020-01-01&to=2026-01-01', 'from=invalido&to=2026-01-01']) {
-      await request(app.getHttpServer()).get(`/v1/sessions?${query}`).expect(400);
+      await request(app.getHttpServer()).get(`/v1/sessions?${query}`).set('Authorization', `Bearer ${token}`).expect(400);
     }
   });
 });

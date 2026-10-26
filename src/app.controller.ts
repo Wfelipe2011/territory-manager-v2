@@ -6,6 +6,8 @@ import { VERSION } from './enum/version.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FirebaseUploadService } from './firebase-upload.service';
 import { HealthService } from './modules/dashboard/health.service';
+import { Roles } from './decorators/roles.decorator';
+import { Role } from './enum/role.enum';
 
 @ApiTags('Verificação de Saúde')
 @Controller({
@@ -19,7 +21,7 @@ export class AppController {
     private healthService: HealthService,
   ) { }
 
-  @Public()
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: 'Verificação de saúde do servidor' })
   @ApiOkResponse({ description: 'Servidor está em execução', type: String })
   @Get('/health-check')
@@ -27,7 +29,7 @@ export class AppController {
     return this.healthService.getHealthData();
   }
 
-  @Public()
+  @Roles(Role.SUPER_ADMIN)
   @Get('/sessions')
   async getSessions(
     @Query('period') period?: string,

@@ -47,6 +47,7 @@ services:
       - JWT_SECRET=$JWT_SECRET
       - API_KEY_SECRET=${API_KEY_SECRET:?Set the shared API key secret}
       - FIELD_POLL_CHECK_MS=1000
+      - FIELD_WORKER_INTERNAL_URL=http://field-worker:3402
       - TZ=$TZ
       - LOGTAIL_API_KEY=$LOGTAIL_API_KEY
       - POSTGRES_DB=$POSTGRES_DB
