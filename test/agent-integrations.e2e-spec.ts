@@ -42,6 +42,7 @@ describe('Integração pública MCP/OAuth com tenants isolados', () => {
       return { tenant, user, type, territory };
     }
     a = await seed('mcp-a'); b = await seed('mcp-b');
+    process.env.AGENT_MCP_ALLOWED_TENANT_IDS = `${a.tenant.id},${b.tenant.id}`;
     admin = createTestToken({ tenantId: a.tenant.id, userId: a.user.id });
   });
 

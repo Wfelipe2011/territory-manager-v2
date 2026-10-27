@@ -2,7 +2,7 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { CatalogRoundService } from '../round/catalog-round.service';
-import { AgentPrincipal, digest } from './agent.config';
+import { AgentPrincipal, agentTenantEnabled, digest } from './agent.config';
 
 type Tx = Prisma.TransactionClient;
 const visibleHouse = { id: true, number: true, legend: true, dontVisit: true, territoryId: true, blockId: true, addressId: true, territoryBlockAddressId: true } as const;
@@ -14,6 +14,7 @@ export class AgentCatalogService {
   constructor(private readonly prisma: PrismaService, private readonly rounds: CatalogRoundService) {}
 
   async assertConnection(tx: Tx, principal: AgentPrincipal) {
+    if (!agentTenantEnabled(principal.tenantId)) throw new UnauthorizedException('Integração não habilitada para esta congregação');
     const connection = await tx.agent_connection.findFirst({ where: {
       id: principal.connectionId, userId: principal.userId, tenantId: principal.tenantId,
       clientId: principal.clientId, revokedAt: null, expiresAt: { gt: new Date() },

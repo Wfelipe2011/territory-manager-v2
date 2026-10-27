@@ -41,6 +41,7 @@ services:
     environment:
       # MCP/OAuth: disabled until API/Admin origins and persistent secrets are provisioned.
       - AGENT_MCP_ENABLED=${AGENT_MCP_ENABLED:-false}
+      - AGENT_MCP_ALLOWED_TENANT_IDS=${AGENT_MCP_ALLOWED_TENANT_IDS:-}
       - AGENT_PUBLIC_ORIGIN=${AGENT_PUBLIC_ORIGIN:-}
       - AGENT_ADMIN_PUBLIC_ORIGIN=${AGENT_ADMIN_PUBLIC_ORIGIN:-}
       - AGENT_OAUTH_ENCRYPTION_KEY=${AGENT_OAUTH_ENCRYPTION_KEY:-}

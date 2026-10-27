@@ -4,8 +4,23 @@ export const AGENT_SCOPES = ['catalog:read', 'catalog:write'];
 export const digest = (value: string) => createHash('sha256').update(value).digest('hex');
 export const nativeImport = (specifier: string): Promise<any> => import(specifier);
 
+function allowedTenantIds(): number[] {
+  const value = (process.env.AGENT_MCP_ALLOWED_TENANT_IDS || '').trim();
+  if (!value) return [];
+  const ids = value.split(',').map(id => id.trim());
+  if (ids.some(id => !/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id)))) {
+    throw new Error('AGENT_MCP_ALLOWED_TENANT_IDS exige IDs positivos separados por vírgula');
+  }
+  return [...new Set(ids.map(Number))];
+}
+
+export function agentTenantEnabled(tenantId: number): boolean {
+  return process.env.AGENT_MCP_ENABLED === 'true' && allowedTenantIds().includes(tenantId);
+}
+
 export function agentConfig() {
   const enabled = process.env.AGENT_MCP_ENABLED === 'true';
+  const tenantIds = allowedTenantIds();
   const origin = new URL(process.env.AGENT_PUBLIC_ORIGIN || 'http://localhost:3001');
   if (enabled && origin.protocol !== 'https:' && !['localhost', '127.0.0.1'].includes(origin.hostname)) {
     throw new Error('AGENT_PUBLIC_ORIGIN exige HTTPS fora de loopback');
@@ -22,7 +37,7 @@ export function agentConfig() {
   const admin = new URL(process.env.AGENT_ADMIN_PUBLIC_ORIGIN || 'http://localhost:4800');
   if (enabled && origin.protocol === 'https:' && admin.protocol !== 'https:') throw new Error('AGENT_ADMIN_PUBLIC_ORIGIN exige HTTPS em publicação pública');
   if (admin.pathname !== '/' || admin.search || admin.hash || admin.username || admin.password) throw new Error('AGENT_ADMIN_PUBLIC_ORIGIN deve ser somente a origem');
-  return { enabled, origin: origin.origin, adminOrigin: admin.origin, issuer: `${origin.origin}/oauth`, resource: `${origin.origin}/mcp`, encryptionKey, cookieKeys, jwks, allowedCimdOrigins, clients };
+  return { enabled, tenantIds, origin: origin.origin, adminOrigin: admin.origin, issuer: `${origin.origin}/oauth`, resource: `${origin.origin}/mcp`, encryptionKey, cookieKeys, jwks, allowedCimdOrigins, clients };
 }
 
 export type AgentPrincipal = { userId: number; tenantId: number; clientId: string; connectionId: string; scopes: string[] };

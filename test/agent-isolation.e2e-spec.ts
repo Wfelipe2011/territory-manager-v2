@@ -11,8 +11,9 @@ import { AgentPrincipal, digest } from '../src/modules/agents/agent.config';
 describe('Vínculos e concorrência do catálogo de agentes', () => {
   let app: INestApplication, prisma: PrismaService, catalog: AgentCatalogService;
   let a: any, b: any;
+  const prior = { ...process.env };
   beforeAll(async () => { app = await createTestApp(); prisma = app.get(PrismaService); catalog = app.get(AgentCatalogService); });
-  afterAll(async () => { await app.close(); });
+  afterAll(async () => { await app.close(); for (const key of Object.keys(process.env)) if (key.startsWith('AGENT_')) delete process.env[key]; Object.assign(process.env, prior); });
   beforeEach(async () => {
     await cleanDatabase(prisma);
     async function seed(name: string) {
@@ -30,6 +31,9 @@ describe('Vínculos e concorrência do catálogo de agentes', () => {
       return { tenant, user, type, territory, block, tb, address, street, house, principal, token: createTestToken({ userId: user.id, tenantId: tenant.id }) };
     }
     a = await seed('isolamento-a'); b = await seed('isolamento-b');
+    // These tests call the catalog directly; no OAuth provider is started.
+    process.env.AGENT_MCP_ENABLED = 'true';
+    process.env.AGENT_MCP_ALLOWED_TENANT_IDS = `${a.tenant.id},${b.tenant.id}`;
   });
   it('rejeita IDs estrangeiros de todos os níveis e combinações de pais', async () => {
     const foreign = [

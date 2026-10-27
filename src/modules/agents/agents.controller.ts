@@ -4,7 +4,7 @@ import { SkipCache } from '../../decorators/skip-cache.decorator';
 import { Role } from '../../enum/role.enum';
 import { RequestUser } from '../../interfaces/RequestUser';
 import { PrismaService } from '../../infra/prisma/prisma.service';
-import { agentConfig } from './agent.config';
+import { agentConfig, agentTenantEnabled } from './agent.config';
 
 @Controller({ version: '1', path: 'agent-integrations' })
 @Roles(Role.ADMIN)
@@ -19,7 +19,8 @@ export class AgentIntegrationsController {
       orderBy: { createdAt: 'desc' }, take: 100,
     });
     const config = agentConfig();
-    return { enabled: config.enabled, mcpUrl: config.enabled ? config.resource : null, connections };
+    const enabled = agentTenantEnabled(req.user.tenantId);
+    return { enabled, mcpUrl: enabled ? config.resource : null, connections };
   }
   @Delete(':id')
   async revoke(@Request() req: RequestUser, @Param('id') id: string) {
