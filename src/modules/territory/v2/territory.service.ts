@@ -54,20 +54,21 @@ export class TerritoryServiceV2 extends BaseService {
       where: { id: tenantId },
     });
     const territory = await this.prisma.territory.findUnique({
-      where: { id },
+      where: { id, tenantId },
     });
+    if (!territory) throw new NotFoundException('Território não encontrado');
     if (territory?.imageUrl) await this.firebaseService.deleteFileByUrl(territory?.imageUrl).catch(() => null);
     const tenantName = tenant?.name.toLowerCase().replace(/ /g, '-');
     const fileType = file.mimetype.split('/')[1];
     const fileUrl = await this.firebaseService.uploadFile(file, `mapas/${tenantName}/${Date.now()}.${fileType}`);
     this.logger.log(`Atualizando território ${id} com a URL da imagem`);
     await this.prisma.territory.update({
-      where: { id },
+      where: { id, tenantId },
       data: { imageUrl: fileUrl as string },
     });
 
     return this.prisma.territory.findUnique({
-      where: { id },
+      where: { id, tenantId },
     });
   }
 

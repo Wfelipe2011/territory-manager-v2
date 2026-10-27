@@ -9,14 +9,21 @@ NestJS (TypeScript) + Prisma/PostgreSQL. Sincronização mobile via long polling
 - `npm run start:dev` — dev server
 - `npm test` — unit tests (jest, `src/**/*.spec.ts`)
 - `npm run lint` — eslint com `--fix`
-- `npm run test:integration` — suíte E2E completa (sobe banco, migra, gera Prisma, testa, derruba). **Requer o plugin `docker compose` v2** — sem ele o script falha em silêncio e fica preso no `wait-on` por 2min.
+- `npm run test:integration` — suíte E2E completa via `scripts/test-agents.sh test/` (Docker, PostgreSQL descartável em 5554, migrations, Prisma e lotes de quatro suítes). Inclui o provider OAuth ESM com VM modules do Jest.
 - `npm run build` — `nest build`
 
 ## Testes E2E (integração)
 
 Banco isolado de teste (compose interno usa **5433**; no workspace compartilhado use **5544** com `bash dev/test-api.sh` da raiz) (não usa o banco de dev). Config em `.env.test` (`JWT_SECRET=test_secret`, `PORT=3001`, `NODEMAILER_USER`/`NODEMAILER_APP_PASS` vazios).
 
-Para rodar um arquivo específico, siga esta ordem obrigatória:
+Para rodar um arquivo específico com o mesmo isolamento do pre-push:
+
+```bash
+bash scripts/test-agents.sh test/<arquivo>.e2e-spec.ts
+```
+
+Os comandos legados abaixo usam o Compose interno em 5433; não os use no workspace
+compartilhado, onde essa porta pertence a outro projeto:
 
 ```bash
 npm run test:db:up

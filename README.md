@@ -160,6 +160,13 @@ Permite que publicadores acessem o sistema sem criar conta.
 
 ---
 
+## Integrações com agentes
+
+O servidor MCP oferece 18 ferramentas para administradores, com OAuth, escopos,
+isolamento por congregação e revogação. A ativação é explícita e fica desabilitada
+por padrão. Configuração, testes, pacotes e publicação:
+[`docs/agents-mcp.md`](docs/agents-mcp.md).
+
 ## 📞 Suporte e Contato
 
 Dúvidas ou sugestões? Entre em contato através do nosso canal oficial.

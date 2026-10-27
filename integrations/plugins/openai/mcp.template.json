@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "territorio-digital": {
+      "type": "streamable-http",
+      "url": "__MCP_URL__",
+      "extensions": { "com.openai": { "auth": { "type": "oauth", "client": { "mode": "cimd" }, "baseScopes": ["catalog:read"], "defaultScopes": ["catalog:read", "catalog:write"] } } }
+    }
+  }
+}

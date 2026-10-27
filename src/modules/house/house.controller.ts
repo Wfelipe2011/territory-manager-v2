@@ -74,6 +74,7 @@ export class HouseController {
           throw new ForbiddenException(`Você ${req.user.id} não tem permissão para acessar esse território`);
         }
       }
+      if (!await this.houseService.prisma.territory_block.findFirst({ where: { territoryId: +territoryId, blockId: +blockId, tenantId: req.user.tenantId } })) throw new NotFoundException('Quadra não encontrada');
       const result = await this.houseService.getAddressPerTerritoryByIdAndBlockById(+blockId, +territoryId);
       return result;
     } catch (error) {
@@ -110,6 +111,7 @@ export class HouseController {
 
       if (req.user.roles.includes(Role.PUBLICADOR)) await this.signatureIsValid.execute(req.user.id);
 
+      if (!await this.houseService.prisma.territory_block_address.findFirst({ where: { addressId: +addressId, tenantId: req.user.tenantId, territoryBlock: { territoryId: +territoryId, blockId: +blockId, tenantId: req.user.tenantId } } })) throw new NotFoundException('Rua não encontrada');
       const result = await this.houseService.getHousesPerTerritoryByIdAndBlockByIdAndAddressById(+blockId, +territoryId, +addressId, +query.round);
       return result;
     } catch (error) {
@@ -164,9 +166,9 @@ export class HouseController {
 
   @Roles(Role.ADMIN)
   @Get('houses/:id')
-  async findById(@Param('id') id: number) {
+  async findById(@Param('id') id: number, @Request() req: RequestUser) {
     try {
-      const result = await this.houseService.findById(+id);
+      const result = await this.houseService.findById(+id, req.user.tenantId);
       if (!result) throw new NotFoundException('Casa não encontrada');
       return result;
     } catch (error) {
@@ -178,9 +180,9 @@ export class HouseController {
   @Roles(Role.ADMIN)
   @Put('houses/:id')
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  async update(@Param('id') id: number, @Body() body: UpsertHouseInput) {
+  async update(@Param('id') id: number, @Body() body: UpsertHouseInput, @Request() req: RequestUser) {
     try {
-      return await this.houseService.update(+id, body);
+      return await this.houseService.update(+id, body, req.user.tenantId);
     } catch (error) {
       this.logger.error(error);
       throw error;
@@ -190,9 +192,9 @@ export class HouseController {
   @Roles(Role.ADMIN)
   @Post('houses')
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  async create(@Body() body: UpsertHouseInput) {
+  async create(@Body() body: UpsertHouseInput, @Request() req: RequestUser) {
     try {
-      const result = await this.houseService.create(body);
+      const result = await this.houseService.create(body, req.user.tenantId);
       return result;
     } catch (error) {
       this.logger.error(error);
@@ -202,9 +204,9 @@ export class HouseController {
 
   @Roles(Role.ADMIN)
   @Delete('houses/:id')
-  async delete(@Param('id') id: number) {
+  async delete(@Param('id') id: number, @Request() req: RequestUser) {
     try {
-      const result = await this.houseService.delete(+id);
+      const result = await this.houseService.delete(+id, req.user.tenantId);
       return result;
     } catch (error) {
       this.logger.error(error);
@@ -217,9 +219,9 @@ export class HouseController {
   @ApiOperation({ summary: 'Atualiza a ordem das casas' })
   @ApiResponse({ status: 200, description: 'Ordem atualizada com sucesso' })
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  async updateOrder(@Body() body: UpdateHouseOrder): Promise<void> {
+  async updateOrder(@Body() body: UpdateHouseOrder, @Request() req: RequestUser): Promise<void> {
     try {
-      return await this.houseService.updateOrder(body);
+      return await this.houseService.updateOrder(body, req.user.tenantId);
     } catch (error) {
       this.logger.error(error);
       throw error;

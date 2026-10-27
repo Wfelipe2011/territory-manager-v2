@@ -16,7 +16,7 @@ export class CatalogRoundService {
       return info;
     }
     return tx.round_info.findFirst({
-      where: { tenantId, status: 'open', OR: [{ typeIds: { has: territory.typeId } }, { typeIds: { isEmpty: true }, type: territory.type.name }] },
+      where: { tenantId, status: 'open', type: territory.type.name },
       orderBy: { roundNumber: 'desc' },
     });
   }

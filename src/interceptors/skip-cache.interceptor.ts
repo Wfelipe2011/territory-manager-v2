@@ -4,9 +4,17 @@ import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { Cache } from 'cache-manager';
 import { SKIP_CACHE } from '../decorators/skip-cache.decorator';
+import { createHash } from 'crypto';
 
 @Injectable()
 export class SkipCacheInterceptor extends CacheInterceptor {
+  trackBy(context: ExecutionContext): string | undefined {
+    const req = context.switchToHttp().getRequest();
+    const base = super.trackBy(context);
+    // URL-only caching leaks authenticated responses across congregations.
+    if (!base || !req.user || !req.headers.authorization) return undefined;
+    return `${base}:${createHash('sha256').update(req.headers.authorization).digest('hex')}`;
+  }
   constructor(cacheManager: Cache, reflector: Reflector) {
     super(cacheManager, reflector);
   }

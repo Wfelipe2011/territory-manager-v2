@@ -1,0 +1,7 @@
+{
+  "name": "territorio-digital",
+  "version": "0.1.0",
+  "description": "Consultar, cadastrar e editar territórios, quadras, ruas e casas da congregação autorizada via OAuth/MCP.",
+  "author": { "name": "Wilson Felipe da Silva" },
+  "homepage": "https://td.territory-manager.com.br/"
+}

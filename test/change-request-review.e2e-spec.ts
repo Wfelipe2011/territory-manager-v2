@@ -27,8 +27,8 @@ describe('Revisão e participação na rodada', () => {
     const otherType = await f.prisma.type.create({ data: { tenantId: f.tenant.id, name: 'Comercial' } });
     await f.prisma.round_info.createMany({
       data: [
-        { tenantId: f.tenant.id, roundNumber: 2, name: 'Outra', theme: 'default', typeIds: [otherType.id], status: 'open' },
-        { tenantId: f.tenant.id, roundNumber: 3, name: 'Fechada', theme: 'default', typeIds: [f.type.id], status: 'closed' },
+        { tenantId: f.tenant.id, roundNumber: 2, name: 'Outra', theme: 'default', type: otherType.name, typeIds: [otherType.id], status: 'open' },
+        { tenantId: f.tenant.id, roundNumber: 3, name: 'Fechada', theme: 'default', type: f.type.name, typeIds: [f.type.id], status: 'closed' },
       ],
     });
     const tree = await f.tree();

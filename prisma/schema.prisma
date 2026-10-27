@@ -3,6 +3,64 @@ generator client {
   binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
+// OAuth artifacts are encrypted; identifiers are SHA-256 digests, never bearer tokens.
+model agent_oauth_artifact {
+  key String @id
+  model String
+  payload String
+  grantId String?
+  uid String? @unique
+  userCode String? @unique
+  consumedAt Int?
+  expiresAt DateTime
+  @@index([grantId])
+  @@index([expiresAt])
+}
+
+model agent_connection {
+  id String @id
+  userId Int
+  tenantId Int
+  clientId String
+  clientName String
+  credentialVersion String
+  scopes String[]
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+  @@index([tenantId, userId])
+}
+
+model agent_operation {
+  connectionId String
+  key String
+  requestHash String
+  result Json
+  expiresAt DateTime
+  @@id([connectionId, key])
+  @@index([expiresAt])
+}
+
+model agent_audit {
+  id Int @id @default(autoincrement())
+  tenantId Int
+  userId Int
+  clientId String
+  connectionId String
+  tool String
+  recordId Int?
+  outcome String
+  createdAt DateTime @default(now())
+  @@index([tenantId, createdAt])
+}
+
+model agent_rate_limit {
+  key String @id
+  count Int
+  expiresAt DateTime
+  @@index([expiresAt])
+}
+
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
