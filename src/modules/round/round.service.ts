@@ -92,16 +92,20 @@ export class RoundService {
   }
 
   public async finish(tenantId:number,roundNumber:number):Promise<void> {
-    const leaders=await this.prisma.territory_overseer.findMany({where:{tenantId,roundNumber,signatureId:{not:null}},select:{territoryId:true},distinct:['territoryId']});
     await this.prisma.$transaction(async tx=>{
       await tx.$queryRaw`SELECT id FROM multi_tenancy WHERE id=${tenantId} FOR UPDATE`;
       const info=await tx.round_info.findUnique({where:{tenantId_roundNumber:{tenantId,roundNumber}}});
       if(!info)throw new NotFoundException('Rodada não encontrada');
+      // Serialize closing with link generation; do not allow a grant to survive cutover.
+      await tx.$queryRaw`SELECT id FROM territory WHERE tenant_id=${tenantId} ORDER BY id FOR UPDATE`;
+      const leaders = await tx.territory_overseer.findMany({ where: { tenantId, roundNumber, signatureId: { not: null } } });
+      const children = await tx.block_signature.findMany({ where: { tenantId, roundNumber } });
       const closedAt=new Date();
       await tx.round_info.update({where:{id:info.id},data:{status:'closed',closedAt}});
       await tx.round.updateMany({where:{tenantId,roundNumber},data:{endDate:closedAt}});
+      await tx.territory_overseer.updateMany({ where: { tenantId, roundNumber }, data: { finished: true, signatureId: null, expirationDate: closedAt } });
+      await tx.signature.deleteMany({ where: { tenantId, id: { in: [...leaders.map(row => row.signatureId!), ...children.map(row => row.signatureId)] } } });
     });
-    await Promise.allSettled(leaders.map(leader=>this.signatureService.deleteTerritorySignature(leader.territoryId,tenantId,roundNumber)));
   }
 
   private async createRound(tenantId: number, rounds: any[], body: CreateRoundDto) {

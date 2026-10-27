@@ -268,9 +268,9 @@ describe('Signature Flow (e2e)', () => {
             expect(response.body.message).toBe('Assinatura já gerada');
         });
 
-        it('should return 400 if block signature already exists', async () => {
+        it('reutiliza o link da quadra já gerado na mesma rodada', async () => {
             // First generation
-            await request(app.getHttpServer())
+            const first = await request(app.getHttpServer())
                 .post(`/v1/territories/${territory.id}/blocks/${block.id}/signature/1`)
                 .set('Authorization', `Bearer ${adminToken}`);
 
@@ -279,8 +279,8 @@ describe('Signature Flow (e2e)', () => {
                 .post(`/v1/territories/${territory.id}/blocks/${block.id}/signature/1`)
                 .set('Authorization', `Bearer ${adminToken}`);
 
-            expect(response.status).toBe(400);
-            expect(response.body.message).toBe('Assinatura já gerada');
+            expect(response.status).toBe(201);
+            expect(response.body).toEqual(first.body);
         });
 
         it('should return 404 if round info is not found in findTokenById', async () => {

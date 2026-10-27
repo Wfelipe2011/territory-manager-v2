@@ -107,3 +107,11 @@ escritores concorrentes, reconexão real do listener e NOTIFY com commit/rollbac
 Depois faz equivalência/carga e restaura o Compose local com o intervalo configurado.
 600 usuários passaram integridade nos experimentos, mas entrada de aproximadamente
 3,4s ainda não satisfaz a meta de 1s; isso não certifica máximo ou 1.000 usuários.
+
+## Assinaturas de quadra por rodada
+
+Requer também `20261027130000_block_signatures_per_round`. A leitura seleciona
+`block_signature` pela rodada da credencial (zero para cadastro), separadamente da
+rodada de trabalho resolvida. Read model formato 2; tokens continuam fora da tabela
+persistida. Geração/revogação permanecem no NestJS. Ver
+[contratos e publicação](../docs/block-signatures.md).

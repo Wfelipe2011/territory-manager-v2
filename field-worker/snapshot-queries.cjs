@@ -24,20 +24,20 @@ async function load(connection, name, args, sql, params, mode) {
     const rows = (await connection.query(`SELECT h.*, json_build_object('name',a.name) AS address, CASE WHEN r.id IS NULL THEN '[]'::json ELSE json_build_array(json_build_object(${selection})) END AS rounds FROM (${sql}) h JOIN address a ON a.id=h."addressId" LEFT JOIN LATERAL ${round} r ON TRUE`,values)).rows;
     return rows.map(row=>({...row, rounds: row.rounds.map(dates)}));
   }
-  if (name === 'territory_block' && args.include?.block?.select?.name && args.include?.signature?.select?.token && args.include?.territory_block_address?.include?.address === true) {
+  if (name === 'territory_block' && args.include?.block?.select?.name && args.include?.blockSignatures?.include?.signature?.select?.token && args.include?.territory_block_address?.include?.address === true) {
     const query = `SELECT h.*,
       json_build_object('id',b.id,'name',b.name) AS block,
-      CASE WHEN s.id IS NULL THEN NULL ELSE json_build_object('key',s.key,'expirationDate',s.expiration_date,'token',s.token) END AS signature,
+      CASE WHEN s.id IS NULL THEN '[]'::json ELSE json_build_array(json_build_object('id',bs.id,'tenantId',bs.tenant_id,'territoryBlockId',bs.territory_block_id,'roundNumber',bs.round_number,'signatureId',bs.signature_id,'signature',json_build_object('key',s.key,'expirationDate',s.expiration_date,'token',s.token))) END AS "blockSignatures",
       coalesce((SELECT json_agg(json_build_object('id',m.id,'registrationStatus',m.registration_status,'territoryBlockId',m.territory_block_id,'addressId',m.address_id,'tenantId',m.tenant_id,
         'address',json_build_object('id',a.id,'name',a.name,'tenantId',a.tenant_id,'zipCode',a.zip_code)) ORDER BY m.id)
         FROM territory_block_address m JOIN address a ON a.id=m.address_id WHERE m.territory_block_id=h.id AND m.registration_status<>'rejected'), '[]'::json) AS territory_block_address
-      FROM (`+sql+`) h JOIN block b ON b.id=h."blockId" LEFT JOIN signature s ON s.id=h."signatureId"`;
-    const rows = (await connection.query(query, params)).rows;
+      FROM (`+sql+`) h JOIN block b ON b.id=h."blockId" LEFT JOIN block_signature bs ON bs.territory_block_id=h.id AND bs.tenant_id=h."tenantId" AND bs.round_number=$${params.length+1} LEFT JOIN signature s ON s.id=bs.signature_id`;
+    const rows = (await connection.query(query, [...params, args.include.blockSignatures.where.roundNumber])).rows;
     for (const row of rows) {
       const names=row.territory_block_address.map(m=>m.address.name).sort((a,b)=>a.localeCompare(b,'pt-BR'));
       if(names.some((name,i)=>i>0&&name.localeCompare(names[i-1],'pt-BR')===0)) return undefined;
     }
-    return rows.map(row=>{ if(row.signature?.expirationDate) row.signature.expirationDate=new Date(/[zZ]|[+-][0-9]{2}:[0-9]{2}$/.test(row.signature.expirationDate)?row.signature.expirationDate:row.signature.expirationDate+'Z'); return row; });
+    return rows.map(row=>{ for(const grant of row.blockSignatures) if(grant.signature?.expirationDate) grant.signature.expirationDate=new Date(/[zZ]|[+-][0-9]{2}:[0-9]{2}$/.test(grant.signature.expirationDate)?grant.signature.expirationDate:grant.signature.expirationDate+'Z'); return row; });
   }
 }
 module.exports = { load };

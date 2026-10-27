@@ -146,6 +146,7 @@ model firebase {
 }
 
 model multitenancy {
+  blockSignatures block_signature[]
   requestsRevision BigInt @default(0) @map("requests_revision")
   changeRequests change_request[]
   id    Int     @id @unique @default(autoincrement())
@@ -201,7 +202,22 @@ model territory {
   territory_overseer territory_overseer[]
 }
 
+// Round zero represents catalogue access without a fixed round.
+model block_signature {
+  id               Int             @id @default(autoincrement())
+  tenantId         Int             @map("tenant_id")
+  territoryBlockId Int             @map("territory_block_id")
+  roundNumber      Int             @default(0) @map("round_number")
+  signatureId      Int             @unique(map: "block_signature_signature_id_key") @map("signature_id")
+  multitenancy     multitenancy    @relation(fields: [tenantId], references: [id])
+  territoryBlock   territory_block @relation(fields: [territoryBlockId], references: [id], onDelete: Cascade)
+  signature        signature       @relation(fields: [signatureId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, territoryBlockId, roundNumber], map: "block_signature_tenant_id_territory_block_id_round_number_key")
+}
+
 model territory_block {
+  blockSignatures block_signature[]
   registrationStatus RegistrationStatus @default(approved) @map("registration_status")
   id                      Int                       @id @unique @default(autoincrement())
   block                   block                     @relation(fields: [blockId], references: [id])
@@ -313,6 +329,7 @@ model user {
 }
 
 model signature {
+  blockSignature block_signature?
   canEditStructure Boolean @default(false) @map("can_edit_structure")
   id             Int          @id @unique @default(autoincrement())
   key            String       @unique

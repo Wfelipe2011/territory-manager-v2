@@ -72,6 +72,8 @@ def main():
         if compare.db('SELECT current_database()') != 'territory_manager_peak_load':
             raise RuntimeError('Refusing read-model setup outside the synthetic database')
         compare.db((API / 'prisma/migrations/20261025190000_field_read_model/migration.sql').read_text())
+        if compare.db("SELECT to_regclass('public.block_signature') IS NOT NULL") != 't':
+            compare.db((API / 'prisma/migrations/20261027130000_block_signatures_per_round/migration.sql').read_text())
         compare.db('TRUNCATE field_read_model;')
         try:
             original_up(variant)

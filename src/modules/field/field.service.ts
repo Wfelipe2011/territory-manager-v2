@@ -190,7 +190,7 @@ export class FieldService {
         },
         include: {
           block: { select: { id: true, name: true } },
-          signature: { select: { key: true, expirationDate: true, token: true } },
+          blockSignatures: { where: { tenantId: user.tenantId, roundNumber: user.round == null ? 0 : +user.round }, include: { signature: { select: { key: true, expirationDate: true, token: true } } } },
           territory_block_address: { where: { registrationStatus: { not: 'rejected' } }, include: { address: true } },
         },
         orderBy: { block: { name: 'asc' } },
@@ -279,10 +279,11 @@ export class FieldService {
         work = rows.filter(h => h.hasRound),
         completed = work.filter(h => h.status).length;
       let signature: { key: string; expirationDate: Date | null } | null = null;
-      if (!user.roles.includes(Role.PUBLICADOR) && link.signature?.expirationDate && link.signature.expirationDate > new Date()) {
-        const payload = jwt.decode(link.signature.token) as { round: number | null } | null;
+      const grant = link.blockSignatures[0]?.signature;
+      if (!user.roles.includes(Role.PUBLICADOR) && grant?.expirationDate && grant.expirationDate > new Date()) {
+        const payload = jwt.decode(grant.token) as { round: number | null } | null;
         if (payload && (payload.round == null ? null : +payload.round) === (user.round == null ? null : +user.round))
-          signature = { key: link.signature.key, expirationDate: link.signature.expirationDate };
+          signature = { key: grant.key, expirationDate: grant.expirationDate };
       }
       const dates = work.flatMap(h => (h.completedDate ? [+h.completedDate] : []));
       return {

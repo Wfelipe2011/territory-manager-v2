@@ -139,3 +139,9 @@ ajuste. Restaurar quotas anteriores na stack do banco se necessário.
 No workspace, `docker-compose.yml` aplica o mesmo orçamento de CPU aos quatro
 serviços. API/Admin continuam em desenvolvimento; não é uma reprodução exata do
 build de produção. Memória, banco/volume, pool e URLs locais são preservados.
+
+## Links de quadra por rodada
+
+A versão que introduz `20261027130000_block_signatures_per_round` exige checagem
+prévia dos vínculos legados e corte coordenado de API, worker e Admin. Procedimento,
+compatibilidade e limites do rollback: [docs/block-signatures.md](../docs/block-signatures.md).

@@ -4,7 +4,7 @@ function install(field,hub){
   // changed domain until its validation/transaction semantics have been reviewed.
   const fs=require('node:fs'),path=require('node:path'),{createHash}=require('node:crypto');
   const hash=createHash('sha256').update(fs.readFileSync(path.join(__dirname,'../dist/modules/field/field.service.js'))).digest('hex');
-  if(hash!=='ee163b944bc5f3de0b5f5fa07774bbd49efc8efb2dbcabcf2772059c34e997a2')throw Error('FieldService changed: review revision-poll compatibility before enabling notifications');
+  if(hash!=='cd172157bd7acb543fcc5404e0a8e498daf6d1f18bbba5f087fd60719ed4cc42')throw Error('FieldService changed: review revision-poll compatibility before enabling notifications');
   field.poll=async function(user,query,signal,fullBlock=false,request){
     await hub.ready;
     const scope=await this.scope(user,query,fullBlock,request);

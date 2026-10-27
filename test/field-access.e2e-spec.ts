@@ -70,6 +70,7 @@ describe('Acessos da área de campo', () => {
     ]);
     const block = await ctx.prisma.territory_block.findUniqueOrThrow({ where: { territoryId_blockId: { territoryId: ctx.territory.id, blockId: ctx.block.id } } });
     expect(block.signatureId).toBeNull();
+    expect(await ctx.prisma.block_signature.count({ where: { territoryBlockId: block.id } })).toBe(0);
     await expect(ctx.signatures.generateTerritoryBlock({ tenantId: ctx.tenant.id, territoryId: ctx.territory.id, blockId: ctx.block.id, round: 1, parentSignature: ctx.leader.signature })).rejects.toMatchObject({ status: 403 });
   });
 });

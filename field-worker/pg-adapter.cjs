@@ -256,8 +256,8 @@ module.exports = function createAdapter(connectionString, models) {
   root.$storeReadModel = values => observed(pool).query('SELECT field_store_read_model($1::integer,$2::integer,$3::integer,$4::integer,$5::text,$6::jsonb)', values);
   root.$pruneReadModels = () => observed(pool).query("DELETE FROM field_read_model WHERE ctid IN (SELECT ctid FROM field_read_model WHERE updated_at < now()-interval '1 hour' ORDER BY updated_at LIMIT 1000)");
   root.$readModelReady = async () => {
-    const result = await observed(pool).query("SELECT to_regclass('public.field_read_model') AS model,to_regprocedure('public.field_store_read_model(integer,integer,integer,integer,text,jsonb)') AS store");
-    if (!result.rows[0]?.model || !result.rows[0]?.store) throw Error('Field read-model migration is required before starting the worker');
+    const result = await observed(pool).query("SELECT to_regclass('public.field_read_model') AS model,to_regclass('public.block_signature') AS signatures,to_regprocedure('public.field_store_read_model(integer,integer,integer,integer,text,jsonb)') AS store");
+    if (!result.rows[0]?.model || !result.rows[0]?.signatures || !result.rows[0]?.store) throw Error('Field read-model and scoped block-signature migrations are required before starting the worker');
   };
   const sharedReads = require('./inflight.cjs').create();
   for (const name of ['parameter','round_info','territory_block','territory','multitenancy']) {

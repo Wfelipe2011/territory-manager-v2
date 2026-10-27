@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# Worker equivalence tests use its pinned pg runtime, independently of the API.
+npm ci --prefix field-worker --ignore-scripts --no-audit --no-fund
 agent_test_port="${AGENT_TEST_DB_PORT:-5554}"
 agent_test_container="territory-agent-tests-$$"
 trap 'docker rm -f "$agent_test_container" >/dev/null 2>&1 || true' EXIT

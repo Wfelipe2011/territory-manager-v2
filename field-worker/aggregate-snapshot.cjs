@@ -8,7 +8,9 @@ const numeric = new Intl.Collator('pt-BR', { numeric: true });
 const iso = column => `to_char(${column}, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')`;
 const SQL = `WITH links AS MATERIALIZED (
  SELECT l.*,b.name AS block_name,s.key AS signature_key,s.expiration_date,s.token
- FROM territory_block l JOIN block b ON b.id=l.block_id LEFT JOIN signature s ON s.id=l.signature_id
+ FROM territory_block l JOIN block b ON b.id=l.block_id
+ LEFT JOIN block_signature bs ON bs.territory_block_id=l.id AND bs.tenant_id=l.tenant_id AND bs.round_number=$6
+ LEFT JOIN signature s ON s.id=bs.signature_id
  WHERE l.tenant_id=$1 AND l.territory_id=$2 AND l.block_id=$3 AND l.registration_status<>'rejected'
 ), mappings AS MATERIALIZED (
  SELECT m.*,a.name,a.zip_code FROM territory_block_address m JOIN address a ON a.id=m.address_id
@@ -64,7 +66,7 @@ SELECT json_build_object(
 ) AS payload`;
 
 async function snapshot(connection,user,scope,info) {
-  const data = (await connection.query(SQL,[user.tenantId,user.territoryId,scope.blockId,scope.round??-1,info?.status==='closed'])).rows[0].payload;
+  const data = (await connection.query(SQL,[user.tenantId,user.territoryId,scope.blockId,scope.round??-1,info?.status==='closed',user.round==null?0:+user.round])).rows[0].payload;
   const names=data.streets.map(s=>s.name).sort((a,b)=>a.localeCompare(b,'pt-BR'));
   if (names.some((name,i)=>i>0&&name.localeCompare(names[i-1],'pt-BR')===0)) return undefined;
   if (data._duplicateRequests) return undefined; // Preserve unspecified legacy request ordering via original path.
