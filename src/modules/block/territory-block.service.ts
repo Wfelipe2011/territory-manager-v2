@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { UserToken } from '../auth/contracts';
 import { PrismaTransaction } from 'src/infra/prisma';
@@ -10,6 +10,7 @@ export class TerritoryBlockService {
     constructor(private readonly prisma: PrismaService) { }
 
     async linkBlockToTerritory(blockId: number, territoryId: number, tenantId: number, prisma: PrismaTransaction = this.prisma) {
+        if (!await prisma.territory.findFirst({ where: { id: territoryId, tenantId } }) || !await prisma.block.findFirst({ where: { id: blockId, tenantId } })) throw new NotFoundException('Território ou quadra não encontrado');
         this.logger.log('Verificando associação com o território');
         let territoryBlock = await prisma.territory_block.findFirst({
             where: { blockId, territoryId, tenantId: tenantId },

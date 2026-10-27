@@ -18,9 +18,11 @@ export class BlockService {
     async upsertBlock(upsertBlockDto: UpsertBlockDto, tenantId: number, territoryId: number) {
         const block = await this.prisma.$transaction(async (prisma) => {
             this.logger.log('Upsert block iniciado');
+            if (!await prisma.territory.findFirst({ where: { id: territoryId, tenantId } })) throw new NotFoundException('Território não encontrado');
+            if (upsertBlockDto.id && !await prisma.block.findFirst({ where: { id: upsertBlockDto.id, tenantId } })) throw new NotFoundException('Quadra não encontrada');
 
             const block = await prisma.block.upsert({
-                where: { id: upsertBlockDto.id ?? 0 },
+                where: { id: upsertBlockDto.id ?? 0, tenantId },
                 create: {
                     name: upsertBlockDto.name,
                     tenantId,

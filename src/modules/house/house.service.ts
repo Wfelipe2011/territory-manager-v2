@@ -223,10 +223,10 @@ export class HouseService {
     `;
   }
 
-  async findById(id: number) {
+  async findById(id: number, tenantId: number) {
     return this.prisma.house.findFirst({
       where: {
-        id,
+        id, tenantId,
       },
       include: {
         address: true,
@@ -236,14 +236,14 @@ export class HouseService {
     });
   }
 
-  async create(input: CreateHouseInput) {
+  async create(input: CreateHouseInput, tenantId: number) {
     this.logger.log(`Criando casa na rua ${input.streetId} e bloco ${input.blockId} e território ${input.territoryId}`);
     const { streetId, number, legend, dontVisit, territoryId, blockId } = input;
-    const address = await this.prisma.address.findUnique({ where: { id: +streetId } });
+    const address = await this.prisma.address.findUnique({ where: { id: +streetId, tenantId } });
     if (!address) throw new NotFoundException('Rua não encontrada');
-    const block = await this.prisma.block.findUnique({ where: { id: +blockId } });
+    const block = await this.prisma.block.findUnique({ where: { id: +blockId, tenantId } });
     if (!block) throw new NotFoundException('Bloco não encontrado');
-    const territory = await this.prisma.territory.findUnique({ where: { id: +territoryId } });
+    const territory = await this.prisma.territory.findUnique({ where: { id: +territoryId, tenantId } });
     if (!territory) throw new NotFoundException('Território não encontrado');
 
     const resolvedTbaId = await this.addressBlockService.resolveTerritoryBlockAddressId(+territoryId, +blockId, +streetId, territory.tenantId);
@@ -348,22 +348,22 @@ export class HouseService {
     return result;
   }
 
-  async update(id: number, input: CreateHouseInput) {
-    const house = await this.prisma.house.findUnique({ where: { id } });
+  async update(id: number, input: CreateHouseInput, tenantId: number) {
+    const house = await this.prisma.house.findUnique({ where: { id, tenantId } });
     if (!house) throw new NotFoundException('Casa não encontrada');
     const { streetId, number, legend, dontVisit, territoryId, blockId } = input;
-    const address = await this.prisma.address.findUnique({ where: { id: +streetId } });
+    const address = await this.prisma.address.findUnique({ where: { id: +streetId, tenantId } });
     if (!address) throw new NotFoundException('Rua não encontrada');
-    const block = await this.prisma.block.findUnique({ where: { id: +blockId } });
+    const block = await this.prisma.block.findUnique({ where: { id: +blockId, tenantId } });
     if (!block) throw new NotFoundException('Bloco não encontrado');
-    const territory = await this.prisma.territory.findUnique({ where: { id: +territoryId } });
+    const territory = await this.prisma.territory.findUnique({ where: { id: +territoryId, tenantId } });
     if (!territory) throw new NotFoundException('Território não encontrado');
 
     const resolvedTbaId = await this.addressBlockService.resolveTerritoryBlockAddressId(+territoryId, +blockId, +streetId, territory.tenantId);
 
     return this.prisma.house.update({
       where: {
-        id,
+        id, tenantId,
       },
       data: {
         number,
@@ -398,27 +398,29 @@ export class HouseService {
     });
   }
 
-  async delete(id: number) {
-    const house = await this.prisma.house.findUnique({ where: { id } });
+  async delete(id: number, tenantId: number) {
+    const house = await this.prisma.house.findUnique({ where: { id, tenantId } });
     if (!house) throw new NotFoundException('Casa não encontrada');
     this.logger.log(`Deletando rodadas da casa ${id}`);
     await this.prisma.round.deleteMany({ where: { houseId: id } });
     this.logger.log(`Rodadas deletadas com sucesso da casa ${id}`);
-    await this.prisma.house.delete({ where: { id } });
+    await this.prisma.house.delete({ where: { id, tenantId } });
     this.logger.log(`Casa ${id} deletada com sucesso`);
 
     await this.addressBlockService.invalidateSyncGhostCache(house.tenantId, house.territoryId, house.blockId);
     await this.cacheManager.del(`addresses:${house.territoryId}:${house.blockId}`);
   }
 
-  async updateOrder(inputs: UpdateHouseOrder): Promise<void> {
+  async updateOrder(inputs: UpdateHouseOrder, tenantId: number): Promise<void> {
+    const ids = inputs.houses.map(house => house.id);
+    if (await this.prisma.house.count({ where: { id: { in: ids }, tenantId } }) !== new Set(ids).size) throw new NotFoundException('Casa não encontrada');
     this.logger.log(`Atualizando ordem das casas`);
     await this.prisma.$transaction(
       inputs.houses.map(house => {
         this.logger.log(`Atualizando casa ${house.id} para a ordem ${house.order}`);
         return this.prisma.house.update({
           where: {
-            id: house.id,
+            id: house.id, tenantId,
           },
           data: {
             order: house.order,

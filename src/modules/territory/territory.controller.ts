@@ -88,9 +88,9 @@ export class TerritoryController {
       whitelist: true, // Remove propriedades que não estão definidas no DTO
     })
   )
-  async updateTerritory(@Param('territoryId') territoryId: number, @Body() body: UpdateTerritoryParams) {
+  async updateTerritory(@Param('territoryId') territoryId: number, @Body() body: UpdateTerritoryParams, @Request() req: RequestUser) {
     logger.log(`Usuário está atualizando o território ${territoryId}`);
-    return this.territoryService.update(territoryId, body)
+    return this.territoryService.update(+territoryId, body, req.user.tenantId)
   }
 
   @ApiResponse({ status: 204, description: 'Território excluído com sucesso' })
@@ -122,12 +122,12 @@ export class TerritoryController {
   @ApiOperation({ summary: 'Busca todos os tipos de territórios' })
   @Get(':territoryId/blocks')
   @Roles(Role.ADMIN)
-  async getTerritoryBlocks(@Param('territoryId') territorySerialize: string): Promise<any[]> {
+  async getTerritoryBlocks(@Param('territoryId') territorySerialize: string, @Request() req: RequestUser): Promise<any[]> {
     try {
       if (!territorySerialize) throw new BadRequestException('Território são obrigatório');
       const id = Number(territorySerialize);
       if (isNaN(id)) throw new BadRequestException('Território inválido');
-      return await this.territoryService.findBlockByTerritoryId(id);
+      return await this.territoryService.findBlockByTerritoryId(id, req.user.tenantId);
     } catch (error) {
       logger.error(error);
       throw error;
@@ -173,7 +173,7 @@ export class TerritoryController {
         {
           page: +page,
           pageSize: +pageSize,
-        }
+        }, req.user.tenantId
       );
     } catch (error) {
       logger.error(error);
@@ -201,7 +201,7 @@ export class TerritoryController {
         if (req.user.territoryId !== id) throw new ForbiddenException(`Você ${req.user.id} não tem permissão para acessar esse território`);
       }
 
-      return await this.territoryService.findById(id, query.round);
+      return await this.territoryService.findById(id, query.round, req.user.tenantId);
     } catch (error) {
       logger.error(error);
       throw error;

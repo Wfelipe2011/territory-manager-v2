@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { TerritoryAllInput, TerritoryAllOutput, TerritoryOneOutput, TerritoryTypesOutput } from './contracts';
 import { RawTerritoryAll, RawTerritoryOne } from './interfaces';
@@ -38,7 +38,7 @@ export class TerritoryService {
     return territories.map(territory => new TerritoryAllOutput(territory));
   }
 
-  async findById(territoryId: number, round: number): Promise<TerritoryOneOutput> {
+  async findById(territoryId: number, round: number, tenantId: number): Promise<TerritoryOneOutput> {
     this.logger.log('Buscando detalhes do territórios');
 
     const territory = await this.prisma.$queryRaw<RawTerritoryOne[]>`
@@ -72,7 +72,7 @@ export class TerritoryService {
       INNER JOIN round ON round.house_id = h.id  AND round.round_number = ${+round} 
       left join territory_overseer tov on tov.territory_id = t.id AND tov.round_number = ${+round}
        left join signature s on s.id = tb.signature_id
-      WHERE t.id = ${territoryId}
+      WHERE t.id = ${territoryId} AND t.tenant_id = ${tenantId}
       GROUP BY t.id, t."name", tb.signature_id, b.id, b."name", tov.overseer, tov.finished, tov.initial_date, s."key", tov.expiration_date, s.expiration_date
       ORDER BY negative_completed DESC;
       `;
@@ -95,10 +95,10 @@ export class TerritoryService {
     });
   }
 
-  async findBlockByTerritoryId(territoryId: number) {
+  async findBlockByTerritoryId(territoryId: number, tenantId: number) {
     const result = await this.prisma.territory_block.findMany({
       where: {
-        territoryId, registrationStatus: 'approved',
+        territoryId, tenantId, block: { tenantId }, registrationStatus: 'approved',
       },
       select: {
         block: true,
@@ -189,7 +189,7 @@ export class TerritoryService {
     });
   }
 
-  async findEditById(query: TerritoryEditQuery, pagination: { page: number; pageSize: number }): Promise<TerritoryEditOutput> {
+  async findEditById(query: TerritoryEditQuery, pagination: { page: number; pageSize: number }, tenantId: number): Promise<TerritoryEditOutput> {
     const { streetName, houseNumber } = this.processStreetFilter(query.streetFilter);
     const whereCondition = { ...this.buildWhereCondition(query, streetName, houseNumber), registrationStatus: 'approved' } as any;
 
@@ -198,7 +198,7 @@ export class TerritoryService {
     const take = pagination.pageSize;
 
     const result = await this.prisma.territory.findFirst({
-      where: { id: query.territoryId },
+      where: { id: query.territoryId, tenantId },
       include: {
         territory_overseer: true,
         house: {
@@ -217,7 +217,7 @@ export class TerritoryService {
 
     const totalHousesByTerritory = await this.prisma.house.count({
       where: {
-        territoryId: query.territoryId, registrationStatus: 'approved',
+        territoryId: query.territoryId, tenantId, block: { tenantId }, registrationStatus: 'approved',
       },
     });
 
@@ -225,6 +225,7 @@ export class TerritoryService {
     const totalHouses = await this.prisma.house.count({
       where: {
         territoryId: query.territoryId,
+        tenantId,
         ...whereCondition,
       },
     });
@@ -265,6 +266,7 @@ export class TerritoryService {
   }
 
   async create(params: CreateTerritoryParams, tenantId: number) {
+    if (!await this.prisma.type.findFirst({ where: { id: params.typeId, tenantId } })) throw new NotFoundException('Tipo não encontrado');
     return this.prisma.territory.create({
       data: {
         tenantId,
@@ -274,16 +276,14 @@ export class TerritoryService {
     })
   }
 
-  async update(territoryId: number, params: CreateTerritoryParams) {
-    return this.prisma.territory.update({
-      where: {
-        id: territoryId
-      },
-      data: {
-        name: params.name,
-        typeId: params.typeId
-      }
-    })
+  async update(territoryId: number, params: CreateTerritoryParams, tenantId: number) {
+    return this.prisma.$transaction(async tx => {
+      await tx.$queryRaw`SELECT id FROM multi_tenancy WHERE id=${tenantId} FOR UPDATE`;
+      const territory = await tx.territory.findFirst({ where: { id: +territoryId, tenantId } });
+      if (!territory || !await tx.type.findFirst({ where: { id: params.typeId, tenantId } })) throw new NotFoundException('Território ou tipo não encontrado');
+      if (territory.typeId !== params.typeId && (await tx.house.count({ where: { territoryId: territory.id, tenantId } }) || await tx.round.count({ where: { territoryId: territory.id, tenantId } }))) throw new ConflictException('Tipo não pode mudar em território com casas ou histórico');
+      return tx.territory.update({ where: { id: territory.id, tenantId }, data: { name: params.name, typeId: params.typeId } });
+    });
   }
 
   processStreetFilter(streetFilter?: string) {

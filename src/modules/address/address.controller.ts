@@ -17,9 +17,9 @@ export class AddressController {
   constructor(private addressService: AddressService) { }
   @Roles(Role.ADMIN)
   @Get('territories/:territoryId/addresses')
-  async findAll(@Param('territoryId') territoryId: number) {
+  async findAll(@Param('territoryId') territoryId: number, @CurrentUser() user: UserToken) {
     try {
-      const result = await this.addressService.findAll(+territoryId);
+      const result = await this.addressService.findAll(+territoryId, user.tenantId);
       return result;
     } catch (error) {
       logger.error(error);

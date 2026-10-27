@@ -1,0 +1,44 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "territorio-digital",
+  "version": "0.1.0",
+  "description": "Consulta, cadastro e edição de territórios, quadras, ruas e casas da congregação autorizada.",
+  "author": { "name": "Wilson Felipe da Silva" },
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Território Digital",
+        "shortDescription": "Cadastro de territórios",
+        "longDescription": "Para administradores de congregações: consulte e organize territórios, quadras, ruas e casas no Território Digital. A conexão exige login e autorização para uma única congregação, com permissões de consulta e edição. Inclusões de casas podem abrir uma rodada compatível automaticamente. Não oferece exclusões, marcações, troca de congregação, importação em massa nem acesso de superadministrador.",
+        "developerName": "Wilson Felipe da Silva",
+        "category": "Productivity",
+        "capabilities": ["Consultar cadastro", "Cadastrar territórios", "Editar cadastro"],
+        "defaultPrompt": ["Liste os territórios da minha congregação.", "Cadastre um território residencial chamado Centro Novo.", "Encontre a casa 10 e me ajude a corrigir seu cadastro."],
+        "websiteURL": "https://td.territory-manager.com.br/",
+        "supportURL": "https://td.territory-manager.com.br/",
+        "logo": "./assets/icon.png",
+        "composerIcon": "./assets/icon.png"
+      },
+      "review": {
+        "commerce": false,
+        "commerce_description": "A integração é gratuita e não oferece compras nem processamento de pagamentos. Eventuais custos dos clientes de IA são definidos pelos respectivos provedores.",
+        "prompts": ["Quais territórios estão cadastrados?", "Cadastre uma quadra e uma rua no território de demonstração."],
+        "test_cases": {
+          "positive": [
+            { "description": "Conta demonstrativa com territórios vazios e sem rodadas. Conferir que a listagem independe de rodada.", "prompt": "Mostre os territórios residenciais da minha congregação.", "tools_triggered": "connection_context, list_territory_types, list_territories", "expected_behavior": "Exibe somente territórios do tipo Residencial da congregação autorizada, incluindo vazios, com dados obtidos do servidor." },
+            { "description": "Usar nome ainda não cadastrado e o tipo Residencial da conta demonstrativa.", "prompt": "Cadastre um território residencial chamado Centro Novo.", "tools_triggered": "connection_context, list_territory_types, create_territory", "expected_behavior": "Cria território com typeId retornado pelo servidor e chave de idempotência; informa o ID real e não cria quadras implícitas." },
+            { "description": "Usar o território criado no caso anterior e nomes distintos para quadra e rua.", "prompt": "No Centro Novo, cadastre a Quadra A, a Rua de Demonstração e a casa 10.", "tools_triggered": "list_territories, create_block, create_street, create_house", "expected_behavior": "Encadeia IDs retornados, usa o ID do vínculo da rua e confirma cadastro e rodadas afetadas; não acessa outra congregação." },
+            { "description": "Usar a casa criada no caso anterior; não alterar pais.", "prompt": "Corrija o número dessa casa de 10 para 10A.", "tools_triggered": "get_house, update_house", "expected_behavior": "Consulta a versão atual e atualiza somente o número com expectedVersion; mantém o ID, os vínculos e as marcações." },
+            { "description": "Usar a rua e a casa dos casos anteriores.", "prompt": "Corrija o nome da rua dessa quadra para Rua da Demonstração, mantendo todas as casas.", "tools_triggered": "get_street, update_street, list_houses", "expected_behavior": "Atualiza somente o vínculo selecionado, preserva IDs de casas e histórico e confirma os dados retornados." }
+          ],
+          "negative": [
+            { "description": "Exclusões não são oferecidas. Explicar a limitação e não chamar ferramenta de escrita substituta.", "prompt": "Apague o território Centro Novo com todas as casas." },
+            { "description": "Marcações de visita estão fora do escopo. Não simular conclusão nem alterar dontVisit como substituto.", "prompt": "Marque como visitadas todas as casas da Quadra A." },
+            { "description": "A conexão não permite troca de tenant nem consulta global. Explicar que é necessário conectar outra conta autorizada.", "prompt": "Mostre também os territórios de outra congregação usando meu acesso atual." }
+          ]
+        }
+      },
+      "publication": { "countries": ["BR"], "release_notes": "Primeira versão: cadastro pontual com OAuth, isolamento por congregação, versões de edição, idempotência e revogação de conexões." }
+    }
+  }
+}

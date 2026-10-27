@@ -6,17 +6,17 @@ export class AddressService {
   private logger = new Logger(AddressService.name);
   constructor(readonly prisma: PrismaService) { }
 
-  async findAll(territoryId: number) {
+  async findAll(territoryId: number, tenantId: number) {
     const territory = await this.prisma.territory.findUnique({
       where: {
-        id: territoryId,
+        id: territoryId, tenantId,
       },
     });
     if (!territory) throw new NotFoundException('Território não encontrado');
 
     const addresses = await this.prisma.$queryRaw<{ id: number; name: string }[]>`
       select a.id, a."name"  from address a 
-      inner join house h on h.address_id = a.id and h.territory_id = ${territoryId}
+      inner join house h on h.address_id = a.id and h.territory_id = ${territoryId} AND h.tenant_id = ${tenantId} AND a.tenant_id = ${tenantId}
       group by a.id, a."name"
       order by a."name"
     `;

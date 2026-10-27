@@ -532,15 +532,14 @@ describe('House Flow (e2e)', () => {
             expect(response.status).toBe(404);
         });
 
-        it('should return 500 for non-existent house in updateOrder', async () => {
+        it('retorna 404 ao ordenar casa inexistente ou fora do tenant', async () => {
             const response = await request(app.getHttpServer())
                 .post('/v1/houses/order')
                 .set('Authorization', `Bearer ${token}`)
                 .send({
                     houses: [{ id: 999999, order: 1 }],
                 });
-            // Prisma throws error which results in 500 if not handled specifically as 404
-            expect(response.status).toBe(500);
+            expect(response.status).toBe(404);
         });
 
         it('should return 404 for non-existent street in create', async () => {
