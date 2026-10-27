@@ -10,6 +10,7 @@ import { Role } from 'src/enum/role.enum';
 import { SignatureDate } from './usecase/SignatureDate';
 import { ParametersService } from '../parameters/parameters.service';
 import { CatalogRoundService } from '../round/catalog-round.service';
+import { assertTerritoryRoundType } from '../round/round-type';
 
 type GenerateTerritoryParams = {
   canEditStructure?: boolean;
@@ -70,6 +71,7 @@ export class SignatureService {
     return this.create(async (tx, key) => {
       const owned = await tx.$queryRaw<{ id: number }[]>`SELECT id FROM territory WHERE id = ${territoryId} AND tenant_id = ${tenantId} FOR UPDATE`;
       if (!owned.length) throw new NotFoundException('Território não encontrado');
+      if (round != null) await assertTerritoryRoundType(tx, tenantId, territoryId, +round);
       const active = await tx.territory_overseer.findFirst({ where: { territoryId, tenantId, roundNumber: round == null ? null : +round, finished: false, signature: { expirationDate: { gt: new Date() } } } });
       if (active) throw new BadRequestException('Assinatura já gerada');
       const expired = await tx.territory_overseer.findMany({ where: { tenantId, territoryId, roundNumber: round == null ? null : +round, signature: { expirationDate: { lte: new Date() } } } });
@@ -88,17 +90,34 @@ export class SignatureService {
     return this.create(async (tx, key) => {
       const territory = await tx.$queryRaw<{ id: number }[]>`SELECT id FROM territory WHERE id = ${territoryId} AND tenant_id = ${tenantId} FOR UPDATE`;
       if (!territory.length) throw new NotFoundException('Território não encontrado');
+      if (round != null) {
+        const info = await assertTerritoryRoundType(tx, tenantId, territoryId, +round);
+        if (info.status !== 'open') throw new BadRequestException('Rodada encerrada');
+      }
       if (parentSignature && !await tx.signature.findFirst({ where: { key: parentSignature, tenantId, expirationDate: { gt: new Date() } } })) throw new ForbiddenException('Link inválido ou expirado');
       const owned = await tx.$queryRaw<{ id: number }[]>`SELECT id FROM territory_block
         WHERE territory_id = ${territoryId} AND block_id = ${blockId} AND tenant_id = ${tenantId} FOR UPDATE`;
       if (!owned.length) throw new NotFoundException('Bloco não encontrado');
       if (await tx.territory_block.findFirst({where:{territoryId,blockId,tenantId,registrationStatus:'rejected'}})) throw new ForbiddenException('Quadra rejeitada');
-      const link = await tx.territory_block.findUniqueOrThrow({ where: { territoryId_blockId: { territoryId, blockId } }, include: { signature: true } });
-      if (link.signature?.expirationDate && link.signature.expirationDate > new Date()) throw new BadRequestException('Assinatura já gerada');
-      if (link.signature) await tx.signature.delete({ where: { id: link.signature.id } });
+      const link = await tx.territory_block.findUniqueOrThrow({ where: { territoryId_blockId: { territoryId, blockId } } });
+      const scope = { tenantId, territoryBlockId: link.id, roundNumber: round == null ? 0 : +round };
+      const existing = await tx.block_signature.findUnique({
+        where: { tenantId_territoryBlockId_roundNumber: scope }, include: { signature: true },
+      });
+      if (existing?.signature.expirationDate && existing.signature.expirationDate > new Date()) {
+        // A retry or another leader in this round must get the same grant and deadline.
+        let grant: TokenData;
+        try { grant = jwt.verify(existing.signature.token, envs.JWT_SECRET) as TokenData; }
+        catch { throw new BadRequestException('Assinatura inconsistente; solicite revisão ao administrador'); }
+        if (grant.id !== existing.signature.key || grant.tenantId !== tenantId || grant.territoryId !== territoryId || grant.blockId !== blockId ||
+            (grant.round == null ? 0 : +grant.round) !== scope.roundNumber || !grant.roles.includes(Role.PUBLICADOR))
+          throw new BadRequestException('Assinatura inconsistente; solicite revisão ao administrador');
+        return { signature: existing.signature.key, expirationDate: existing.signature.expirationDate };
+      }
+      if (existing) await tx.signature.delete({ where: { id: existing.signatureId } });
       const token = this.createJWT({ id: key, territoryId, blockId, tenantId, round: round == null ? null : +round, roles: [Role.PUBLICADOR] }, expirationDate.toISOString());
       const signature = await tx.signature.create({ data: { key, expirationDate, token, tenantId } });
-      await tx.territory_block.update({ where: { id: link.id }, data: { signatureId: signature.id } });
+      await tx.block_signature.create({ data: { ...scope, signatureId: signature.id } });
       return { signature: key, expirationDate };
     });
   }
@@ -122,26 +141,31 @@ export class SignatureService {
   async deleteTerritorySignature(territoryId: number, tenantId: number, round?: number): Promise<void> {
     await this.prisma.$transaction(async tx => {
       await tx.$queryRaw`SELECT id FROM territory WHERE id = ${territoryId} AND tenant_id = ${tenantId} FOR UPDATE`;
-      const leaders = await tx.territory_overseer.findMany({ where: { tenantId, territoryId, ...(round ? { roundNumber: round } : {}), finished: false, signatureId: { not: null } } });
-      if (!leaders.length) throw new NotFoundException('Assinatura não encontrada');
-      const rounds = new Set(leaders.map(leader => leader.roundNumber));
-      const blocks = await tx.territory_block.findMany({ where: { tenantId, territoryId, signatureId: { not: null } }, include: { signature: true } });
-      const childIds = blocks.flatMap(block => {
-        const payload = block.signature ? jwt.decode(block.signature.token) as TokenData | null : null;
-        return !payload || rounds.has(payload.round == null ? null : +payload.round) ? [block.signatureId!] : [];
-      });
+      const leaders = await tx.territory_overseer.findMany({ where: { tenantId, territoryId, ...(round === undefined ? {} : { roundNumber: round }), signatureId: { not: null } } });
+      const blocks = await tx.block_signature.findMany({ where: {
+        tenantId, territoryBlock: { territoryId, tenantId },
+        ...(round === undefined ? {} : { roundNumber: round }),
+      } });
+      const legacy = round === undefined ? await tx.territory_block.findMany({ where: { tenantId, territoryId, signatureId: { not: null } }, select: { signatureId: true } }) : [];
+      if (!leaders.length && !blocks.length && !legacy.length) throw new NotFoundException('Assinatura não encontrada');
+      const childIds = [...blocks.map(block => block.signatureId), ...legacy.map(block => block.signatureId!)];
       await tx.territory_overseer.updateMany({ where: { id: { in: leaders.map(leader => leader.id) } }, data: { signatureId: null, finished: true, expirationDate: new Date() } });
       await tx.signature.deleteMany({ where: { tenantId, id: { in: [...leaders.map(leader => leader.signatureId!), ...childIds] } } });
     });
   }
 
-  async deleteBlockSignature(territoryId: number, blockId: number, tenantId: number, round?: number) {
+  async deleteBlockSignature(territoryId: number, blockId: number, tenantId: number, round?: number | null) {
     await this.prisma.$transaction(async tx => {
       await tx.$queryRaw`SELECT id FROM territory WHERE id = ${territoryId} AND tenant_id = ${tenantId} FOR UPDATE`;
-      const block = await tx.territory_block.findFirst({ where: { tenantId, territoryId, blockId }, include: { signature: true } });
-      if (!block?.signatureId) throw new NotFoundException('Quadra não encontrada');
-      if (round && Number((jwt.decode(block.signature!.token) as TokenData)?.round) !== round) throw new NotFoundException('Assinatura não encontrada');
-      await tx.signature.delete({ where: { id: block.signatureId } });
+      const block = await tx.territory_block.findFirst({ where: { tenantId, territoryId, blockId } });
+      if (!block) throw new NotFoundException('Quadra não encontrada');
+      const links = await tx.block_signature.findMany({ where: {
+        tenantId, territoryBlockId: block.id,
+        ...(round === undefined ? {} : { roundNumber: round == null ? 0 : +round }),
+      } });
+      const ids = [...links.map(link => link.signatureId), ...(round === undefined && block.signatureId ? [block.signatureId] : [])];
+      if (!ids.length) throw new NotFoundException('Assinatura não encontrada');
+      await tx.signature.deleteMany({ where: { tenantId, id: { in: ids } } });
     });
   }
 
@@ -185,6 +209,10 @@ export class SignatureService {
   }
 
   async isTerritoryRound(territoryId: number, tenantId: number, round?: number | null) {
+    if (round != null) {
+      await assertTerritoryRoundType(this.prisma, tenantId, territoryId, +round);
+      return;
+    }
     const territory = await this.prisma.territory.findFirst({ where: { id: territoryId, tenantId } });
     const info = round == null ? true : await this.prisma.round_info.findUnique({ where: { tenantId_roundNumber: { tenantId, roundNumber: +round } } });
     if (!territory || !info) throw new NotFoundException('Round não encontrado');

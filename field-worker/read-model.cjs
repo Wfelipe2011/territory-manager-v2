@@ -1,6 +1,6 @@
 const { AsyncLocalStorage } = require('node:async_hooks');
 // Increment when changing the raw catalog representation, independently of DB revisions.
-const FORMAT_VERSION = 1;
+const FORMAT_VERSION = 2;
 function install(db, snapshot, SQL) {
   const contexts = new AsyncLocalStorage(), backgrounds = new AsyncLocalStorage(), transaction = db.$transaction.bind(db);
   const counts = { hits:0,misses:0,stored:0,storeFailures:0,background:0,backgroundFailures:0,backgroundSkipped:0,evictedScopes:0,pruned:0,pruneFailures:0 };
@@ -32,14 +32,14 @@ function install(db, snapshot, SQL) {
     if(payload)counts.hits++;
     else{
       counts.misses++;
-      payload=(await connection.query(SQL,[user.tenantId,user.territoryId,scope.blockId,scope.round??-1,info?.status==='closed'])).rows[0].payload;
+      payload=(await connection.query(SQL,[user.tenantId,user.territoryId,scope.blockId,scope.round??-1,info?.status==='closed',user.round==null?0:+user.round])).rows[0].payload;
       const saved=structuredClone(payload);
       if(saved.block)saved.block._signature=null;
       contexts.getStore()?.push([...key,JSON.stringify(saved)]);
     }
     payload=structuredClone(payload);
     if(payload.block){
-      const signature=await connection.query(`SELECT s.key,s.expiration_date AS "expirationDate",s.token FROM territory_block l JOIN signature s ON s.id=l.signature_id WHERE l.tenant_id=$1 AND l.territory_id=$2 AND l.block_id=$3 AND l.registration_status<>'rejected' LIMIT 1`,key.slice(0,3));
+      const signature=await connection.query(`SELECT s.key,s.expiration_date AS "expirationDate",s.token FROM territory_block l JOIN block_signature bs ON bs.territory_block_id=l.id AND bs.tenant_id=l.tenant_id AND bs.round_number=$4 JOIN signature s ON s.id=bs.signature_id WHERE l.tenant_id=$1 AND l.territory_id=$2 AND l.block_id=$3 AND l.registration_status<>'rejected' LIMIT 1`,[...key.slice(0,3),user.round==null?0:+user.round]);
       payload.block._signature=signature.rows[0]??null;
     }
     return snapshot({query:async()=>({rows:[{payload}]})},user,scope,info);

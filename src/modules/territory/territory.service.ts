@@ -46,7 +46,7 @@ export class TerritoryService {
         t.id as territory_id,
         t.image_url,
         t."name" as territory_name,
-        tb.signature_id as signature,
+        bs.signature_id as signature,
         COUNT(round.id) > 0 as has_rounds,
         tov.overseer,
         tov.initial_date,
@@ -71,9 +71,10 @@ export class TerritoryService {
       LEFT JOIN house h ON h.block_id = tb.block_id AND h.territory_id = tb.territory_id AND h.registration_status='approved'
       INNER JOIN round ON round.house_id = h.id  AND round.round_number = ${+round} 
       left join territory_overseer tov on tov.territory_id = t.id AND tov.round_number = ${+round}
-       left join signature s on s.id = tb.signature_id
+       left join block_signature bs on bs.territory_block_id=tb.id AND bs.tenant_id=t.tenant_id AND bs.round_number=${+round}
+       left join signature s on s.id = bs.signature_id
       WHERE t.id = ${territoryId} AND t.tenant_id = ${tenantId}
-      GROUP BY t.id, t."name", tb.signature_id, b.id, b."name", tov.overseer, tov.finished, tov.initial_date, s."key", tov.expiration_date, s.expiration_date
+      GROUP BY t.id, t."name", bs.signature_id, b.id, b."name", tov.overseer, tov.finished, tov.initial_date, s."key", tov.expiration_date, s.expiration_date
       ORDER BY negative_completed DESC;
       `;
     if (!territory.length) throw new NotFoundException('Território não encontrado');

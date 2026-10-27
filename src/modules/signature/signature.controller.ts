@@ -132,14 +132,15 @@ export class SignatureController {
   }
 
   @ApiBearerAuth()
-  @Delete('territories/:territoryId/signature')
+  @Delete(['territories/:territoryId/signature/:round', 'territories/:territoryId/signature'])
   @Roles(Role.ADMIN)
-  async deleteSignatureTerritory(@Param('territoryId') territoryIdSerialize: string, @Request() req: RequestUser) {
+  async deleteSignatureTerritory(@Param('territoryId') territoryIdSerialize: string, @Request() req: RequestUser, @Param('round') round?: string) {
     try {
       if (!territoryIdSerialize) throw new BadRequestException('Território são obrigatório');
       const territoryId = Number(territoryIdSerialize);
 
-      return await this.signatureService.deleteTerritorySignature(territoryId, req.user.tenantId);
+      if (round !== undefined && (!Number.isSafeInteger(+round) || +round < 1)) throw new BadRequestException('Número da rodada inválida');
+      return await this.signatureService.deleteTerritorySignature(territoryId, req.user.tenantId, round === undefined ? undefined : +round);
     } catch (error) {
       logger.error(error);
       throw error;
@@ -147,9 +148,9 @@ export class SignatureController {
   }
 
   @ApiBearerAuth()
-  @Delete('territories/:territoryId/blocks/:blockId/signature')
+  @Delete(['territories/:territoryId/blocks/:blockId/signature/:round', 'territories/:territoryId/blocks/:blockId/signature'])
   @Roles(Role.ADMIN, Role.DIRIGENTE)
-  async deleteSignatureTerritoryBlock(@Param('territoryId') territoryIdSerialize: string, @Param('blockId') blockIdSerialize: string, @Request() req: RequestSignature) {
+  async deleteSignatureTerritoryBlock(@Param('territoryId') territoryIdSerialize: string, @Param('blockId') blockIdSerialize: string, @Request() req: RequestSignature, @Param('round') round?: string) {
     try {
       if (!territoryIdSerialize) throw new BadRequestException('Território são obrigatório');
       const territoryId = Number(territoryIdSerialize);
@@ -159,7 +160,8 @@ export class SignatureController {
       const blockId = Number(blockIdSerialize);
       if (isNaN(blockId)) throw new BadRequestException('Bloco inválido');
 
-      return await this.signatureService.deleteBlockSignature(territoryId, blockId, req.user.tenantId, req.user.roles.includes(Role.DIRIGENTE) ? +req.user.round : undefined);
+      if (round !== undefined && (!Number.isSafeInteger(+round) || +round < 1)) throw new BadRequestException('Número da rodada inválida');
+      return await this.signatureService.deleteBlockSignature(territoryId, blockId, req.user.tenantId, req.user.roles.includes(Role.DIRIGENTE) ? (req.user.round == null ? null : +req.user.round) : round === undefined ? undefined : +round);
     } catch (error) {
       logger.error(error);
       throw error;
