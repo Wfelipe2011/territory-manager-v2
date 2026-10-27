@@ -17,7 +17,7 @@ export JWT_SECRET=test_secret
 export NODE_OPTIONS="${NODE_OPTIONS:-} --experimental-vm-modules --max-old-space-size=4096"
 npx prisma migrate deploy
 npx prisma generate
-if [[ $# -eq 0 ]]; then set -- test/agent-integrations.e2e-spec.ts test/agent-isolation.e2e-spec.ts; fi
+if [[ $# -eq 0 ]]; then set -- test/agent-integrations.e2e-spec.ts test/agent-isolation.e2e-spec.ts test/agent-tenant-access.e2e-spec.ts; fi
 if [[ $# -eq 1 && "$1" == 'test/' ]]; then
   # Recycle Jest/VM state between batches; Nest + Prisma suites retain substantial memory.
   mapfile -t agent_test_files < <(node -e 'const fs=require("fs"),path=require("path"); const walk=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(f=>f.isDirectory()?walk(path.join(d,f.name)):f.name.endsWith(".e2e-spec.ts")?[path.join(d,f.name)]:[]); console.log(walk("test").sort().join("\n"));')

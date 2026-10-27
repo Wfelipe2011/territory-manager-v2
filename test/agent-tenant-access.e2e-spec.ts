@@ -1,0 +1,131 @@
+import { INestApplication } from '@nestjs/common';
+import { createHash, randomBytes, generateKeyPairSync } from 'crypto';
+import * as bcrypt from 'bcryptjs';
+import request from 'supertest';
+import { createTestApp } from './utils/app-helper';
+import { cleanDatabase } from './utils/db-cleaner';
+import { createTestToken } from './utils/auth-helper';
+import { PrismaService } from '../src/infra/prisma/prisma.service';
+
+const origin = 'http://127.0.0.1:3105';
+const resource = `${origin}/mcp`;
+const callback = 'http://localhost:9191/callback';
+const path = (url: string) => { const parsed = new URL(url, origin); return parsed.pathname + parsed.search; };
+const input = (html: string, name: string) => html.match(new RegExp(`name="${name}" value="([^"]+)"`))![1];
+
+describe('Liberação MCP por congregação', () => {
+  let app: INestApplication;
+  let prisma: PrismaService;
+  let a: any;
+  let b: any;
+  let admin: string;
+  const prior = { ...process.env };
+
+  beforeAll(async () => {
+    const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+    Object.assign(process.env, {
+      AGENT_MCP_ENABLED: 'true', AGENT_PUBLIC_ORIGIN: origin,
+      AGENT_OAUTH_ENCRYPTION_KEY: randomBytes(32).toString('hex'), AGENT_OAUTH_COOKIE_KEYS: randomBytes(32).toString('hex'),
+      AGENT_OAUTH_JWKS: JSON.stringify({ keys: [{ ...privateKey.export({ format: 'jwk' }), kid: 'test-only', alg: 'RS256', use: 'sig' }] }),
+      AGENT_OAUTH_CLIENTS: JSON.stringify([{ client_id: 'agent-test', client_name: 'Agente de teste', redirect_uris: [callback], grant_types: ['authorization_code', 'refresh_token'], response_types: ['code'], token_endpoint_auth_method: 'none' }]),
+    });
+    app = await createTestApp(); prisma = app.get(PrismaService);
+  });
+  afterAll(async () => { if (app) await app.close(); for (const key of Object.keys(process.env)) if (key.startsWith('AGENT_')) delete process.env[key]; Object.assign(process.env, prior); });
+  beforeEach(async () => {
+    await cleanDatabase(prisma);
+    async function seed(name: string) {
+      const tenant = await prisma.multitenancy.create({ data: { name } });
+      const user = await prisma.user.create({ data: { tenantId: tenant.id, email: `${name}@local.test`, name, password: await bcrypt.hash('test-password', 4) } });
+      const type = await prisma.type.create({ data: { tenantId: tenant.id, name: 'Residencial' } });
+      const territory = await prisma.territory.create({ data: { tenantId: tenant.id, name: `Território ${name}`, typeId: type.id } });
+      return { tenant, user, type, territory };
+    }
+    a = await seed('mcp-a'); b = await seed('mcp-b');
+    process.env.AGENT_MCP_ALLOWED_TENANT_IDS = `${a.tenant.id},${b.tenant.id}`;
+    admin = createTestToken({ tenantId: a.tenant.id, userId: a.user.id });
+  });
+
+  async function authorize(who = a, scopes = 'catalog:read catalog:write offline_access') {
+    const agent = request.agent(app.getHttpServer());
+    const verifier = randomBytes(32).toString('base64url');
+    const authQuery = { client_id: 'agent-test', response_type: 'code', scope: scopes, redirect_uri: callback, resource, state: 'state-test', code_challenge: createHash('sha256').update(verifier).digest('base64url'), code_challenge_method: 'S256' };
+    let response = await agent.get('/oauth/auth').query(authQuery).expect(303);
+    let location = path(response.headers.location);
+    response = await agent.get(location).expect(200);
+    response = await agent.post(location).type('form').send({ csrf: input(response.text, 'csrf'), email: who.user.email, password: 'test-password' }).expect(303);
+    response = await agent.get(path(response.headers.location)).expect(303);
+    location = path(response.headers.location);
+    response = await agent.get(location).expect(200);
+    expect(response.text).toContain(who.tenant.name);
+    response = await agent.post(location).type('form').send({ csrf: input(response.text, 'csrf'), consentBinding: input(response.text, 'consentBinding'), decision: 'allow' }).expect(303);
+    response = await agent.get(path(response.headers.location)).expect(303);
+    const redirect = new URL(response.headers.location);
+    expect(redirect.searchParams.get('state')).toBe('state-test');
+    expect(redirect.searchParams.get('iss')).toBe(`${origin}/oauth`);
+    const code = redirect.searchParams.get('code')!;
+    const tokens = await request(app.getHttpServer()).post('/oauth/token').type('form').send({ grant_type: 'authorization_code', client_id: 'agent-test', redirect_uri: callback, code, code_verifier: verifier, resource }).expect(200);
+    return { ...tokens.body, code, verifier };
+  }
+  async function mcp(token: string, name: string, args: object = {}) {
+    const response = await request(app.getHttpServer()).post('/mcp').set('Authorization', `Bearer ${token}`).set('Accept', 'application/json, text/event-stream').send({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name, arguments: args } }).expect(200);
+    return response.body.result;
+  }
+
+  async function login(who = a) {
+    const agent = request.agent(app.getHttpServer());
+    const verifier = randomBytes(32).toString('base64url');
+    let response = await agent.get('/oauth/auth').query({ client_id: 'agent-test', response_type: 'code', scope: 'catalog:read catalog:write offline_access', redirect_uri: callback, resource, state: 'tenant-test', code_challenge: createHash('sha256').update(verifier).digest('base64url'), code_challenge_method: 'S256' }).expect(303);
+    const location = path(response.headers.location);
+    response = await agent.get(location).expect(200);
+    const result = await agent.post(location).type('form').send({ csrf: input(response.text, 'csrf'), email: who.user.email, password: 'test-password' });
+    return { agent, result };
+  }
+
+  it('mostra a conexão apenas para o tenant liberado e bloqueia login dos demais', async () => {
+    process.env.AGENT_MCP_ALLOWED_TENANT_IDS = String(a.tenant.id);
+    const allowed = await request(app.getHttpServer()).get('/v1/agent-integrations').set('Authorization', `Bearer ${admin}`).expect(200);
+    expect(allowed.body).toMatchObject({ enabled: true, mcpUrl: resource });
+    const other = createTestToken({ tenantId: b.tenant.id, userId: b.user.id });
+    const blocked = await request(app.getHttpServer()).get('/v1/agent-integrations').set('Authorization', `Bearer ${other}`).expect(200);
+    expect(blocked.body).toMatchObject({ enabled: false, mcpUrl: null });
+    const { result } = await login(b);
+    expect(result.status).toBe(403);
+    expect(result.text).toContain('não está habilitada');
+    expect(await prisma.agent_connection.count()).toBe(0);
+    const tokens = await authorize();
+    expect((await mcp(tokens.access_token, 'connection_context')).structuredContent.result.congregation).toBe(a.tenant.name);
+  });
+
+  it('revalida a liberação entre login e consentimento', async () => {
+    const { agent, result } = await login();
+    expect(result.status).toBe(303);
+    const next = await agent.get(path(result.headers.location)).expect(303);
+    const location = path(next.headers.location);
+    const consent = await agent.get(location).expect(200);
+    process.env.AGENT_MCP_ALLOWED_TENANT_IDS = String(b.tenant.id);
+    await agent.get(location).expect(403);
+    await agent.post(location).type('form').send({ csrf: input(consent.text, 'csrf'), consentBinding: input(consent.text, 'consentBinding'), decision: 'allow' }).expect(403);
+    expect(await prisma.agent_connection.count()).toBe(0);
+  });
+
+  it('bloqueia token existente, refresh e escrita quando o tenant sai da lista', async () => {
+    const tokens = await authorize();
+    const count = await prisma.territory.count({ where: { tenantId: a.tenant.id } });
+    process.env.AGENT_MCP_ALLOWED_TENANT_IDS = String(b.tenant.id);
+    await request(app.getHttpServer()).post('/mcp').set('Authorization', `Bearer ${tokens.access_token}`).set('Accept', 'application/json, text/event-stream').send({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'create_territory', arguments: { name: 'Bloqueado', typeId: a.type.id, idempotencyKey: 'tenant-disabled' } } }).expect(401);
+    const connection = await prisma.agent_connection.findFirstOrThrow({ where: { tenantId: a.tenant.id } });
+    const { AgentCatalogService } = await import('../src/modules/agents/catalog.service');
+    await expect(app.get(AgentCatalogService).execute({ userId: a.user.id, tenantId: a.tenant.id, connectionId: connection.id, clientId: connection.clientId, scopes: connection.scopes }, 'create_territory', { name: 'Bloqueado', typeId: a.type.id, idempotencyKey: 'tenant-disabled' })).rejects.toThrow('não habilitada');
+    await request(app.getHttpServer()).post('/oauth/token').type('form').send({ grant_type: 'refresh_token', client_id: 'agent-test', refresh_token: tokens.refresh_token, resource }).expect(400);
+    expect(await prisma.territory.count({ where: { tenantId: a.tenant.id } })).toBe(count);
+  });
+
+  it('lista vazia bloqueia todos sem afetar o acesso normal ao Admin', async () => {
+    process.env.AGENT_MCP_ALLOWED_TENANT_IDS = '';
+    const response = await request(app.getHttpServer()).get('/v1/agent-integrations').set('Authorization', `Bearer ${admin}`).expect(200);
+    expect(response.body).toMatchObject({ enabled: false, mcpUrl: null });
+    expect((await login()).result.status).toBe(403);
+    await request(app.getHttpServer()).get('/v1/addresses').set('Authorization', `Bearer ${admin}`).expect(200);
+  });
+});

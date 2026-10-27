@@ -3,7 +3,7 @@ import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 import * as bcrypt from 'bcryptjs';
 import { Request, Response } from 'express';
 import { PrismaService } from '../../infra/prisma/prisma.service';
-import { agentConfig, AgentPrincipal, AGENT_SCOPES, digest, nativeImport } from './agent.config';
+import { agentConfig, agentTenantEnabled, AgentPrincipal, AGENT_SCOPES, digest, nativeImport } from './agent.config';
 import { oauthAdapter } from './oauth-adapter';
 import { AgentCatalogService } from './catalog.service';
 
@@ -124,6 +124,7 @@ export class AgentOAuthService {
         const password = typeof req.body?.password === 'string' ? req.body.password : '';
         const user = email.length <= 254 && password.length <= 1024 ? await this.prisma.user.findUnique({ where: { email } }) : null;
         if (user && await bcrypt.compare(password, user.password)) {
+          if (!agentTenantEnabled(user.tenantId)) return html('<p>A integração com agentes não está habilitada para esta congregação.</p>', 403);
           return this.provider.interactionFinished(req, res, { login: { accountId: String(user.id), remember: false } }, { mergeWithLastSubmission: false });
         }
         return html('<p>E-mail ou senha inválidos. Volte e tente novamente.</p>', 401);
@@ -133,6 +134,7 @@ export class AgentOAuthService {
     if (details.prompt.name !== 'consent' || !details.session?.accountId) return html('<p>Interação não suportada. Inicie a conexão novamente.</p>', 400);
     const user = await this.prisma.user.findUnique({ where: { id: Number(details.session.accountId) }, include: { multitenancy: true } });
     if (!user) throw new UnauthorizedException('Usuário não encontrado');
+    if (!agentTenantEnabled(user.tenantId)) return html('<p>A integração com agentes não está habilitada para esta congregação.</p>', 403);
     const client = await this.provider.Client.find(details.params.client_id);
     const scopes = String(details.params.scope || '').split(' ').filter((scope: string) => AGENT_SCOPES.includes(scope));
     const clientName = client.clientName || client.clientId;

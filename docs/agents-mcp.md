@@ -56,7 +56,8 @@ commitar o arquivo, abrir o banco nem expor chaves em logs.
 
 | Variável | Função |
 | --- | --- |
-| `AGENT_MCP_ENABLED` | Ativação explícita; padrão `false` |
+| `AGENT_MCP_ENABLED` | Interruptor global; padrão `false` |
+| `AGENT_MCP_ALLOWED_TENANT_IDS` | IDs autorizados separados por vírgula, por exemplo `1,23`. Vazio bloqueia todos; não aceita `*` |
 | `AGENT_PUBLIC_ORIGIN` | Origem externa canônica da API; recurso `/mcp`, issuer `/oauth` |
 | `AGENT_ADMIN_PUBLIC_ORIGIN` | Origem pública do Admin e das páginas informativas |
 | `AGENT_OAUTH_ENCRYPTION_KEY` | 32 bytes hex; AES-256-GCM dos artefatos no PostgreSQL |
@@ -170,6 +171,18 @@ Evidências, resultados e limites da entrega local:
 [agents-validation.md](agents-validation.md).
 
 Deploy exige corte coordenado API/Admin/worker com as versões correspondentes.
+Liberação gradual: configure `AGENT_MCP_ENABLED=true` e
+`AGENT_MCP_ALLOWED_TENANT_IDS=1,23` na stack e recrie a API. A lista vazia
+bloqueia todas as congregações. O tenant vem exclusivamente da conta autenticada;
+nenhum parâmetro enviado pelo agente escolhe a congregação. A lista é validada
+no login, no consentimento, na emissão/renovação de tokens e em cada operação.
+A retirada de um ID bloqueia suas conexões existentes após a atualização da API,
+sem apagar cadastros. O interruptor global continua prevalecendo.
+
+O gerador local aceita a lista como quarto argumento:
+`node scripts/setup-agents.mjs http://localhost:3001 http://localhost:4800 1,23`.
+Sem esse argumento, o arquivo gerado mantém todos os tenants bloqueados.
+
 Rollback inicial: desabilitar `AGENT_MCP_ENABLED` e recriar a API, preservando as
 tabelas e as chaves. Revogar conexões quando necessário. Não remover tabelas nem
 reverter alterações cadastrais já confirmadas automaticamente.
