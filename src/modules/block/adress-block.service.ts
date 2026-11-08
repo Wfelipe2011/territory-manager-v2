@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, Injectable, Logger } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
@@ -42,20 +42,29 @@ export class AddressBlockService {
         if (!addresses.length) {
             this.logger.log('Nenhum endereço fornecido. Removendo todas as associações.');
 
-            const existingAddressIds = existingTerritoryBlockAddresses.map((a) => a.id);
+            const existingAddressIds = existingTerritoryBlockAddresses.filter(a => a.registrationStatus !== 'pending').map((a) => a.id);
 
             await this.deleteHousesAndRounds(existingAddressIds, territoryBlock, tenantId, prisma);
-            await prisma.territory_block_address.deleteMany({ where: { territoryBlockId, tenantId } });
+            await prisma.territory_block_address.deleteMany({ where: { id: { in: existingAddressIds }, territoryBlockId, tenantId } });
             this.logger.log('Todas as associações foram removidas.');
             return;
         }
 
         const existingAddressById = new Map(existingTerritoryBlockAddresses.map((tba) => [tba.addressId, tba]));
+        const names = new Set<string>();
+        for (const address of addresses) {
+            const name = this.normalizeStreet(address.street);
+            if (!name) throw new BadRequestException('Informe o nome da rua');
+            if (names.has(name)) throw new ConflictException('Já existe uma rua com esse nome na quadra');
+            names.add(name);
+            if (existingTerritoryBlockAddresses.some(tba => tba.registrationStatus === 'pending' && tba.addressId !== address.id && this.normalizeStreet(tba.address.name) === name))
+                throw new ConflictException('Já existe uma rua com esse nome na quadra');
+        }
         const renameInputs = addresses.filter((address) => {
             if (!address.id) return false;
             const linkedAddress = existingAddressById.get(address.id);
             if (!linkedAddress) return false;
-            return this.normalizeStreet(linkedAddress.address.name) !== this.normalizeStreet(address.street);
+            return linkedAddress.address.name !== address.street.trim();
         });
 
         const renamedAddressIds = new Set<number>();
@@ -67,6 +76,7 @@ export class AddressBlockService {
                 linkedAddress.id,
                 linkedAddress.addressId,
                 address.street,
+                linkedAddress.address.zipCode,
                 territoryBlock,
                 tenantId,
                 prisma
@@ -83,10 +93,11 @@ export class AddressBlockService {
         const addressesWithoutRename = addresses.filter((address) => !renameInputs.includes(address));
 
         // Upsert de endereços
-        const upsertedAddresses = await this.upsertAddress(addressesWithoutRename, tenantId, prisma);
+        const upsertedAddresses = await this.upsertAddress(addressesWithoutRename.filter(a => !a.id || !existingAddressById.has(a.id)), tenantId, prisma);
 
         const desiredAddressIds = new Set<number>([
             ...upsertedAddresses.map((a) => a.id),
+            ...addressesWithoutRename.filter(a => a.id && existingAddressById.has(a.id)).map(a => a.id!),
             ...Array.from(renamedAddressIds),
         ]);
 
@@ -99,7 +110,7 @@ export class AddressBlockService {
         const existingAddressIds = currentTerritoryBlockAddresses.map((a) => a.addressId);
 
         // Deleta endereços que não estão mais na lista
-        const addressesToDelete = existingAddressIds.filter((id) => !desiredAddressIds.has(id));
+        const addressesToDelete = existingAddressIds.filter((id) => !desiredAddressIds.has(id) && existingAddressById.get(id)?.registrationStatus !== 'pending');
         if (addressesToDelete.length) {
             this.logger.log(`Removendo os endereços: ${addressesToDelete}`);
             const territoryBlockAddressIds = currentTerritoryBlockAddresses
@@ -203,11 +214,18 @@ export class AddressBlockService {
         territoryBlockAddressId: number,
         oldAddressId: number,
         newStreet: string,
+        oldZipCode: string | null,
         territoryBlock: { id: number; blockId: number; territoryId: number },
         tenantId: number,
         prisma: PrismaTransaction
     ): Promise<number> {
-        const [newAddress] = await this.upsertAddress([{ street: newStreet }], tenantId, prisma);
+        const collision = await prisma.territory_block_address.findFirst({
+            where: { tenantId, territoryBlockId: territoryBlock.id, id: { not: territoryBlockAddressId }, registrationStatus: { not: 'rejected' }, address: { name: { equals: newStreet.trim(), mode: 'insensitive' } } },
+        });
+        if (collision) throw new ConflictException('Já existe uma rua com esse nome na quadra');
+        const name = newStreet.trim();
+        const newAddress = await prisma.address.findFirst({ where: { tenantId, name, zipCode: oldZipCode } })
+            ?? await prisma.address.create({ data: { tenantId, name, zipCode: oldZipCode } });
 
         if (!newAddress || newAddress.id === oldAddressId) {
             return oldAddressId;
@@ -222,14 +240,13 @@ export class AddressBlockService {
             select: { id: true },
         });
 
-        const targetTerritoryBlockAddressId = existingTargetTba?.id ?? territoryBlockAddressId;
+        if (existingTargetTba) throw new ConflictException('Já existe uma rua com esse nome na quadra');
+        const targetTerritoryBlockAddressId = territoryBlockAddressId;
 
-        if (!existingTargetTba) {
-            await prisma.territory_block_address.update({
-                where: { id: territoryBlockAddressId, tenantId },
-                data: { addressId: newAddress.id },
-            });
-        }
+        await prisma.territory_block_address.update({
+            where: { id: territoryBlockAddressId, tenantId },
+            data: { addressId: newAddress.id },
+        });
 
         await prisma.house.updateMany({
             where: {
@@ -257,12 +274,6 @@ export class AddressBlockService {
                 territoryBlockAddressId: targetTerritoryBlockAddressId,
             },
         });
-
-        if (existingTargetTba && existingTargetTba.id !== territoryBlockAddressId) {
-            await prisma.territory_block_address.delete({
-                where: { id: territoryBlockAddressId, tenantId },
-            });
-        }
 
         return newAddress.id;
     }
@@ -461,6 +472,11 @@ export class AddressBlockService {
         const syncCacheKey = `sync:ghost:${tenantId}:${territoryId}:${blockId}`;
         await this.cacheManager.del(syncCacheKey);
         this.logger.log(`[CACHE INVALIDATE] syncGhostHouses ${syncCacheKey}`);
+    }
+
+    async invalidateBlockCaches(tenantId: number, territoryId: number, blockId: number) {
+        await this.cacheManager.del(`addresses:${territoryId}:${blockId}`);
+        await this.invalidateSyncGhostCache(tenantId, territoryId, blockId);
     }
 
     async resolveTerritoryBlockAddressId(territoryId: number, blockId: number, addressId: number, tenantId: number): Promise<number> {

@@ -32,6 +32,16 @@ export class UpsertBlockDto {
   @ValidateNested({ each: true })
   @Type(() => UpsertAddressDto)
   addresses: UpsertAddressDto[];
+
+  @IsOptional()
+  @IsString()
+  expectedBlockName?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpsertAddressDto)
+  expectedAddresses?: UpsertAddressDto[];
 }
 
 export class UpsertAddressDto {

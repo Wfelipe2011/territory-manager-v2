@@ -1,0 +1,51 @@
+import request from 'supertest';
+import { INestApplication } from '@nestjs/common';
+import { PrismaService } from '../src/infra/prisma/prisma.service';
+import { createTestApp } from './utils/app-helper';
+import { cleanDatabase } from './utils/db-cleaner';
+import { createTestToken } from './utils/auth-helper';
+
+describe('Correção de rua pelo administrador', () => {
+  let app: INestApplication, db: PrismaService;
+  beforeAll(async () => { app = await createTestApp(); db = app.get(PrismaService); });
+  afterAll(async () => { await app.close(); });
+  beforeEach(async () => { await cleanDatabase(db); });
+
+  it('preserva casas e marcações, isola outras quadras e congregações e recusa conflitos', async () => {
+    const tenant = await db.multitenancy.create({ data: { name: 'QA rua' } });
+    const otherTenant = await db.multitenancy.create({ data: { name: 'QA outra' } });
+    const type = await db.type.create({ data: { name: 'Residencial', tenantId: tenant.id } });
+    const territory = await db.territory.create({ data: { name: 'QA', tenantId: tenant.id, typeId: type.id } });
+    const block = await db.block.create({ data: { name: 'Quadra 1', tenantId: tenant.id } });
+    const otherBlock = await db.block.create({ data: { name: 'Quadra 2', tenantId: tenant.id } });
+    const tb = await db.territory_block.create({ data: { tenantId: tenant.id, territoryId: territory.id, blockId: block.id } });
+    const otherTb = await db.territory_block.create({ data: { tenantId: tenant.id, territoryId: territory.id, blockId: otherBlock.id } });
+    const street = await db.address.create({ data: { tenantId: tenant.id, name: 'Rua errada', zipCode: '12345678' } });
+    const foreignStreet = await db.address.create({ data: { tenantId: otherTenant.id, name: 'Rua errada' } });
+    const mapping = await db.territory_block_address.create({ data: { tenantId: tenant.id, territoryBlockId: tb.id, addressId: street.id } });
+    const otherMapping = await db.territory_block_address.create({ data: { tenantId: tenant.id, territoryBlockId: otherTb.id, addressId: street.id } });
+    const house = await db.house.create({ data: { tenantId: tenant.id, territoryId: territory.id, blockId: block.id, addressId: street.id, territoryBlockAddressId: mapping.id, number: '10' } });
+    const legacy = await db.house.create({ data: { tenantId: tenant.id, territoryId: territory.id, blockId: block.id, addressId: street.id, number: '12' } });
+    const otherHouse = await db.house.create({ data: { tenantId: tenant.id, territoryId: territory.id, blockId: otherBlock.id, addressId: street.id, territoryBlockAddressId: otherMapping.id, number: '20' } });
+    const round = await db.round.create({ data: { tenantId: tenant.id, territoryId: territory.id, blockId: block.id, houseId: house.id, roundNumber: 1, completed: true, completedDate: new Date('2026-01-01'), mode: 'letters' } });
+    const auth = `Bearer ${createTestToken({ tenantId: tenant.id })}`;
+    const url = `/v2/territories/${territory.id}/blocks`;
+    const before = { id: street.id, street: street.name, zipCode: street.zipCode };
+    const body = { id: block.id, name: block.name, expectedBlockName: block.name, expectedAddresses: [before], addresses: [{ ...before, street: 'Rua corrigida' }] };
+    await request(app.getHttpServer()).post(url).set('Authorization', auth).send(body).expect(201);
+    const updated = await db.territory_block_address.findUniqueOrThrow({ where: { id: mapping.id }, include: { address: true } });
+    expect(updated.address).toMatchObject({ name: 'Rua corrigida', zipCode: '12345678', tenantId: tenant.id });
+    for (const id of [house.id, legacy.id]) expect(await db.house.findUniqueOrThrow({ where: { id } })).toMatchObject({ addressId: updated.addressId, territoryBlockAddressId: mapping.id });
+    expect(await db.round.findUniqueOrThrow({ where: { id: round.id } })).toMatchObject({ houseId: house.id, completed: true, completedDate: round.completedDate });
+    expect(await db.house.findUniqueOrThrow({ where: { id: otherHouse.id } })).toMatchObject({ addressId: street.id, territoryBlockAddressId: otherMapping.id });
+    expect((await db.address.findUniqueOrThrow({ where: { id: foreignStreet.id } })).name).toBe('Rua errada');
+    await request(app.getHttpServer()).post(url).set('Authorization', auth).send(body).expect(409);
+    await request(app.getHttpServer()).post(url).set('Authorization', `Bearer ${createTestToken({ tenantId: otherTenant.id })}`).send(body).expect(404);
+    const second = await db.address.create({ data: { tenantId: tenant.id, name: 'Rua existente' } });
+    await db.territory_block_address.create({ data: { tenantId: tenant.id, territoryBlockId: tb.id, addressId: second.id } });
+    const current = [{ id: updated.addressId, street: 'Rua corrigida', zipCode: '12345678' }, { id: second.id, street: second.name, zipCode: '' }];
+    await request(app.getHttpServer()).post(url).set('Authorization', auth).send({ id: block.id, name: 'Nome não deve salvar', expectedBlockName: block.name, expectedAddresses: current, addresses: [{ ...current[0], street: 'Rua existente' }, current[1]] }).expect(409);
+    expect((await db.block.findUniqueOrThrow({ where: { id: block.id } })).name).toBe(block.name);
+    expect((await db.territory_block_address.findUniqueOrThrow({ where: { id: mapping.id } })).addressId).toBe(updated.addressId);
+  });
+});
