@@ -1,8 +1,9 @@
-import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/infra/prisma/prisma.service';
 import { AddressBlockService } from './adress-block.service';
 import { UpsertBlockDto } from './contracts/UpsertBlockDto';
 import { TerritoryBlockService } from './territory-block.service';
+import { StreetOrderService, Entry } from '../change-request/street-order.service';
 
 
 @Injectable()
@@ -12,7 +13,8 @@ export class BlockService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly territoryBlockService: TerritoryBlockService,
-        private readonly addressService: AddressBlockService
+        private readonly addressService: AddressBlockService,
+        private readonly streetOrder: StreetOrderService
     ) { }
 
     async upsertBlock(upsertBlockDto: UpsertBlockDto, tenantId: number, territoryId: number) {
@@ -50,6 +52,20 @@ export class BlockService {
                     throw new ConflictException('Uma rua não pertence a esta quadra. Atualize a página.');
             }
 
+            let beforeOrder: Entry[] = [];
+            if (upsertBlockDto.saveStreetOrder) {
+                if (upsertBlockDto.id) {
+                    beforeOrder = await this.streetOrder.snapshot(prisma, tenantId, territoryId, upsertBlockDto.id);
+                    if (!this.streetOrder.same(upsertBlockDto.expectedStreetOrder, beforeOrder))
+                        throw new ConflictException('A ordem ou as ruas foram alteradas. Atualize a página.');
+                    for (const address of upsertBlockDto.addresses ?? []) {
+                        if (!address.id) continue;
+                        const existing = beforeOrder.find(e => e.id === address.id && e.mappingId === address.mappingId && e.status === 'approved');
+                        if (!existing) throw new BadRequestException('Vínculo da rua inválido nesta quadra');
+                    }
+                }
+            }
+
             const block = await prisma.block.upsert({
                 where: { id: upsertBlockDto.id ?? 0, tenantId },
                 create: {
@@ -64,7 +80,9 @@ export class BlockService {
 
             this.logger.log(`Bloco upsertado com ID: ${block.id}`);
             const territoryBlock = await this.territoryBlockService.linkBlockToTerritory(block.id, territoryId, tenantId, prisma);
-            await this.addressService.manageAddresses(territoryBlock.id, upsertBlockDto.addresses, tenantId, prisma);
+            const orderedMappings = await this.addressService.manageAddresses(territoryBlock.id, upsertBlockDto.addresses, tenantId, prisma);
+            if (upsertBlockDto.saveStreetOrder)
+                await this.streetOrder.applyEdited(prisma, tenantId, territoryId, block.id, beforeOrder, orderedMappings ?? []);
             return block
         }, { timeout: 120_000 });
         await this.addressService.invalidateBlockCaches(tenantId, territoryId, block.id);
@@ -83,8 +101,10 @@ export class BlockService {
         return {
             id: rawData?.block.id,
             name: rawData?.block.name,
-            addresses: rawData?.territory_block_address.map((a) => ({
+            addresses: rawData?.territory_block_address.sort((a,b) => (a.position ?? Number.MAX_SAFE_INTEGER) - (b.position ?? Number.MAX_SAFE_INTEGER) || a.address.name.localeCompare(b.address.name, 'pt-BR') || a.addressId - b.addressId).map((a) => ({
                 id: a.address.id,
+                mappingId: a.id,
+                position: a.position,
                 street: a.address.name,
                 zipCode: a.address.zipCode,
             })),
@@ -103,8 +123,10 @@ export class BlockService {
         return rawData.map((raw) => ({
             id: raw.block.id,
             name: raw.block.name,
-            addresses: raw.territory_block_address.map((a) => ({
+            addresses: raw.territory_block_address.sort((a,b) => (a.position ?? Number.MAX_SAFE_INTEGER) - (b.position ?? Number.MAX_SAFE_INTEGER) || a.address.name.localeCompare(b.address.name, 'pt-BR') || a.addressId - b.addressId).map((a) => ({
                 id: a.address.id,
+                mappingId: a.id,
+                position: a.position,
                 street: a.address.name,
                 zipCode: a.address.zipCode,
             })),

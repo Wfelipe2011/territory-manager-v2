@@ -6,12 +6,26 @@ import { Roles } from 'src/decorators/roles.decorator';
 import { SkipCache } from 'src/decorators/skip-cache.decorator';
 import { ChangeRequestService, ReviewItem } from './change-request.service';
 import { CreateChangeRequest } from './contracts';
+import { StreetOrderService } from './street-order.service';
 
 @Controller({ version: '1', path: 'change-requests' })
 @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.DIRIGENTE, Role.PUBLICADOR)
 @SkipCache()
 export class ChangeRequestController {
-  constructor(private readonly requests: ChangeRequestService) {}
+  constructor(private readonly requests: ChangeRequestService, private readonly streetOrder: StreetOrderService) {}
+  @Get('street-order/:territoryId/:blockId')
+  order(@Req() req: any, @Param('territoryId', ParseIntPipe) territoryId: number, @Param('blockId', ParseIntPipe) blockId: number) {
+    return this.streetOrder.get(req.user, territoryId, blockId);
+  }
+  @Get('street-order/:territoryId/:blockId/state')
+  @Header('Cache-Control', 'no-store')
+  orderState(@Req() req: any, @Param('territoryId', ParseIntPipe) territoryId: number, @Param('blockId', ParseIntPipe) blockId: number) {
+    return this.streetOrder.state(req.user, territoryId, blockId);
+  }
+  @Post('street-order/:territoryId/:blockId')
+  saveOrder(@Req() req: any, @Param('territoryId', ParseIntPipe) territoryId: number, @Param('blockId', ParseIntPipe) blockId: number, @Body() body: { expected: any[]; ordered: number[]; requestId?: number; version?: number }) {
+    return this.streetOrder.save(req.user, territoryId, blockId, body?.expected, body?.ordered, body?.requestId, body?.version);
+  }
   @Post()
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }))
   create(@Req() req: any, @Body() body: CreateChangeRequest) {

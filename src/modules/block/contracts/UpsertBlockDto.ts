@@ -1,6 +1,14 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsArray, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
+import { IsArray, IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString, Min, ValidateNested } from "class-validator";
+
+export class StreetOrderEntryDto {
+  @IsInt() @Min(1) id: number;
+  @IsOptional() @IsInt() @Min(1) mappingId: number | null;
+  @IsString() name: string;
+  @IsString() status: string;
+  @IsOptional() @IsInt() @Min(1) position: number | null;
+}
 
 export class UpsertBlockDto {
   @ApiProperty({
@@ -34,6 +42,16 @@ export class UpsertBlockDto {
   addresses: UpsertAddressDto[];
 
   @IsOptional()
+  @IsBoolean()
+  saveStreetOrder?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => StreetOrderEntryDto)
+  expectedStreetOrder?: StreetOrderEntryDto[];
+
+  @IsOptional()
   @IsString()
   expectedBlockName?: string;
 
@@ -45,6 +63,11 @@ export class UpsertBlockDto {
 }
 
 export class UpsertAddressDto {
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  mappingId?: number;
+
   @ApiProperty({
     required: false,
     description: 'ID do endereço',

@@ -30,9 +30,9 @@ const SQL = `WITH links AS MATERIALIZED (
  WHERE h.tenant_id=$1 AND h.territory_id=$2 AND h.registration_status<>'rejected' AND h.number<>'ghost'
  AND (h.territory_block_address_id IS NULL OR h.territory_block_address_id IN(SELECT id FROM mappings))
 ), streets AS (
- SELECT address_id AS id,id AS mapping_id,name,zip_code,registration_status::text AS registration_status FROM mappings
+ SELECT address_id AS id,id AS mapping_id,name,zip_code,registration_status::text AS registration_status,position FROM mappings
  UNION ALL
- SELECT DISTINCT h.address_id,NULL::integer,h.address_name,NULL::text,'approved' FROM houses h
+ SELECT DISTINCT h.address_id,NULL::integer,h.address_name,NULL::text,'approved',NULL::integer FROM houses h
  WHERE NOT EXISTS(SELECT 1 FROM mappings m WHERE m.address_id=h.address_id)
 ), totals AS (
  SELECT count(*)::int AS catalog,count(*) FILTER(WHERE round_id IS NOT NULL)::int AS total,
@@ -47,7 +47,7 @@ SELECT json_build_object(
    'total',t.total,'catalogTotal',t.catalog,'withoutRound',t.catalog-t.total,'completed',t.completed,'pending',t.total-t.completed,
    'lastWorkedAt',${iso('t.last_worked')},'_signature',CASE WHEN l.signature_key IS NULL THEN NULL ELSE json_build_object('key',l.signature_key,'expirationDate',${iso('l.expiration_date')},'token',l.token) END
  ) FROM links l CROSS JOIN totals t),
- 'streets',coalesce((SELECT json_agg(json_build_object('id',s.id,'mappingId',s.mapping_id,'name',s.name,'zipCode',s.zip_code,'registrationStatus',s.registration_status,
+ 'streets',coalesce((SELECT json_agg(json_build_object('id',s.id,'mappingId',s.mapping_id,'name',s.name,'zipCode',s.zip_code,'registrationStatus',s.registration_status,'position',s.position,
    'completed',g.completed,'pending',g.total-g.completed,'total',g.total,'catalogTotal',g.catalog,'withoutRound',g.catalog-g.total,
    'pendingRequest',(SELECT json_build_object('id',id,'action',action) FROM requests WHERE entity='street' AND target_id IS NOT DISTINCT FROM s.mapping_id ORDER BY id DESC LIMIT 1),
    'houses',g.houses
@@ -82,7 +82,7 @@ async function snapshot(connection,user,scope,info) {
       delete house._order; delete house._completedDate; delete house._endDate;
     }
   }
-  data.streets.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+  data.streets.sort((a,b)=>(a.position??Number.MAX_SAFE_INTEGER)-(b.position??Number.MAX_SAFE_INTEGER)||a.name.localeCompare(b.name,'pt-BR')||a.id-b.id);
   if(data.block) {
     const sig=data.block._signature;
     data.block.signature=null;

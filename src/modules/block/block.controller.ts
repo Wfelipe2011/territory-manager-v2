@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Logger, Param, ParseIntPipe, Post, UsePi
 import { VERSION } from 'src/enum/version.enum';
 import { Role } from 'src/enum/role.enum';
 import { Roles } from 'src/decorators/roles.decorator';
+import { SkipCache } from 'src/decorators/skip-cache.decorator';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { UserToken } from '../auth/contracts';
 import { UpsertBlockDto } from './contracts/UpsertBlockDto';
@@ -16,6 +17,7 @@ export class BlockController {
 
   constructor(private readonly blockService: BlockService) { }
 
+  @SkipCache()
   @Get('territories/:territoryId/blocks')
   @Roles(Role.ADMIN)
   async getTerritoryBlocks(@Param('territoryId', ParseIntPipe) territoryId: number, @CurrentUser() user: UserToken) {
@@ -23,6 +25,7 @@ export class BlockController {
     return this.blockService.getTerritoryBlocks(territoryId, user.tenantId);
   }
 
+  @SkipCache()
   @Get('territories/:territoryId/blocks/:blockId')
   @Roles(Role.ADMIN)
   async getTerritoryBlockDetails(@Param('blockId', ParseIntPipe) blockId: number, @Param('territoryId', ParseIntPipe) territoryId: number, @CurrentUser() user: UserToken) {

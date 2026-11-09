@@ -28,7 +28,7 @@ async function load(connection, name, args, sql, params, mode) {
     const query = `SELECT h.*,
       json_build_object('id',b.id,'name',b.name) AS block,
       CASE WHEN s.id IS NULL THEN '[]'::json ELSE json_build_array(json_build_object('id',bs.id,'tenantId',bs.tenant_id,'territoryBlockId',bs.territory_block_id,'roundNumber',bs.round_number,'signatureId',bs.signature_id,'signature',json_build_object('key',s.key,'expirationDate',s.expiration_date,'token',s.token))) END AS "blockSignatures",
-      coalesce((SELECT json_agg(json_build_object('id',m.id,'registrationStatus',m.registration_status,'territoryBlockId',m.territory_block_id,'addressId',m.address_id,'tenantId',m.tenant_id,
+      coalesce((SELECT json_agg(json_build_object('id',m.id,'position',m.position,'registrationStatus',m.registration_status,'territoryBlockId',m.territory_block_id,'addressId',m.address_id,'tenantId',m.tenant_id,
         'address',json_build_object('id',a.id,'name',a.name,'tenantId',a.tenant_id,'zipCode',a.zip_code)) ORDER BY m.id)
         FROM territory_block_address m JOIN address a ON a.id=m.address_id WHERE m.territory_block_id=h.id AND m.registration_status<>'rejected'), '[]'::json) AS territory_block_address
       FROM (`+sql+`) h JOIN block b ON b.id=h."blockId" LEFT JOIN block_signature bs ON bs.territory_block_id=h.id AND bs.tenant_id=h."tenantId" AND bs.round_number=$${params.length+1} LEFT JOIN signature s ON s.id=bs.signature_id`;

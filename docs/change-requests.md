@@ -5,7 +5,7 @@
 `change_request` mantém proposta, estado anterior, autor, origem do link,
 dependência, versão e histórico de revisão. Os IDs das solicitações são distintos
 dos IDs dos cadastros. As entidades são `block`, `street` e `house`; as operações
-são `create`, `update` e `delete` (quadra permite cadastro).
+são `create`, `update` e `delete` (quadra permite cadastro; a ordenação de ruas usa uma proposta especializada).
 
 Inclusões criam o cadastro real com `registration_status=pending`. Assim, uma
 quadra pode receber ruas, casas e link de publicador imediatamente. A aprovação
@@ -69,8 +69,28 @@ marcações/datas das rodadas e é conferido sob lock das participações; novos
 exigem reconferência. Rejeitar pai remove dependentes somente no seu escopo.
 Rejeitar correção de casa aprovada preserva seu cadastro e trabalho.
 
+## Ordenação de ruas
+
+A posição pertence ao vínculo `territory_block_address`, restrito à congregação,
+território e quadra. No Admin, arrastar em “Editar quadra → Ruas” só altera o
+formulário; `saveStreetOrder` e `expectedStreetOrder` no salvamento V2 aplicam
+nomes e posições na mesma transação. `mappingId` identifica a rua durante uma
+correção de nome. Vínculos provisórios ocultos conservam seus lugares relativos.
+
+No campo, soltar o indicador cria uma proposta `block/update` com
+`proposedData._kind=street_order`, `targetId=null` e o `blockId` do escopo. O mesmo
+link pode atualizar essa proposta usando `requestId` e `version`; cada alteração
+incrementa a versão e registra `order_updated`. Outros links não podem sobrescrevê-la.
+A prévia pertence ao link de origem; a ordem pública muda apenas na aprovação.
+O estado atual é comparado novamente no envio e na revisão.
+
 ## HTTP e sincronização
 
+- `GET /v1/change-requests/street-order/:territoryId/:blockId`: ordem vigente.
+- `GET /v1/change-requests/street-order/:territoryId/:blockId/state`: ordem vigente
+  e metadados da proposta pendente, incluindo versão, propriedade e conflito.
+- `POST /v1/change-requests/street-order/:territoryId/:blockId`: `expected` e
+  `ordered`; `requestId` e `version` são obrigatórios para atualizar proposta.
 - `POST /v1/change-requests`: solicitar.
 - `GET /v1/change-requests`: paginação, filtros por estado, entidade, operação,
   território e período; campo limitado ao escopo do link.

@@ -235,6 +235,7 @@ model territory_block {
 }
 
 model territory_block_address {
+  position         Int?
   registrationStatus RegistrationStatus @default(approved) @map("registration_status")
   id               Int             @id @unique @default(autoincrement())
   territoryBlock   territory_block @relation(fields: [territoryBlockId], references: [id])

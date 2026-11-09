@@ -6,6 +6,7 @@ import { Role } from 'src/enum/role.enum';
 import { FieldAccessService, FieldPrincipal } from '../field/field-access.service';
 import { CatalogRoundService } from '../round/catalog-round.service';
 import { CreateChangeRequest } from './contracts';
+import { StreetOrderService } from './street-order.service';
 
 type Tx = Prisma.TransactionClient;
 export type Actor = {
@@ -43,7 +44,8 @@ export class ChangeRequestService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly access: FieldAccessService,
-    private readonly rounds: CatalogRoundService
+    private readonly rounds: CatalogRoundService,
+    private readonly streetOrder: StreetOrderService
   ) {}
   isAdmin(actor: Actor) {
     return actor.roles.includes(Role.ADMIN) || actor.roles.includes(Role.SUPER_ADMIN);
@@ -91,9 +93,10 @@ export class ChangeRequestService {
   }
   private async current(
     tx: Tx,
-    request: { entity: ChangeEntity; targetId?: number | null; tenantId: number; territoryId: number; blockId?: number | null }
+    request: { entity: ChangeEntity; targetId?: number | null; tenantId: number; territoryId: number; blockId?: number | null; proposedData?: unknown }
   ): Promise<any | null> {
     const { tenantId, territoryId, blockId, targetId } = request;
+    if ((request.proposedData as any)?._kind === 'street_order' && blockId) return this.streetOrder.snapshot(tx, tenantId, territoryId, blockId);
     if (!targetId) return null;
     if (request.entity === 'house') {
       const h = await tx.house.findFirst({ where: { id: targetId, tenantId, territoryId, blockId: blockId ?? undefined } });
@@ -422,6 +425,11 @@ export class ChangeRequestService {
   }
   private async apply(tx: Tx, row: change_request) {
     const data = row.proposedData as any;
+    if (data?._kind === 'street_order' && row.blockId) {
+      const current = await this.streetOrder.snapshot(tx, row.tenantId, row.territoryId, row.blockId);
+      await this.streetOrder.apply(tx, row.tenantId, row.territoryId, row.blockId, current, data.ordered);
+      return;
+    }
     if (row.entity === 'block') {
       await this.targetState(tx, row, 'approved');
       return;
@@ -555,7 +563,7 @@ export class ChangeRequestService {
               throw new ConflictException('Aprove primeiro os cadastros pais ou inclua-os no lote');
             const current = await this.current(tx, row);
             if (!current || (!row.isLegacy && row.action !== 'create' && hash(current) !== hash(row.beforeData)))
-              throw new ConflictException('Cadastro alterado ou removido desde a solicitação');
+              throw new ConflictException('Cadastro alterado ou removido desde a solicitação. Crie uma nova solicitação.');
           }
           const removes = decision === 'approve' ? row.action === 'delete' : row.action === 'create';
           if (removes) {

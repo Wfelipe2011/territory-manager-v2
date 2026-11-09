@@ -47,7 +47,7 @@ export class AddressBlockService {
             await this.deleteHousesAndRounds(existingAddressIds, territoryBlock, tenantId, prisma);
             await prisma.territory_block_address.deleteMany({ where: { id: { in: existingAddressIds }, territoryBlockId, tenantId } });
             this.logger.log('Todas as associações foram removidas.');
-            return;
+            return [] as number[];
         }
 
         const existingAddressById = new Map(existingTerritoryBlockAddresses.map((tba) => [tba.addressId, tba]));
@@ -67,6 +67,8 @@ export class AddressBlockService {
             return linkedAddress.address.name !== address.street.trim();
         });
 
+        const resolved = new Map<AddressDto, number>();
+        for (const address of addresses) if (address.id && existingAddressById.has(address.id)) resolved.set(address, address.id);
         const renamedAddressIds = new Set<number>();
         for (const address of renameInputs) {
             const linkedAddress = existingAddressById.get(address.id!);
@@ -83,6 +85,7 @@ export class AddressBlockService {
             );
 
             renamedAddressIds.add(migratedAddressId);
+            resolved.set(address, migratedAddressId);
         }
 
         if (renameInputs.length) {
@@ -93,7 +96,9 @@ export class AddressBlockService {
         const addressesWithoutRename = addresses.filter((address) => !renameInputs.includes(address));
 
         // Upsert de endereços
-        const upsertedAddresses = await this.upsertAddress(addressesWithoutRename.filter(a => !a.id || !existingAddressById.has(a.id)), tenantId, prisma);
+        const newInputs = addressesWithoutRename.filter(a => !a.id || !existingAddressById.has(a.id));
+        const upsertedAddresses = await this.upsertAddress(newInputs, tenantId, prisma);
+        newInputs.forEach((input, index) => resolved.set(input, upsertedAddresses[index].id));
 
         const desiredAddressIds = new Set<number>([
             ...upsertedAddresses.map((a) => a.id),
@@ -165,6 +170,11 @@ export class AddressBlockService {
                 await this.createGhostHouse(addressId, territoryBlock, territoryBlockAddress.id, tenantId, prisma);
             }
         }
+        const finalMappings = await prisma.territory_block_address.findMany({ where: { tenantId, territoryBlockId } });
+        const orderedMappings = addresses.map(input => finalMappings.find(m => m.addressId === resolved.get(input))?.id);
+        if (orderedMappings.some(id => !id) || new Set(orderedMappings).size !== orderedMappings.length)
+            throw new ConflictException('Não foi possível identificar a ordem das ruas');
+        return orderedMappings as number[];
     }
 
     private async upsertAddress(addresses: AddressDto[], tenantId: number, prisma: PrismaTransaction) {

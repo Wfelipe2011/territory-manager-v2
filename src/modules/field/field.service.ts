@@ -301,7 +301,7 @@ export class FieldService {
         ...pairSuggestion(work.length - completed),
       };
     });
-    const streetMap = new Map<number, { id: number; mappingId: number | null; name: string; zipCode: string | null; registrationStatus: string }>();
+    const streetMap = new Map<number, { id: number; mappingId: number | null; name: string; zipCode: string | null; registrationStatus: string; position: number | null }>();
     for (const link of links)
       for (const mapping of link.territory_block_address)
         streetMap.set(mapping.addressId, {
@@ -310,17 +310,18 @@ export class FieldService {
           name: mapping.address.name,
           zipCode: mapping.address.zipCode,
           registrationStatus: mapping.registrationStatus,
+          position: mapping.position,
         });
     for (const h of mapped)
       if (!streetMap.has(h.addressId))
-        streetMap.set(h.addressId, { id: h.addressId, mappingId: null, name: h.addressName, zipCode: null, registrationStatus: 'approved' });
+        streetMap.set(h.addressId, { id: h.addressId, mappingId: null, name: h.addressName, zipCode: null, registrationStatus: 'approved', position: null });
     const byAddress = new Map<number, typeof mapped>();
     for (const h of mapped) {
       if (!byAddress.has(h.addressId)) byAddress.set(h.addressId, []);
       byAddress.get(h.addressId)!.push(h);
     }
     const streets = [...streetMap.values()]
-      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+      .sort((a, b) => (a.position ?? Number.MAX_SAFE_INTEGER) - (b.position ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name, 'pt-BR') || a.id - b.id)
       .map(street => {
         const rows = byAddress.get(street.id) ?? [],
           work = rows.filter(h => h.hasRound),

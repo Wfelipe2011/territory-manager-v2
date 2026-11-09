@@ -1,0 +1,83 @@
+import { INestApplication } from '@nestjs/common';
+import request from 'supertest';
+import { createTestApp } from './utils/app-helper';
+import { cleanDatabase } from './utils/db-cleaner';
+import { PrismaService } from '../src/infra/prisma/prisma.service';
+import { requestFixture } from './utils/request-fixture';
+import { FieldService } from '../src/modules/field/field.service';
+const aggregate = require('../field-worker/aggregate-snapshot.cjs');
+
+describe('Ordenação de ruas', () => {
+  let app: INestApplication;
+  beforeAll(async () => { app = await createTestApp(); });
+  afterAll(async () => { await app.close(); });
+  beforeEach(async () => { await cleanDatabase(app.get(PrismaService)); });
+  it('aplica ordem administrativa e solicitações após aprovação, preservando casas', async () => {
+    const f = await requestFixture(app), tree = await f.tree();
+    await f.review(Object.values(tree)).expect(201);
+    const second = await f.create('street', { name: 'Outra rua' }, { blockId: tree.block.targetId });
+    const otherBlock = await f.prisma.block.create({ data: { tenantId: f.tenant.id, name: 'Outra quadra' } });
+    const otherLink = await f.prisma.territory_block.create({ data: { tenantId: f.tenant.id, territoryId: f.territory.id, blockId: otherBlock.id } });
+    const otherMapping = await f.prisma.territory_block_address.create({ data: { tenantId: f.tenant.id, territoryBlockId: otherLink.id, addressId: tree.street.addressId } });
+    const url = `/v1/change-requests/street-order/${f.territory.id}/${tree.block.targetId}`;
+    const get = (token: string) => request(f.server).get(url).set(f.auth(token));
+    const beforeRows = (await get(f.admin).expect(200)).body;
+    const before = beforeRows.map((s: any) => s.id);
+    expect(before).toEqual([second.addressId, tree.street.addressId]);
+    const proposal = await request(f.server).post(url).set(f.auth(f.leader)).send({ expected: beforeRows, ordered: [...before].reverse() }).expect(201);
+    expect((await get(f.admin)).body.map((s: any) => s.id)).toEqual(before);
+    await f.review([proposal.body]).expect(201);
+    expect((await get(f.admin)).body.map((s: any) => s.id)).toEqual([...before].reverse());
+    expect((await f.snapshot(tree.block.targetId)).data.streets.map((s: any) => s.id)).toEqual([...before].reverse());
+    expect(await f.prisma.house.findUnique({ where: { id: tree.house.targetId } })).toBeTruthy();
+    expect((await f.prisma.territory_block_address.findUniqueOrThrow({ where: { id: otherMapping.id } })).position).toBeNull();
+    await request(f.server).post(url).set(f.auth(f.admin)).send({ expected: beforeRows, ordered: [...before].reverse() }).expect(409);
+    const updatedRows = (await get(f.admin)).body;
+    await request(f.server).post(url).set(f.auth(f.admin)).send({ expected: updatedRows, ordered: before }).expect(201);
+  });
+  it('rejeita proposta e normaliza rua legada sem alterar casa ou marcação', async () => {
+    const f = await requestFixture(app), tree = await f.tree();
+    await f.review(Object.values(tree)).expect(201);
+    const legacy = await f.prisma.address.create({ data: { tenantId: f.tenant.id, name: 'Rua legada' } });
+    const house = await f.prisma.house.create({ data: { tenantId: f.tenant.id, territoryId: f.territory.id, blockId: tree.block.targetId, addressId: legacy.id, number: '44' } });
+    const round = await f.prisma.round.create({ data: { tenantId: f.tenant.id, territoryId: f.territory.id, blockId: tree.block.targetId, houseId: house.id, roundNumber: 1, completed: true } });
+    const url = `/v1/change-requests/street-order/${f.territory.id}/${tree.block.targetId}`;
+    const get = async () => (await request(f.server).get(url).set(f.auth(f.admin)).expect(200)).body.map((s: any) => s.id);
+    const before = await get();
+    const beforeRows = (await request(f.server).get(url).set(f.auth(f.admin))).body;
+    const proposal = (await request(f.server).post(url).set(f.auth(f.leader)).send({ expected: beforeRows, ordered: [...before].reverse() }).expect(201)).body;
+    await f.review([proposal], 'reject').expect(201);
+    expect(await get()).toEqual(before);
+    await request(f.server).post(url).set(f.auth(f.admin)).send({ expected: beforeRows, ordered: [...before].reverse() }).expect(201);
+    expect(await get()).toEqual([...before].reverse());
+    expect(await f.prisma.house.findUnique({ where: { id: house.id } })).toMatchObject({ id: house.id, addressId: legacy.id, territoryBlockAddressId: null });
+    expect(await f.prisma.round.findUnique({ where: { id: round.id } })).toMatchObject({ houseId: house.id, completed: true });
+    expect(await f.prisma.territory_block_address.count({ where: { tenantId: f.tenant.id, addressId: legacy.id } })).toBe(1);
+    const user = { tenantId: f.tenant.id, territoryId: f.territory.id, roles: ['overseer'], round: null };
+    const scope = { blockId: tree.block.targetId, round: 1, hours: 24, canEditStructure: true, fullBlock: true };
+    const [reference, optimized] = await f.prisma.$transaction(async tx => {
+      const reference = await (app.get(FieldService) as any).snapshot(tx, user, scope, null);
+      const connection = { query: async (sql: string, params: any[]) => ({ rows: await tx.$queryRawUnsafe(sql, ...params) }) };
+      const optimized = await aggregate.snapshot(connection, user, scope, null);
+      return [reference, optimized];
+    });
+    expect(JSON.parse(JSON.stringify(optimized))).toEqual(JSON.parse(JSON.stringify(reference)));
+
+  });
+  it('recusa aprovação desatualizada e protege a permissão e o isolamento', async () => {
+    const f = await requestFixture(app), tree = await f.tree();
+    await f.review(Object.values(tree)).expect(201);
+    const second = await f.create('street', { name: 'Outra rua' }, { blockId: tree.block.targetId });
+    const url = `/v1/change-requests/street-order/${f.territory.id}/${tree.block.targetId}`;
+    const beforeRows = (await request(f.server).get(url).set(f.auth(f.admin))).body;
+    const before = beforeRows.map((s: any) => s.id);
+    const proposal = (await request(f.server).post(url).set(f.auth(f.leader)).send({ expected: beforeRows, ordered: [...before].reverse() }).expect(201)).body;
+    await f.review([second]).expect(201);
+    await f.review([proposal]).expect(409);
+    const other = await requestFixture(app);
+    await request(f.server).get(url).set(other.auth(other.leader)).expect(403);
+    await request(f.server).get(url).set(other.auth(other.admin)).expect(404);
+    await request(f.server).patch(`/v1/signature/${f.code}/permissions`).set(f.auth(f.admin)).send({ canEditStructure: false }).expect(200);
+    await request(f.server).post(url).set(f.auth(f.leader)).send({ expected: beforeRows, ordered: [...before].reverse() }).expect(403);
+  });
+});
